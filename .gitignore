@@ -1,0 +1,42 @@
+# Python bytecode & caches
+__pycache__/
+**/__pycache__/
+*.py[cod]
+*.pyc
+*.egg-info/
+*.egg
+dist/
+build/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+Thumbs.db
+.DS_Store
+
+# Sessions (runtime data, not for distribution)
+sessions/*.json
+
+# Memory runtime data (not for distribution)
+memory/long_term/*.json
+memory/long_term/index.json
+memory/test*/
+
+# Local secrets / environment files
+.env
+.env.*
+!.env.example
+
+# Common secret/config files
+*.key
+*.pem
+secrets.*
+config.local.*
+
+# pytest cache
+.pytest_cache/

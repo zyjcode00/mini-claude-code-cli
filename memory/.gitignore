@@ -1,0 +1,5 @@
+# 忽略测试生成的长期记忆文件  
+memory/test_long_term/  
+memory/test_long_term_cross/  
+memory/test_search/  
+memory/long_term/*.json 
