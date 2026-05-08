@@ -8,6 +8,10 @@ class ReadArgs(BaseModel):
     start_line: int = Field(1, description="起始行号（从 1 开始）")
     end_line: int = Field(None, description="结束行号（可选，若不传则读到文件末尾）")
     raw_mode: bool = Field(False, description="原始模式：输出无装饰符的内容，方便拷贝")
+    
+class FileTreeArgs(BaseModel):
+    """递归列出文件的参数模型（无参数）"""
+    pass
 
 class ReadTool(BaseTool):
     name = "read_file"
@@ -124,7 +128,7 @@ class WriteFullFileTool(BaseTool):
 class FileTreeTool(BaseTool):
     name = "list_files_recursive"
     description = "递归列出当前项目的所有文件结构。在进入新项目或寻找特定文件时，请优先使用此工具。"
-    args_schema = None
+    args_schema = FileTreeArgs
 
     def run(self, **kwargs) -> str:
         try:

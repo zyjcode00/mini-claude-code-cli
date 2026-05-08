@@ -113,10 +113,14 @@ class AgentEngine:
 
             msg = resp.choices[0].message
             # 🔥 修复：转换为字典格式，避免后续 .get() 报错
+            # 🔥🔥🔥 DeepSeek 修复：保存 reasoning_content（思考模式必须回传）
             self.last_oa_msg = {
                 "role": "assistant",
                 "content": msg.content or "",
             }
+            # DeepSeek reasoning_content 回传：必须原样保存在消息历史中
+            if hasattr(msg, 'reasoning_content') and msg.reasoning_content:
+                self.last_oa_msg["reasoning_content"] = msg.reasoning_content
             # 如果有工具调用，添加 tool_calls 字段
             if msg.tool_calls:
                 self.last_oa_msg["tool_calls"] = [
