@@ -1,5 +1,7 @@
 import json
 import os
+import re
+from pathlib import Path
 from typing import List, Dict, Any
 import anthropic
 import openai
@@ -7,6 +9,7 @@ import asyncio
 from tools.base import BaseTool
 from core.prompts import get_system_prompt
 from core.context import ContextManager  # <--- 导入新管家
+from core.memory_items import MemoryKind, ObservationType, RawObservation
 
 # Git 自动化保险导入
 from tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes, start_task_branch, finalize_task, start_plan_branch, finalize_plan
@@ -42,8 +45,9 @@ class AgentEngine:
         # ========== Git 自动化保险状态追踪 ==========
         self.edit_failures = {}  # {"file_path": failure_count}
         self.last_snapshot_plan_step = None  # 记录上次快照时的计划步骤
-        self.current_plan_branch = None  # 当前影子分支对应的 Plan ID
-        # ===========================================
+        # Phase 5: Prompt 记忆注入预算配置
+        self.memory_token_budget = 1500
+        self.memory_recall_top_k = 8
 
         self.is_openai_compat = base_url is not None or "claude" not in model.lower()
 
@@ -71,7 +75,7 @@ class AgentEngine:
         if self.context._enable_memory_layers and user_input:
             try:
                 # 从长期记忆中检索与当前任务相关的摘要（跨所有会话）
-                long_term_memories = self.context.long_term_memory.search(
+                long_term_memories = self.context.memory_manager.search_long_term(
                     query=user_input,
                     top_k=5  # 检索最相关的 5 条长期记忆
                 )
@@ -157,9 +161,10 @@ class AgentEngine:
 
     async def execute_query(self, user_input: str):
         self.context.add_message({"role": "user", "content": user_input})
+        self._observe_prompt_submit(user_input)
 
         # ========== 检索增强：自动检索相关历史 ==========
-        relevant_history = ""
+        relevant_history = self._build_relevant_memory_context(user_input)
         if self.retrieval_enabled and len(self.bm25_retriever) > 0:
             try:
                 # 使用 BM25 检索相关历史
@@ -175,7 +180,7 @@ class AgentEngine:
                             preview = content[:200] + "..." if len(content) > 200 else content
                             history_lines.append(f"{i}. (相关度: {score:.2f}) {preview}")
 
-                    relevant_history = "\n".join(history_lines) + "\n"
+                    relevant_history += "\n" + "\n".join(history_lines) + "\n"
                     print(f" [🔍] 检索到 {len(results)} 条相关历史")
             except Exception as e:
                 print(f" [⚠️] 检索失败: {e}")
@@ -214,6 +219,7 @@ class AgentEngine:
 
             if stop_reason != "tool_use":
                 final_ans = "".join([b["text"] for b in content_blocks if b["type"] == "text"])
+                self._remember_task_completion(user_input, final_ans)
                 self.save_session()
                 return final_ans
 
@@ -225,6 +231,9 @@ class AgentEngine:
                 if block["type"] == "tool_use":
                     t_id, t_name, t_input = block["id"], block["name"], block["input"]
                     tool_obj = self.tool_map[t_name]
+                    pre_memory_context = self._build_pre_tool_memory_context(t_name, t_input)
+                    if pre_memory_context:
+                        self.context.add_message({"role": "user", "content": pre_memory_context})
                     # 包装同步工具到线程中运行，避免阻塞
                     tasks.append(asyncio.to_thread(tool_obj.run, **t_input))
                     tool_calls_info.append((t_id, t_name, t_input))  # 保存输入参数
@@ -260,6 +269,10 @@ class AgentEngine:
                 rollback_reason = ""
 
                 for (t_id, t_name, t_input), res in zip(tool_calls_info, results):
+                    self._observe_tool_result(t_name, t_input, res)
+                    failure_memory_context = self._build_post_tool_failure_memory_context(t_name, str(res))
+                    if failure_memory_context:
+                        self.context.add_message({"role": "user", "content": failure_memory_context})
                     # ========== Git 自动化保险逻辑 ==========
                     # 1. 检测 edit_file 失败
                     if t_name == "edit_file":
@@ -337,6 +350,192 @@ class AgentEngine:
 
         return "任务达到最大思考步数限制。"
 
+    def _build_relevant_memory_context(self, query: str, top_k: int = None) -> str:
+        """召回与当前输入相关的长期记忆，并按 token budget 格式化为 prompt 注入文本。"""
+        if not query or not getattr(self.context, "_enable_memory_layers", False):
+            return ""
+
+        try:
+            context = self.context.memory_manager.build_prompt_memory_context(
+                query=query,
+                token_budget=self.memory_token_budget,
+                task_type=None,
+                top_k=top_k or self.memory_recall_top_k,
+            )
+        except Exception as e:
+            print(f" [⚠️] 主动记忆召回失败: {e}")
+            return ""
+
+        if context:
+            print(" [🧠] 已按预算注入长期记忆上下文")
+        return context
+
+    def _build_pre_tool_memory_context(self, tool_name: str, tool_input: Dict[str, Any]) -> str:
+        """在文件编辑/写入前自动召回文件历史。"""
+        if tool_name not in {"edit_file", "write_full_file"} or not getattr(self.context, "_enable_memory_layers", False):
+            return ""
+        path = (tool_input or {}).get("path") or (tool_input or {}).get("file_path")
+        if not path:
+            return ""
+        try:
+            context = self.context.memory_manager.build_prompt_memory_context(
+                query=str(path),
+                token_budget=500,
+                task_type="code_edit",
+                top_k=4,
+                file_path=str(path),
+            )
+        except Exception as e:
+            print(f" [⚠️] 文件历史自动召回失败: {e}")
+            return ""
+        if not context:
+            return ""
+        return f"\n[自动文件历史召回: {path}]\n{context}"
+
+    def _build_post_tool_failure_memory_context(self, tool_name: str, result_text: str) -> str:
+        """测试或工具失败后自动召回错误历史。"""
+        if not self._is_failure_result(result_text) or not getattr(self.context, "_enable_memory_layers", False):
+            return ""
+        if tool_name not in {"run_pytest", "execute_bash", "edit_file", "write_full_file"}:
+            return ""
+        error_query = self._extract_error_query(result_text)
+        try:
+            context = self.context.memory_manager.build_prompt_memory_context(
+                query=error_query,
+                token_budget=600,
+                task_type="test_failure" if tool_name == "run_pytest" else None,
+                top_k=4,
+                error_type=error_query,
+            )
+        except Exception as e:
+            print(f" [⚠️] 错误历史自动召回失败: {e}")
+            return ""
+        if not context:
+            return ""
+        return f"\n[自动错误历史召回: {error_query}]\n{context}"
+
+    @staticmethod
+    def _extract_error_query(result_text: str) -> str:
+        text = str(result_text or "")
+        patterns = [
+            r"([A-Za-z_][A-Za-z0-9_]*(?:Error|Exception))[:\\s]",
+            r"(AssertionError)[^\\n]*",
+            r"(Exit Code \\d+)",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, text)
+            if match:
+                return match.group(0).strip()[:300]
+        return text[:300]
+
+    def _observe_prompt_submit(self, user_input: str):
+        """记录用户输入 Observation，并提升为任务型长期记忆。"""
+        observation = RawObservation(
+            session_id=self.session_id,
+            project=Path.cwd().name,
+            cwd=str(Path.cwd()),
+            event_type=ObservationType.PROMPT_SUBMIT.value,
+            user_prompt=user_input,
+            metadata={"source": "AgentEngine.execute_query"},
+        )
+        return self.context.memory_manager.save_observation(
+            observation,
+            promote=True,
+            kind=MemoryKind.TASK.value,
+            title=f"用户任务: {self._shorten(user_input, 80)}",
+            importance=0.55,
+            confidence=0.7,
+        )
+
+    def _observe_tool_result(self, tool_name: str, tool_input: Dict[str, Any], result: Any):
+        """记录工具执行结果 Observation，失败/pytest 结果会沉淀为长期 MemoryItem。"""
+        result_text = str(result)
+        failed = self._is_failure_result(result_text)
+        event_type = ObservationType.TOOL_FAILURE.value if failed else ObservationType.POST_TOOL_USE.value
+        if tool_name == "run_pytest":
+            event_type = ObservationType.TOOL_FAILURE.value if failed else ObservationType.TEST_RESULT.value
+
+        files = self._extract_files_from_tool_call(tool_name, tool_input, result_text)
+        observation = RawObservation(
+            session_id=self.session_id,
+            project=Path.cwd().name,
+            cwd=str(Path.cwd()),
+            event_type=event_type,
+            tool_name=tool_name,
+            tool_input=tool_input or {},
+            tool_output=self._shorten(result_text, 4000) if not failed else None,
+            error=self._shorten(result_text, 4000) if failed else None,
+            files=files,
+            metadata={"source": "AgentEngine.tool_dispatch", "success": not failed},
+        )
+
+        kind = MemoryKind.BUG.value if failed else MemoryKind.WORKFLOW.value
+        title_status = "失败" if failed else "成功"
+        return self.context.memory_manager.save_observation(
+            observation,
+            promote=True,
+            kind=kind,
+            title=f"工具执行{title_status}: {tool_name}",
+            importance=0.8 if failed else 0.6,
+            confidence=0.85,
+        )
+
+    def _remember_task_completion(self, user_input: str, final_answer: str):
+        """任务结束时保存一条任务完成记忆，方便跨会话召回。"""
+        content = f"用户任务: {user_input}\n完成结果: {final_answer}"
+        observation = RawObservation(
+            session_id=self.session_id,
+            project=Path.cwd().name,
+            cwd=str(Path.cwd()),
+            event_type=ObservationType.SESSION_END.value,
+            user_prompt=user_input,
+            assistant_message=final_answer,
+            files=self._extract_file_paths(content),
+            metadata={"source": "AgentEngine.final_answer"},
+        )
+        item = self.context.memory_manager.save_observation(
+            observation,
+            promote=True,
+            kind=MemoryKind.TASK.value,
+            title=f"任务完成: {self._shorten(user_input, 80)}",
+            importance=0.75,
+            confidence=0.8,
+        )
+        if item:
+            item.concepts = list(dict.fromkeys(item.concepts + self._extract_concepts(content)))
+            self.context.memory_manager.save_memory_item(item)
+        return item
+
+    @staticmethod
+    def _shorten(text: Any, limit: int) -> str:
+        text = str(text or "")
+        return text if len(text) <= limit else text[:limit] + "..."
+
+    @staticmethod
+    def _is_failure_result(result_text: str) -> bool:
+        markers = ["❌", "Traceback", "Error", "Exception", "失败", "Exit Code 1", "Exit Code 2", "Exit Code 4"]
+        return any(marker in result_text for marker in markers)
+
+    def _extract_files_from_tool_call(self, tool_name: str, tool_input: Dict[str, Any], result_text: str) -> List[str]:
+        files = []
+        if isinstance(tool_input, dict):
+            for key in ("path", "file_path"):
+                value = tool_input.get(key)
+                if value:
+                    files.append(str(value))
+        files.extend(self._extract_file_paths(result_text))
+        return list(dict.fromkeys(files))[:20]
+
+    @staticmethod
+    def _extract_file_paths(text: str) -> List[str]:
+        pattern = r"(?:[A-Za-z]:)?[\\/\w\.\-]+\.(?:py|md|json|txt|yaml|yml|toml)"
+        return list(dict.fromkeys(re.findall(pattern, text or "")))[:20]
+
+    @staticmethod
+    def _extract_concepts(text: str) -> List[str]:
+        words = re.findall(r"[A-Za-z_][A-Za-z0-9_\-]{2,}", text or "")
+        return list(dict.fromkeys(words))[:20]
+
 
 
     def save_session(self):
@@ -347,7 +546,7 @@ class AgentEngine:
 
             # 1. 更新情景记忆中的相关摘要
             if self.context._enable_memory_layers:
-                episodic_summaries = self.context.episodic_memory.get_all()
+                episodic_summaries = self.context.memory_manager.episodic_memory.get_all()
                 updated_count = 0
                 for summary in episodic_summaries:
                     # 匹配规则：goal 完全一致，或包含关系
@@ -603,14 +802,13 @@ class AgentEngine:
     def index_session_summaries(self):
         """索引所有会话摘要"""
         try:
-            # 从 context 中获取所有摘要
-            if hasattr(self.context, 'session_summaries'):
-                for session_id, summary in self.context.session_summaries.items():
-                    # 将结构化摘要转换为文本
-                    content = self._summary_to_text(summary)
-                    self.index_content(session_id, content)
+            summaries = getattr(self.context, 'session_summaries', [])
+            for summary in summaries:
+                doc_id = getattr(summary, "session_id", None) or str(len(self.bm25_retriever))
+                content = self._summary_to_text(summary)
+                self.index_content(doc_id, content)
 
-                print(f" [🔍] 已索引 {len(self.context.session_summaries)} 个会话摘要")
+            print(f" [🔍] 已索引 {len(summaries)} 个会话摘要")
         except Exception as e:
             print(f" [⚠️] 索引会话摘要失败: {e}")
 

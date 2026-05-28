@@ -17,7 +17,8 @@ from core.memory_models import (
     ErrorRecord,
     ToolUsage,
     SessionSummary,
-    create_summary_from_messages
+    create_summary_from_messages,
+    normalize_task_status
 )
 
 
@@ -186,6 +187,21 @@ def test_session_summary_to_dict():
     assert data["message_count"] == 20
 
 
+def test_file_change_from_legacy_file_path_dict():
+    """测试 FileChange 兼容旧版 file_path 字段"""
+    data = {
+        "file_path": "core/legacy_context.py",
+        "action": "modified",
+        "summary": "旧版字段兼容",
+    }
+
+    fc = FileChange.from_dict(data)
+
+    assert fc.path == "core/legacy_context.py"
+    assert fc.action == "modified"
+    assert fc.summary == "旧版字段兼容"
+
+
 def test_session_summary_from_dict():
     """测试 SessionSummary 反序列化"""
     data = {
@@ -219,6 +235,48 @@ def test_session_summary_from_dict():
     assert summary.files_changed[0].path == "tests/test_example.py"
     assert len(summary.errors_encountered) == 0
     assert summary.importance == 0.7
+
+
+def test_normalize_task_status_aliases():
+    """测试 task_status 别名归一化为标准枚举"""
+    assert normalize_task_status("done") == "completed"
+    assert normalize_task_status("complete") == "completed"
+    assert normalize_task_status("in-progress") == "in_progress"
+    assert normalize_task_status("ongoing") == "in_progress"
+    assert normalize_task_status("error") == "failed"
+    assert normalize_task_status("canceled") == "cancelled"
+    assert normalize_task_status("unknown") == "in_progress"
+    assert normalize_task_status(None) == "in_progress"
+
+
+def test_session_summary_normalizes_task_status_on_init_and_serialization():
+    """测试 SessionSummary 初始化和序列化时统一 task_status"""
+    summary = SessionSummary(
+        session_id="session_status_alias",
+        timestamp="2026-04-23T15:30:00",
+        summary_text="状态别名测试",
+        task_goal="兼容旧状态",
+        task_status="done",
+    )
+
+    assert summary.task_status == "completed"
+    assert summary.to_dict()["task_status"] == "completed"
+
+
+def test_session_summary_from_dict_normalizes_legacy_task_status():
+    """测试从旧 session 数据反序列化时归一化 task_status"""
+    summary = SessionSummary.from_dict({
+        "session_id": "legacy_status_session",
+        "timestamp": "2026-04-23T15:40:00",
+        "summary_text": "旧状态测试",
+        "task_goal": "兼容 done 状态",
+        "task_status": "done",
+        "files_changed": [],
+        "errors_encountered": [],
+        "tools_used": [],
+    })
+
+    assert summary.task_status == "completed"
 
 
 def test_session_summary_to_json():
