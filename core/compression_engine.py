@@ -214,11 +214,7 @@ class CompressionEngine:
 
         # 划分消息
         to_summarize = messages[:-min_keep]
-        keep_messages = messages[-min_keep:]
-
-        # 调整保留消息，确保不截断工具调用
-        while keep_messages and self._is_tool_call_start(keep_messages[0]):
-            keep_messages.pop(0)
+        keep_messages = self._sanitize_openai_tool_pairs(messages[-min_keep:])
 
         # 🔥 Phase 2: 检查缓存
         messages_hash = self._get_messages_hash(to_summarize)
@@ -355,20 +351,25 @@ class CompressionEngine:
         for i, msg in enumerate(messages):
             if i in keyframe_indices or tool_count >= tool_target:
                 continue
-            if msg.get("role") == "tool":
-                # 添加工具调用及其上下文
-                keyframes.append(msg)
-                keyframe_indices.add(i)
-                tool_count += 1
-                # 如果前一条是 assistant 且包含工具调用，也添加
-                if i > 0 and messages[i-1].get("role") == "assistant" and i - 1 not in keyframe_indices:
-                    keyframes.append(messages[i-1])
-                    keyframe_indices.add(i - 1)
+            if msg.get("role") == "assistant" and msg.get("tool_calls"):
+                tool_call_ids = {tc.get("id") for tc in msg.get("tool_calls", []) if tc.get("id")}
+                pair_indices = [i]
+                j = i + 1
+                while j < len(messages) and messages[j].get("role") == "tool":
+                    if messages[j].get("tool_call_id") in tool_call_ids:
+                        pair_indices.append(j)
+                    j += 1
+                found_ids = {messages[idx].get("tool_call_id") for idx in pair_indices[1:]}
+                if tool_call_ids and tool_call_ids.issubset(found_ids):
+                    for idx in pair_indices:
+                        keyframes.append(messages[idx])
+                        keyframe_indices.add(idx)
+                    tool_count += len(pair_indices)
 
-        # 4. 如果还有空间，按消息新鲜度补充（保留最新的消息）
+        # 4. 如果还有空间，按消息新鲜度补充（保留最新的非工具调用消息）
         if len(keyframes) < target_count:
             remaining_indices = [i for i in range(len(messages)) if i not in keyframe_indices]
-            
+
             # 按索引降序（最新的消息优先）
             remaining_indices.sort(reverse=True)
 
@@ -376,12 +377,14 @@ class CompressionEngine:
             for i in remaining_indices:
                 if len(keyframes) >= target_count:
                     break
+                if self._is_tool_call_start(messages[i]):
+                    continue
                 keyframes.append(messages[i])
                 keyframe_indices.add(i)
 
         # 按原始顺序排序
         keyframe_indices_sorted = sorted(keyframe_indices)
-        compressed_messages = [messages[i] for i in keyframe_indices_sorted]
+        compressed_messages = self._sanitize_openai_tool_pairs([messages[i] for i in keyframe_indices_sorted])
 
         # 确保至少保留 min_keep 条消息
         if len(compressed_messages) < min_keep:
@@ -538,8 +541,8 @@ class CompressionEngine:
         # 🔥 关键验证：检查最终的消息序列是否有效
         is_valid = self._validate_message_ordering(compressed_messages)
         if not is_valid:
-            print(f"   ⚠️  警告: 压缩后的消息序列无效，降级到保留所有消息")
-            compressed_messages = messages[:]
+            print(f"   ⚠️  警告: 压缩后的消息序列无效，执行安全清理")
+            compressed_messages = self._sanitize_openai_tool_pairs(compressed_messages)
 
         # 生成简化版摘要
         summary = self._generate_summary_from_messages(
@@ -821,27 +824,25 @@ class CompressionEngine:
             bool: 消息序列是否有效
         """
         for i, msg in enumerate(messages):
-            # 检查 1: tool 消息是否有对应的 assistant（向前查找）
+            # 检查 1: tool 消息是否有对应的相邻 assistant(tool_calls)
             if msg.get("role") == "tool":
                 tool_call_id = msg.get("tool_call_id")
                 if not tool_call_id:
                     print(f"   ❌ 错误: Tool 消息 [{i}] 缺少 tool_call_id")
                     return False
 
-                # 向前查找对应的 assistant with tool_calls
-                found_matching = False
-                for j in range(i - 1, -1, -1):
-                    prev_msg = messages[j]
-                    if prev_msg.get("role") == "assistant" and "tool_calls" in prev_msg:
-                        for tc in prev_msg.get("tool_calls", []):
-                            if tc.get("id") == tool_call_id:
-                                found_matching = True
-                                break
-                    if found_matching:
-                        break
+                # OpenAI strict tools 要求 tool 消息必须位于 assistant(tool_calls) 后的连续 tool 响应块中。
+                block_start = i
+                while block_start > 0 and messages[block_start - 1].get("role") == "tool":
+                    block_start -= 1
+                prev_msg = messages[block_start - 1] if block_start > 0 else None
+                if not (prev_msg and prev_msg.get("role") == "assistant" and prev_msg.get("tool_calls")):
+                    print(f"   ❌ 错误: Tool 消息 [{i}] 不在 assistant(tool_calls) 后的连续响应块中")
+                    return False
 
-                if not found_matching:
-                    print(f"   ❌ 错误: Tool 消息 [{i}] (tool_call_id={tool_call_id}) 没有对应的 assistant with tool_calls")
+                expected_ids = {tc.get("id") for tc in prev_msg.get("tool_calls", []) if tc.get("id")}
+                if tool_call_id not in expected_ids:
+                    print(f"   ❌ 错误: Tool 消息 [{i}] (tool_call_id={tool_call_id}) 没有对应的相邻 assistant with tool_calls")
                     return False
 
             # 🔥🔥🔥 检查 2: assistant with tool_calls 是否有对应的 tool 消息（向后查找）
@@ -854,13 +855,14 @@ class CompressionEngine:
                     if not tool_call_id:
                         continue
 
-                    # 向后查找对应的 tool 消息
-                    found_tool = False
-                    for j in range(i + 1, len(messages)):
-                        next_msg = messages[j]
-                        if next_msg.get("role") == "tool" and next_msg.get("tool_call_id") == tool_call_id:
-                            found_tool = True
-                            break
+                    # 向后检查紧邻的连续 tool 响应块，不能跨过 user/assistant/system 等其它消息查找。
+                    expected_ids = {tc.get("id") for tc in tool_calls if tc.get("id")}
+                    contiguous_tool_ids = set()
+                    j = i + 1
+                    while j < len(messages) and messages[j].get("role") == "tool":
+                        contiguous_tool_ids.add(messages[j].get("tool_call_id"))
+                        j += 1
+                    found_tool = tool_call_id in contiguous_tool_ids
 
                     # 🔥🔥🔥 GPT-5.5 严格要求：每个 tool_call_id 都必须有对应的 tool 消息
                     if not found_tool:
@@ -869,6 +871,59 @@ class CompressionEngine:
                         return False
 
         return True
+
+    def _sanitize_openai_tool_pairs(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """
+        删除 OpenAI strict tools 不接受的半截工具调用消息。
+
+        OpenAI 兼容接口要求 assistant(tool_calls) 与后续 tool 响应必须成对出现。
+        压缩、LLM 摘要超时回退、滑动窗口补齐等路径都可能只保留 pair 的一半，
+        因此发送前/压缩后统一做一次安全清理：
+        - tool 消息若找不到前置 assistant(tool_calls)，删除该 tool；
+        - assistant(tool_calls) 若任一 tool_call_id 找不到后续 tool，删除该 assistant。
+        """
+        sanitized = [dict(msg) if isinstance(msg, dict) else msg for msg in messages]
+        changed = True
+
+        while changed:
+            changed = False
+            remove_indices = set()
+
+            for i, msg in enumerate(sanitized):
+                if not isinstance(msg, dict):
+                    continue
+
+                if msg.get("role") == "tool":
+                    tool_call_id = msg.get("tool_call_id")
+                    block_start = i
+                    while block_start > 0 and isinstance(sanitized[block_start - 1], dict) and sanitized[block_start - 1].get("role") == "tool":
+                        block_start -= 1
+                    prev_msg = sanitized[block_start - 1] if block_start > 0 and isinstance(sanitized[block_start - 1], dict) else None
+                    found_assistant = bool(
+                        tool_call_id
+                        and prev_msg
+                        and prev_msg.get("role") == "assistant"
+                        and any(tc.get("id") == tool_call_id for tc in prev_msg.get("tool_calls", []))
+                    )
+                    if not found_assistant:
+                        remove_indices.add(i)
+
+                elif msg.get("role") == "assistant" and msg.get("tool_calls"):
+                    expected_ids = {tc.get("id") for tc in msg.get("tool_calls", []) if tc.get("id")}
+                    contiguous_tool_ids = set()
+                    j = i + 1
+                    while j < len(sanitized) and isinstance(sanitized[j], dict) and sanitized[j].get("role") == "tool":
+                        contiguous_tool_ids.add(sanitized[j].get("tool_call_id"))
+                        j += 1
+                    if not expected_ids.issubset(contiguous_tool_ids):
+                        remove_indices.add(i)
+
+            if remove_indices:
+                changed = True
+                print(f"   [工具调用清理] 删除 {len(remove_indices)} 条半截 tool pair 消息")
+                sanitized = [msg for i, msg in enumerate(sanitized) if i not in remove_indices]
+
+        return sanitized
 
     def _parse_structured_summary(
         self,

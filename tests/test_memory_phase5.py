@@ -9,7 +9,7 @@ from core.memory_context_builder import MemoryContextBuilder
 from core.memory_items import MemoryItem, MemoryKind
 from core.memory_manager import MemoryManager
 from tools import get_default_tools
-from tools.memory_tool import MemoryStatsTool
+from tools.memory_tool import MemoryRecallTool, MemoryStatsTool
 from core.engine import AgentEngine
 
 
@@ -131,6 +131,50 @@ def test_agent_engine_builds_file_and_error_history_context(tmp_path):
     assert "编辑 engine.py 前注意" in file_context
     assert "自动错误历史召回" in error_context
     assert "AssertionError 历史" in error_context
+
+
+def test_agent_engine_uses_memory_manager_recall_without_local_bm25_index(tmp_path):
+    engine = AgentEngine(tools=[_DummyTool()], model="fake-model", plan_manager=_FakePlanManager(), base_url="http://example.invalid", api_key="x")
+    engine.context.memory_manager = MemoryManager(long_term_storage_dir=str(tmp_path / "long_term"))
+    engine.context._enable_memory_layers = True
+    engine.context.memory_manager.save_memory_item(MemoryItem(
+        kind=MemoryKind.ARCHITECTURE.value,
+        title="统一召回入口",
+        content="AgentEngine 主动记忆注入必须通过 MemoryManager.hybrid_recall，而不是维护独立 BM25 索引。",
+        concepts=["AgentEngine", "hybrid_recall"],
+    ))
+
+    relevant_history = engine._build_relevant_memory_context("AgentEngine hybrid_recall", top_k=3)
+
+    assert "[相关长期记忆]" in relevant_history
+    assert "统一召回入口" in relevant_history
+    assert not hasattr(engine, "keyword_indexer")
+    assert not hasattr(engine, "bm25_retriever")
+    assert not hasattr(engine, "retrieval_enabled")
+
+
+def test_memory_recall_tool_uses_memory_manager_hybrid_recall(tmp_path, monkeypatch):
+    manager = MemoryManager(long_term_storage_dir=str(tmp_path / "long_term"))
+    manager.save_memory_item(MemoryItem(
+        kind=MemoryKind.WORKFLOW.value,
+        title="Hybrid Recall 回归",
+        content="memory_recall 工具应继续委托 MemoryManager.recall/hybrid_recall 返回结果。",
+        concepts=["memory_recall", "hybrid_recall"],
+    ))
+    calls = []
+    original_hybrid_recall = manager.hybrid_recall
+
+    def spy_hybrid_recall(*args, **kwargs):
+        calls.append((args, kwargs))
+        return original_hybrid_recall(*args, **kwargs)
+
+    monkeypatch.setattr(manager, "hybrid_recall", spy_hybrid_recall)
+
+    output = MemoryRecallTool(memory_manager=manager).run(query="memory_recall hybrid_recall", top_k=3)
+
+    assert "Hybrid Recall 回归" in output
+    assert calls
+    assert calls[0][1]["query"] == "memory_recall hybrid_recall"
 
 
 def test_agent_engine_initializes_current_plan_branch_and_starts_plan_branch(tmp_path, monkeypatch):

@@ -9,14 +9,11 @@ import asyncio
 from tools.base import BaseTool
 from core.prompts import get_system_prompt
 from core.context import ContextManager  # <--- 导入新管家
+from core.compression_engine import CompressionEngine  # OpenAI tool pair sanitizer
 from core.memory_items import MemoryKind, ObservationType, RawObservation
 
 # Git 自动化保险导入
 from tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes, start_task_branch, finalize_task, start_plan_branch, finalize_plan
-
-# 检索增强导入
-from core.keyword_indexer import KeywordIndexer
-from core.bm25_retriever import BM25Retriever
 
 class AgentEngine:
     def __init__(self, tools: List[BaseTool], model: str, plan_manager, # <--- 传入管家
@@ -35,12 +32,6 @@ class AgentEngine:
         self.session_id = session_id
         self.session_path = f"sessions/{session_id}.json"
         # ----------------------------------------------------------
-
-        # ========== 检索增强：初始化检索器 ==========
-        self.keyword_indexer = KeywordIndexer()
-        self.bm25_retriever = BM25Retriever()
-        self.retrieval_enabled = True  # 检索增强开关
-        # ===========================================
 
         # ========== Git 自动化保险状态追踪 ==========
         self.edit_failures = {}  # {"file_path": failure_count}
@@ -105,6 +96,8 @@ class AgentEngine:
 
         # 🔥🔥🔥 Phase 4: 获取消息快照（并发安全）
         messages_snapshot = await self.context.get_messages_snapshot()
+        if self.is_openai_compat:
+            messages_snapshot = CompressionEngine()._sanitize_openai_tool_pairs(messages_snapshot)
 
         if self.is_openai_compat:
             oa_tools = [{"type": "function", "function": {"name": t["name"], "description": t["description"], "parameters": t["input_schema"]}} for t in self.tool_specs]
@@ -164,28 +157,9 @@ class AgentEngine:
         self.context.add_message({"role": "user", "content": user_input})
         self._observe_prompt_submit(user_input)
 
-        # ========== 检索增强：自动检索相关历史 ==========
+        # ========== 统一长期记忆召回：通过 MemoryManager/Hybrid Recall 注入相关历史 ==========
         relevant_history = self._build_relevant_memory_context(user_input)
-        if self.retrieval_enabled and len(self.bm25_retriever) > 0:
-            try:
-                # 使用 BM25 检索相关历史
-                results = self.bm25_retriever.search(user_input, top_k=3)
-
-                if results:
-                    # 格式化检索结果
-                    history_lines = ["\n[相关历史记忆]"]
-                    for i, (doc_id, score) in enumerate(results[:3], 1):
-                        content = self.bm25_retriever.get_document(doc_id)
-                        if content:
-                            # 截取前 200 字符
-                            preview = content[:200] + "..." if len(content) > 200 else content
-                            history_lines.append(f"{i}. (相关度: {score:.2f}) {preview}")
-
-                    relevant_history += "\n" + "\n".join(history_lines) + "\n"
-                    print(f" [🔍] 检索到 {len(results)} 条相关历史")
-            except Exception as e:
-                print(f" [⚠️] 检索失败: {e}")
-        # ============================================
+        # =====================================================================
 
         await self.compress_messages()
 
@@ -227,6 +201,9 @@ class AgentEngine:
             # --- 核心并发逻辑 ---
             tasks = []
             tool_calls_info = []
+            # OpenAI strict tools 要求：assistant(tool_calls) 后面必须紧跟所有 tool 响应。
+            # 因此工具前/工具后的记忆提示不能插入到 assistant 与 tool 消息之间，统一延后写入。
+            deferred_memory_contexts = []
 
             for block in content_blocks:
                 if block["type"] == "tool_use":
@@ -234,7 +211,7 @@ class AgentEngine:
                     tool_obj = self.tool_map[t_name]
                     pre_memory_context = self._build_pre_tool_memory_context(t_name, t_input)
                     if pre_memory_context:
-                        self.context.add_message({"role": "user", "content": pre_memory_context})
+                        deferred_memory_contexts.append(pre_memory_context)
                     # 包装同步工具到线程中运行，避免阻塞
                     tasks.append(asyncio.to_thread(tool_obj.run, **t_input))
                     tool_calls_info.append((t_id, t_name, t_input))  # 保存输入参数
@@ -273,7 +250,7 @@ class AgentEngine:
                     self._observe_tool_result(t_name, t_input, res)
                     failure_memory_context = self._build_post_tool_failure_memory_context(t_name, str(res))
                     if failure_memory_context:
-                        self.context.add_message({"role": "user", "content": failure_memory_context})
+                        deferred_memory_contexts.append(failure_memory_context)
                     # ========== Git 自动化保险逻辑 ==========
                     # 1. 检测 edit_file 失败
                     if t_name == "edit_file":
@@ -333,6 +310,10 @@ class AgentEngine:
 
                 if not self.is_openai_compat and tool_results_content:
                     self.context.add_message({"role": "user", "content": tool_results_content})
+
+                # 延后写入记忆提示，避免 OpenAI assistant(tool_calls) 与 tool 响应之间夹入非 tool 消息。
+                for memory_context in deferred_memory_contexts:
+                    self.context.add_message({"role": "user", "content": memory_context})
 
                 # ========== 自动回滚逻辑 ==========
                 if should_rollback:
@@ -749,112 +730,30 @@ class AgentEngine:
         # 或者在这里直接 await context.compress
         await self.context.compress(llm_summarizer)
 
-        # ========== 检索增强：压缩后自动索引新摘要 ==========
-        if self.retrieval_enabled:
-            # 索引 history_summary
-            if self.context.history_summary:
-                self.index_content(
-                    f"summary_{self.session_id}",
-                    self.context.history_summary
-                )
-        # ===========================================
-
     async def _call_llm_internal(self, user_input: str): # <--- 加 async
         """摘要专用：异步调用 (包含超时保护)"""
         temp_messages = [{"role": "user", "content": user_input}]
         try:
-            # 🔥🔥🔥 问题 1 修复：添加超时保护（30秒）
+            # 🔥🔥🔥 问题 1 修复：添加超时保护（默认90秒，可用环境变量覆盖）
+            timeout_seconds = float(os.getenv("COMPRESSION_LLM_TIMEOUT", "90"))
             if self.is_openai_compat:
                 resp = await asyncio.wait_for(
                     self.client.chat.completions.create(model=self.model, messages=temp_messages),
-                    timeout=30.0
+                    timeout=timeout_seconds
                 )
                 content = resp.choices[0].message.content
                 return [{"type": "text", "text": content}], "end_turn"
             else:
                 resp = await asyncio.wait_for(
                     self.client.messages.create(model=self.model, max_tokens=1024, messages=temp_messages),
-                    timeout=30.0
+                    timeout=timeout_seconds
                 )
                 return resp.content, resp.stop_reason
         except asyncio.TimeoutError:
-            print(f"[⚠️] 压缩 LLM 调用超时 (30s)，使用快速回退策略")
+            timeout_seconds = float(os.getenv("COMPRESSION_LLM_TIMEOUT", "90"))
+            print(f"[⚠️] 压缩 LLM 调用超时 ({timeout_seconds:g}s)，使用快速回退策略")
             return None, "error"
         except Exception as e:
             print(f"[摘要调用失败]: {e}")
             return None, "error"
 
-    # ========== 检索增强：索引管理方法 ==========
-    def index_content(self, doc_id: str, content: str):
-        """
-        索引内容到检索器
-
-        Args:
-            doc_id: 文档 ID（通常是会话 ID 或摘要 ID）
-            content: 内容文本
-        """
-        try:
-            # 同时索引到关键词索引器和 BM25 检索器
-            self.keyword_indexer.index_document(doc_id, content)
-            self.bm25_retriever.index_document(doc_id, content)
-        except Exception as e:
-            print(f" [⚠️] 索引失败: {e}")
-
-    def index_session_summaries(self):
-        """索引所有会话摘要"""
-        try:
-            summaries = getattr(self.context, 'session_summaries', [])
-            for summary in summaries:
-                doc_id = getattr(summary, "session_id", None) or str(len(self.bm25_retriever))
-                content = self._summary_to_text(summary)
-                self.index_content(doc_id, content)
-
-            print(f" [🔍] 已索引 {len(summaries)} 个会话摘要")
-        except Exception as e:
-            print(f" [⚠️] 索引会话摘要失败: {e}")
-
-    def _summary_to_text(self, summary) -> str:
-        """
-        将结构化摘要转换为文本
-
-        Args:
-            summary: SessionSummary 对象或字典
-
-        Returns:
-            文本内容
-        """
-        if hasattr(summary, 'summary_text'):
-            # SessionSummary 对象
-            parts = [
-                summary.summary_text,
-                f"任务目标: {summary.task_goal}",
-                f"任务状态: {summary.task_status}"
-            ]
-
-            if summary.files_changed:
-                parts.append("文件变更: " + ", ".join([fc.path for fc in summary.files_changed]))
-
-            if summary.errors_encountered:
-                parts.append("错误: " + ", ".join([er.error_type for er in summary.errors_encountered]))
-
-            if summary.tools_used:
-                parts.append("工具: " + ", ".join([tu.tool_name for tu in summary.tools_used]))
-
-            return "\n".join(parts)
-        else:
-            # 字典格式
-            return str(summary)
-
-    def get_retrieval_stats(self) -> Dict[str, Any]:
-        """
-        获取检索器统计信息
-
-        Returns:
-            统计信息字典
-        """
-        return {
-            "keyword_indexer": self.keyword_indexer.get_statistics(),
-            "bm25_retriever": self.bm25_retriever.get_statistics(),
-            "retrieval_enabled": self.retrieval_enabled
-        }
-    # ===========================================
