@@ -24,11 +24,11 @@ import uuid
 from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage
 from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2
 
-# Phase 2 新增导入
-from core.memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory
+# Phase 1 重构：统一记忆编排入口
+from core.memory_manager import MemoryManager
 
 # Phase 3 新增导入
-from core.compression_engine import CompressionEngine, CompressionStrategy
+from core.compression_engine import CompressionStrategy
 
 
 class ContextManager:
@@ -60,19 +60,18 @@ class ContextManager:
         # Phase 1: 结构化摘要列表（将被 Phase 2 替代，但保持向后兼容）
         self.session_summaries: List[SessionSummary] = []
 
-        # Phase 2: 三层记忆架构
-        self.working_memory = WorkingMemory(max_size=20)
-        self.episodic_memory = EpisodicMemory(max_size=50)
-        self.long_term_memory = LongTermMemory(storage_dir="memory/long_term")
+        # Phase 2: 三层记忆架构统一由 MemoryManager 编排
+        self.memory_manager = MemoryManager(plan_manager=plan_manager)
+        self.working_memory = self.memory_manager.working_memory
+        self.episodic_memory = self.memory_manager.episodic_memory
+        self.long_term_memory = self.memory_manager.long_term_memory
+        self.compression_engine = self.memory_manager.compression_engine
 
         # 消息列表（保留，用于兼容）
         self.messages = []
-        
+
         # 🔥🔥🔥 Phase 4 新增：并发锁，保护 messages 访问
         self.messages_lock = asyncio.Lock()
-
-        # Phase 3: 压缩引擎（传入 plan_manager）
-        self.compression_engine = CompressionEngine(plan_manager=plan_manager)
 
         # 会话 ID（用于生成摘要 ID）
         self._session_id_counter = 0
@@ -88,7 +87,7 @@ class ContextManager:
         1. 添加到消息列表（兼容）
         2. 添加到工作记忆
         3. 如果工作记忆满了，自动触发压缩和流转
-        
+
         ⚠️ 注意：这个方法是同步的，不进行锁保护。
            用于 Agent loop 中添加消息。
            对于 LLM 调用，请使用 get_messages_snapshot() 获取原子快照。
@@ -98,7 +97,7 @@ class ContextManager:
 
         # 2. 添加到工作记忆
         if self._enable_memory_layers:
-            evicted_message = self.working_memory.add(message)
+            self.memory_manager.add_message(message)
 
             # 3. 如果工作记忆满了，触发异步压缩（需要在外部调用 compress）
             # 注意：这里不直接调用 compress，因为 compress 是异步的
@@ -107,10 +106,10 @@ class ContextManager:
     async def get_messages_snapshot(self) -> List[Dict]:
         """
         🔥🔥🔥 获取当前消息的原子快照（并发安全）
-        
+
         用于 LLM 调用时获取一致的消息列表。
         确保在快照期间，messages 不会被压缩修改。
-        
+
         Returns:
             messages 的深拷贝
         """
@@ -120,10 +119,10 @@ class ContextManager:
     async def add_message_safe(self, message):
         """
         🔥🔥🔥 异步安全的消息添加（带锁保护）
-        
+
         可选方法，用于需要严格并发控制的场景。
         当前 Agent loop 不需要使用此方法。
-        
+
         Args:
             message: 消息字典
         """
@@ -255,12 +254,11 @@ class ContextManager:
         if self._enable_memory_layers:
             print(f"   [Phase 2] 工作记忆: {len(self.working_memory)}/{self.working_memory.max_size}")
 
-        # Phase 3: 使用压缩引擎
-        result = await self.compression_engine.compress(
+        # Phase 3: 通过 MemoryManager 使用统一压缩入口
+        result = await self.memory_manager.compress_messages(
             messages=self.messages,
             strategy=strategy,
             llm_summarizer_func=llm_summarizer_func,
-            target_ratio=self.min_keep / len(self.messages) if self.messages else 0.3,
             min_keep=self.min_keep,
             existing_summary=self.history_summary
         )
@@ -274,20 +272,16 @@ class ContextManager:
 
         # Phase 2: 同步更新工作记忆
         if self._enable_memory_layers:
-            # 清空工作记忆，只保留最新的消息
-            self.working_memory.clear()
-            for msg in result.compressed_messages:
-                self.working_memory.add(msg)
+            self.memory_manager.reset_working_memory(result.compressed_messages)
 
         # 如果有结构化摘要，存储到三层记忆
         if result.summary:
             # Phase 2: 添加到情景记忆
             if self._enable_memory_layers:
-                evicted_summary = self.episodic_memory.add(result.summary)
+                evicted_summary = self.memory_manager.save_summary(result.summary)
 
                 if evicted_summary:
                     print(f"   [Phase 2] 情景记忆已满，归档到长期记忆: {evicted_summary.session_id}")
-                    self.long_term_memory.store(evicted_summary)
 
                 print(f"   [Phase 2] 摘要已添加到情景记忆: {result.summary.session_id}")
 
@@ -567,22 +561,7 @@ class ContextManager:
         if not self._enable_memory_layers:
             return self.get_summary_statistics()
 
-        return {
-            "working_memory": {
-                "size": len(self.working_memory),
-                "max_size": self.working_memory.max_size,
-                "usage_rate": len(self.working_memory) / self.working_memory.max_size
-            },
-            "episodic_memory": {
-                "size": len(self.episodic_memory),
-                "max_size": self.episodic_memory.max_size,
-                "usage_rate": len(self.episodic_memory) / self.episodic_memory.max_size
-            },
-            "long_term_memory": {
-                "count": len(self.long_term_memory),
-                "storage_dir": str(self.long_term_memory.storage_dir)
-            }
-        }
+        return self.memory_manager.get_statistics()
 
     def search_all_memories(self, query: str, top_k: int = 5) -> List[SessionSummary]:
         """
@@ -595,29 +574,10 @@ class ContextManager:
         Returns:
             匹配的摘要列表
         """
-        results = []
-
         if not self._enable_memory_layers:
             return self.search_summaries(query)[:top_k]
 
-        # 1. 检索情景记忆
-        episodic_results = self.episodic_memory.search(query, top_k)
-        results.extend(episodic_results)
-
-        # 2. 检索长期记忆
-        if len(results) < top_k:
-            long_term_results = self.long_term_memory.search(query, top_k - len(results))
-            results.extend(long_term_results)
-
-        # 3. 去重（基于 session_id）
-        seen_ids = set()
-        unique_results = []
-        for summary in results:
-            if summary.session_id not in seen_ids:
-                seen_ids.add(summary.session_id)
-                unique_results.append(summary)
-
-        return unique_results[:top_k]
+        return self.memory_manager.search(query, top_k)
 
     def get_recent_summaries_from_episodic(self, n: int = 5) -> List[SessionSummary]:
         """
@@ -632,14 +592,12 @@ class ContextManager:
         if not self._enable_memory_layers:
             return self.session_summaries[-n:] if n < len(self.session_summaries) else self.session_summaries
 
-        return self.episodic_memory.get_recent(n)
+        return self.memory_manager.get_recent_summaries(n)
 
     def clear_all_memories(self):
         """清空所有三层记忆"""
         if self._enable_memory_layers:
-            self.working_memory.clear()
-            self.episodic_memory.clear()
-            self.long_term_memory.clear()
+            self.memory_manager.clear()
 
         # 兼容 Phase 1
         self.session_summaries.clear()
@@ -655,29 +613,7 @@ class ContextManager:
         Returns:
             包含三层记忆数据的字典
         """
-        if not self._enable_memory_layers:
-            return {
-                "working_memory": [],
-                "episodic_memory": [],
-                "session_summaries": [s.to_dict() for s in self.session_summaries],
-                "history_summary": self.history_summary
-            }
-
-        # 导出工作记忆
-        working_memory_data = self.working_memory.get_all()
-
-        # 导出情景记忆
-        episodic_memory_data = [s.to_dict() for s in self.episodic_memory.get_all()]
-
-        # 导出会话摘要（Phase 1 兼容）
-        session_summaries_data = [s.to_dict() for s in self.session_summaries]
-
-        return {
-            "working_memory": working_memory_data,
-            "episodic_memory": episodic_memory_data,
-            "session_summaries": session_summaries_data,
-            "history_summary": self.history_summary
-        }
+        return self.memory_manager.export_memories(self.session_summaries, self.history_summary)
 
     def import_memories(self, data: Dict[str, Any]):
         """
@@ -686,41 +622,13 @@ class ContextManager:
         Args:
             data: 包含记忆数据的字典
         """
-        from .memory_models import SessionSummary
+        imported = self.memory_manager.import_memories(data)
+        self.history_summary = imported["history_summary"]
+        self.session_summaries = imported["session_summaries"]
 
-        # 恢复历史摘要
-        self.history_summary = data.get("history_summary", "")
-
-        # 恢复会话摘要（Phase 1 兼容）
-        summaries_data = data.get("session_summaries", [])
-        self.session_summaries = []
-        for s_dict in summaries_data:
-            try:
-                summary = SessionSummary.from_dict(s_dict)
-                self.session_summaries.append(summary)
-            except Exception as e:
-                print(f"⚠️ 恢复会话摘要失败: {e}")
-
-        # 恢复三层记忆（Phase 2）
         if not self._enable_memory_layers:
             print("[Phase 1] 已恢复历史摘要和会话摘要")
             return
-
-        # 恢复工作记忆
-        working_memory_data = data.get("working_memory", [])
-        self.working_memory.clear()
-        for msg in working_memory_data:
-            self.working_memory.add(msg)
-
-        # 恢复情景记忆
-        episodic_memory_data = data.get("episodic_memory", [])
-        self.episodic_memory.clear()
-        for s_dict in episodic_memory_data:
-            try:
-                summary = SessionSummary.from_dict(s_dict)
-                self.episodic_memory.add(summary)
-            except Exception as e:
-                print(f"⚠️ 恢复情景记忆失败: {e}")
 
         print(f"[Phase 2] 已恢复三层记忆:")
         print(f"   - 工作记忆: {len(self.working_memory)} 条")
@@ -734,26 +642,7 @@ class ContextManager:
         Args:
             output_dir: 输出目录
         """
-        from pathlib import Path
-
-        output_path = Path(output_dir)
-        output_path.mkdir(parents=True, exist_ok=True)
-
-        # 导出情景记忆
-        episodic_file = output_path / "episodic_memory.json"
-        episodic_data = [s.to_dict() for s in self.episodic_memory.get_all()]
-
-        with open(episodic_file, 'w', encoding='utf-8') as f:
-            json.dump(episodic_data, f, ensure_ascii=False, indent=2)
-
-        print(f"[Phase 2] 情景记忆已导出: {episodic_file}")
-        print(f"   - 摘要数量: {len(episodic_data)}")
-
-        # 导出统计信息
-        stats = self.get_memory_statistics()
-        stats_file = output_path / "memory_statistics.json"
-
-        with open(stats_file, 'w', encoding='utf-8') as f:
-            json.dump(stats, f, ensure_ascii=False, indent=2)
-
-        print(f"[Phase 2] 统计信息已导出: {stats_file}")
+        files = self.memory_manager.export_to_files(output_dir)
+        print(f"[Phase 2] 情景记忆已导出: {files['episodic_memory']}")
+        print(f"   - 摘要数量: {len(self.episodic_memory.get_all())}")
+        print(f"[Phase 2] 统计信息已导出: {files['memory_statistics']}")

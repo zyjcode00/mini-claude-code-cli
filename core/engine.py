@@ -71,7 +71,7 @@ class AgentEngine:
         if self.context._enable_memory_layers and user_input:
             try:
                 # 从长期记忆中检索与当前任务相关的摘要（跨所有会话）
-                long_term_memories = self.context.long_term_memory.search(
+                long_term_memories = self.context.memory_manager.search_long_term(
                     query=user_input,
                     top_k=5  # 检索最相关的 5 条长期记忆
                 )
@@ -347,7 +347,7 @@ class AgentEngine:
 
             # 1. 更新情景记忆中的相关摘要
             if self.context._enable_memory_layers:
-                episodic_summaries = self.context.episodic_memory.get_all()
+                episodic_summaries = self.context.memory_manager.episodic_memory.get_all()
                 updated_count = 0
                 for summary in episodic_summaries:
                     # 匹配规则：goal 完全一致，或包含关系
@@ -603,14 +603,13 @@ class AgentEngine:
     def index_session_summaries(self):
         """索引所有会话摘要"""
         try:
-            # 从 context 中获取所有摘要
-            if hasattr(self.context, 'session_summaries'):
-                for session_id, summary in self.context.session_summaries.items():
-                    # 将结构化摘要转换为文本
-                    content = self._summary_to_text(summary)
-                    self.index_content(session_id, content)
+            summaries = getattr(self.context, 'session_summaries', [])
+            for summary in summaries:
+                doc_id = getattr(summary, "session_id", None) or str(len(self.bm25_retriever))
+                content = self._summary_to_text(summary)
+                self.index_content(doc_id, content)
 
-                print(f" [🔍] 已索引 {len(self.context.session_summaries)} 个会话摘要")
+            print(f" [🔍] 已索引 {len(summaries)} 个会话摘要")
         except Exception as e:
             print(f" [⚠️] 索引会话摘要失败: {e}")
 
