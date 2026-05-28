@@ -7,13 +7,15 @@ from .pytest_tool import PytestTool
 from .search_tool import SearchTool
 from .symbol_tool import ListSymbolsTool, FindSymbolTool
 from .git_tool import GitStatusTool, GitCommitTool, GitRollbackTool
-from .memory_tool import MemorySaveTool, MemoryRecallTool
+from .memory_tool import MemorySaveTool, MemoryRecallTool, MemoryFileHistoryTool, MemoryErrorHistoryTool
 
 def get_default_tools(plan_manager=None, memory_manager=None, memory_storage_dir="memory/long_term"):
     shared_memory_manager = memory_manager
     memory_save_tool = MemorySaveTool(memory_manager=shared_memory_manager, long_term_storage_dir=memory_storage_dir)
     shared_memory_manager = memory_save_tool.memory_manager
     memory_recall_tool = MemoryRecallTool(memory_manager=shared_memory_manager)
+    memory_file_history_tool = MemoryFileHistoryTool(memory_manager=shared_memory_manager)
+    memory_error_history_tool = MemoryErrorHistoryTool(memory_manager=shared_memory_manager)
 
     tools = [
         BashTool(),
@@ -32,7 +34,9 @@ def get_default_tools(plan_manager=None, memory_manager=None, memory_storage_dir
         GitRollbackTool(),
         # 长期记忆工具
         memory_save_tool,
-        memory_recall_tool
+        memory_recall_tool,
+        memory_file_history_tool,
+        memory_error_history_tool
     ]
 
     # 如果提供了管家，就加载规划工具

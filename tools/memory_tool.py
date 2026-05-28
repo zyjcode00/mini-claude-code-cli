@@ -1,4 +1,4 @@
-"""长期记忆工具：memory_save / memory_recall。"""
+"""长期记忆工具：memory_save / memory_recall / memory_file_history / memory_error_history。"""
 
 from __future__ import annotations
 
@@ -6,7 +6,7 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, Field
 
-from core.memory_items import MemoryItem, MemoryKind
+from core.memory_items import MemoryItem, MemoryKind, MemoryRecallResult
 from core.memory_manager import MemoryManager
 from tools.base import BaseTool
 
@@ -27,6 +27,16 @@ class MemoryRecallArgs(BaseModel):
     query: str = Field(..., description="召回查询文本")
     top_k: int = Field(default=5, description="最多返回几条记忆")
     include_summaries: bool = Field(default=True, description="是否包含旧 SessionSummary 兼容召回")
+
+
+class MemoryFileHistoryArgs(BaseModel):
+    path: str = Field(..., description="要查询历史的文件路径")
+    top_k: int = Field(default=5, description="最多返回几条文件历史")
+
+
+class MemoryErrorHistoryArgs(BaseModel):
+    error: str = Field(..., description="错误类型、错误消息或 traceback 片段")
+    top_k: int = Field(default=5, description="最多返回几条错误历史")
 
 
 class MemorySaveTool(BaseTool):
@@ -103,9 +113,34 @@ class MemorySaveTool(BaseTool):
             return f"❌ 保存长期记忆失败: {e}"
 
 
+class _MemoryResultFormatter:
+    @staticmethod
+    def format_results(header: str, empty_message: str, results: List[MemoryRecallResult]) -> str:
+        if not results:
+            return empty_message
+
+        lines = [f"{header} {len(results)} 条："]
+        if header == "🧠 召回":
+            lines = [f"{header} {len(results)} 条长期记忆："]
+        for index, result in enumerate(results, 1):
+            item = result.item
+            files = ", ".join(item.files) if item.files else "无"
+            concepts = ", ".join(item.concepts) if item.concepts else "无"
+            content = item.content[:500] + "..." if len(item.content) > 500 else item.content
+            lines.extend([
+                f"\n{index}. [{item.kind}] {item.title}",
+                f"   ID: {item.id}",
+                f"   相关度: {result.score:.3f} | 来源: {result.source} | 原因: {result.reason}",
+                f"   内容: {content}",
+                f"   文件: {files}",
+                f"   概念: {concepts}",
+            ])
+        return "\n".join(lines)
+
+
 class MemoryRecallTool(BaseTool):
     name = "memory_recall"
-    description = "从长期记忆中召回与查询相关的 MemoryItem，返回标题、内容、文件、概念和来源。"
+    description = "从长期记忆中 Hybrid Recall 与查询相关的 MemoryItem/SessionSummary。"
     args_schema = MemoryRecallArgs
 
     def __init__(self, memory_manager: Optional[MemoryManager] = None, long_term_storage_dir: str = "memory/long_term"):
@@ -114,26 +149,62 @@ class MemoryRecallTool(BaseTool):
     def run(self, query: str, top_k: int = 5, include_summaries: bool = True, **kwargs) -> str:
         try:
             results = self.memory_manager.recall(query=query, top_k=top_k, include_summaries=include_summaries)
-            if not results:
-                return f"未找到与 '{query}' 相关的长期记忆"
-
-            lines = [f"🧠 召回 {len(results)} 条长期记忆："]
-            for index, result in enumerate(results, 1):
-                item = result.item
-                files = ", ".join(item.files) if item.files else "无"
-                concepts = ", ".join(item.concepts) if item.concepts else "无"
-                content = item.content[:500] + "..." if len(item.content) > 500 else item.content
-                lines.extend([
-                    f"\n{index}. [{item.kind}] {item.title}",
-                    f"   ID: {item.id}",
-                    f"   相关度: {result.score:.3f} | 来源: {result.source} | 原因: {result.reason}",
-                    f"   内容: {content}",
-                    f"   文件: {files}",
-                    f"   概念: {concepts}",
-                ])
-            return "\n".join(lines)
+            return _MemoryResultFormatter.format_results(
+                "🧠 召回",
+                f"未找到与 '{query}' 相关的长期记忆",
+                results,
+            )
         except Exception as e:
             return f"❌ 召回长期记忆失败: {e}"
 
 
-__all__ = ["MemorySaveTool", "MemoryRecallTool", "MemorySaveArgs", "MemoryRecallArgs"]
+class MemoryFileHistoryTool(BaseTool):
+    name = "memory_file_history"
+    description = "修改文件前查询该文件相关的长期历史、Bug、决策和会话摘要。"
+    args_schema = MemoryFileHistoryArgs
+
+    def __init__(self, memory_manager: Optional[MemoryManager] = None, long_term_storage_dir: str = "memory/long_term"):
+        self.memory_manager = memory_manager or MemoryManager(long_term_storage_dir=long_term_storage_dir)
+
+    def run(self, path: str, top_k: int = 5, **kwargs) -> str:
+        try:
+            results = self.memory_manager.retrieve_file_history(path=path, top_k=top_k)
+            return _MemoryResultFormatter.format_results(
+                f"📁 文件历史 {path} 命中",
+                f"未找到文件 '{path}' 的历史记忆",
+                results,
+            )
+        except Exception as e:
+            return f"❌ 查询文件历史失败: {e}"
+
+
+class MemoryErrorHistoryTool(BaseTool):
+    name = "memory_error_history"
+    description = "根据错误类型、错误消息或 traceback 片段查询历史修复经验。"
+    args_schema = MemoryErrorHistoryArgs
+
+    def __init__(self, memory_manager: Optional[MemoryManager] = None, long_term_storage_dir: str = "memory/long_term"):
+        self.memory_manager = memory_manager or MemoryManager(long_term_storage_dir=long_term_storage_dir)
+
+    def run(self, error: str, top_k: int = 5, **kwargs) -> str:
+        try:
+            results = self.memory_manager.retrieve_error_history(error=error, top_k=top_k)
+            return _MemoryResultFormatter.format_results(
+                f"🐞 错误历史 {error} 命中",
+                f"未找到错误 '{error}' 的历史记忆",
+                results,
+            )
+        except Exception as e:
+            return f"❌ 查询错误历史失败: {e}"
+
+
+__all__ = [
+    "MemorySaveTool",
+    "MemoryRecallTool",
+    "MemoryFileHistoryTool",
+    "MemoryErrorHistoryTool",
+    "MemorySaveArgs",
+    "MemoryRecallArgs",
+    "MemoryFileHistoryArgs",
+    "MemoryErrorHistoryArgs",
+]

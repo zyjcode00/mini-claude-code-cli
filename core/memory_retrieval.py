@@ -4,9 +4,117 @@
 实现多层级检索功能，支持从三层记忆中快速定位相关信息。
 """
 
+from dataclasses import dataclass, field
+from datetime import datetime
 from typing import List, Dict, Any, Optional, Tuple
 from .memory_models import SessionSummary
 from .memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory
+from .memory_items import MemoryItem, MemoryKind, MemoryRecallResult
+
+
+@dataclass
+class MemoryDocument:
+    """统一检索文档：把 MemoryItem / SessionSummary 映射到同一排序空间。"""
+
+    id: str
+    source_type: str
+    content: str
+    project: str = ""
+    session_id: Optional[str] = None
+    files: List[str] = field(default_factory=list)
+    concepts: List[str] = field(default_factory=list)
+    timestamp: str = ""
+    importance: float = 0.5
+    kind: str = MemoryKind.OTHER.value
+    item: Optional[MemoryItem] = None
+    summary: Optional[SessionSummary] = None
+    error_types: List[str] = field(default_factory=list)
+
+    @classmethod
+    def from_memory_item(cls, item: MemoryItem, source_type: str = "long_term_items") -> "MemoryDocument":
+        raw_observation = item.metadata.get("raw_observation", {}) if item.metadata else {}
+        error_types = []
+        if item.kind == MemoryKind.BUG.value:
+            error_types.extend(item.concepts)
+        if isinstance(raw_observation, dict):
+            error = raw_observation.get("error") or raw_observation.get("tool_output") or ""
+            error_types.extend(_extract_error_types(error))
+
+        return cls(
+            id=item.id,
+            source_type=source_type,
+            content=item.searchable_text(),
+            project=item.project,
+            session_id=item.source_session_ids[0] if item.source_session_ids else None,
+            files=list(item.files),
+            concepts=list(item.concepts),
+            timestamp=item.updated_at or item.created_at,
+            importance=item.importance,
+            kind=item.kind,
+            item=item,
+            error_types=list(dict.fromkeys(error_types)),
+        )
+
+    @classmethod
+    def from_session_summary(cls, summary: SessionSummary, source_type: str = "session_summary") -> "MemoryDocument":
+        error_types = [error.error_type for error in summary.errors_encountered]
+        content_parts = [
+            summary.task_goal,
+            summary.summary_text,
+            " ".join(summary.key_decisions),
+            " ".join(fc.summary for fc in summary.files_changed),
+            " ".join(f"{er.error_type} {er.error_message} {er.solution or ''}" for er in summary.errors_encountered),
+            " ".join(tu.tool_name for tu in summary.tools_used),
+        ]
+        return cls(
+            id=f"summary_{summary.session_id}",
+            source_type=source_type,
+            content="\n".join(part for part in content_parts if part),
+            session_id=summary.session_id,
+            files=summary.get_file_paths(),
+            concepts=summary.get_keywords(),
+            timestamp=summary.timestamp,
+            importance=summary.importance,
+            kind=MemoryKind.SUMMARY.value,
+            summary=summary,
+            error_types=error_types,
+        )
+
+    def to_memory_item(self) -> MemoryItem:
+        if self.item:
+            return self.item
+        if self.summary:
+            return MemoryItem(
+                id=self.id,
+                kind=MemoryKind.SUMMARY.value,
+                title=self.summary.task_goal,
+                content=self.summary.summary_text,
+                created_at=self.summary.timestamp,
+                updated_at=self.summary.timestamp,
+                concepts=self.summary.get_keywords(),
+                files=self.summary.get_file_paths(),
+                source_session_ids=[self.summary.session_id],
+                importance=self.summary.importance,
+                confidence=0.7,
+                metadata={"session_summary": self.summary.to_dict()},
+            )
+        return MemoryItem(
+            id=self.id,
+            kind=self.kind,
+            title=self.id,
+            content=self.content,
+            project=self.project,
+            concepts=self.concepts,
+            files=self.files,
+            source_session_ids=[self.session_id] if self.session_id else [],
+            importance=self.importance,
+            confidence=0.7,
+        )
+
+
+def _extract_error_types(text: str) -> List[str]:
+    import re
+    return list(dict.fromkeys(re.findall(r"\b[A-Z][A-Za-z0-9_]*(?:Error|Exception)\b", text or "")))
 
 
 class MemoryRetriever:
@@ -276,6 +384,148 @@ class MemoryRetriever:
         chinese = list(set(chinese_2char + chinese_3char))
 
         return words + chinese
+
+    def hybrid_recall(
+        self,
+        query: str = "",
+        top_k: int = 5,
+        file_path: Optional[str] = None,
+        error_type: Optional[str] = None,
+        kinds: Optional[List[str]] = None,
+        include_summaries: bool = True,
+        include_items: bool = True,
+    ) -> List[MemoryRecallResult]:
+        """统一 Hybrid Recall：整合 MemoryItem、Episodic SessionSummary 与长期 SessionSummary。"""
+        documents = self._build_documents(include_summaries=include_summaries, include_items=include_items)
+        query_terms = self._tokenize(" ".join(part for part in [query, file_path or "", error_type or ""] if part))
+        ranked: List[Tuple[MemoryDocument, float, List[str]]] = []
+
+        normalized_file = self._normalize_path(file_path) if file_path else ""
+        normalized_error = (error_type or "").lower()
+        allowed_kinds = {kind.lower() for kind in kinds} if kinds else None
+
+        for doc in documents:
+            if allowed_kinds and doc.kind.lower() not in allowed_kinds:
+                continue
+
+            file_match = self._file_match_score(doc, normalized_file) if normalized_file else 0.0
+            error_match = self._error_match_score(doc, normalized_error) if normalized_error else 0.0
+            if normalized_file and file_match <= 0:
+                continue
+            if normalized_error and error_match <= 0 and doc.kind != MemoryKind.BUG.value:
+                continue
+
+            bm25_score = self._calculate_text_bm25_score(query_terms, doc.content) if query_terms else 0.0
+            importance_weight = max(0.0, min(doc.importance, 1.0)) * 0.35
+            recency_weight = self._recency_weight(doc.timestamp)
+            type_weight = self._type_weight(doc.kind, query)
+            score = bm25_score + importance_weight + recency_weight + file_match + error_match + type_weight
+
+            reasons = []
+            if bm25_score:
+                reasons.append(f"匹配关键词/文本相关 {bm25_score:.2f}")
+            if importance_weight:
+                reasons.append(f"重要性 {importance_weight:.2f}")
+            if recency_weight:
+                reasons.append(f"时间 {recency_weight:.2f}")
+            if file_match:
+                reasons.append(f"文件匹配 {file_match:.2f}")
+            if error_match:
+                reasons.append(f"错误匹配 {error_match:.2f}")
+            if type_weight:
+                reasons.append(f"类型匹配 {type_weight:.2f}")
+
+            if score > 0 or not query_terms:
+                ranked.append((doc, score, reasons or ["默认召回"]))
+
+        ranked.sort(key=lambda item: item[1], reverse=True)
+        results: List[MemoryRecallResult] = []
+        seen = set()
+        for doc, score, reasons in ranked:
+            if doc.id in seen:
+                continue
+            seen.add(doc.id)
+            results.append(MemoryRecallResult(
+                item=doc.to_memory_item(),
+                score=score,
+                source=doc.source_type,
+                reason="; ".join(reasons),
+            ))
+            if len(results) >= top_k:
+                break
+        return results
+
+    def _build_documents(self, include_summaries: bool = True, include_items: bool = True) -> List[MemoryDocument]:
+        documents: List[MemoryDocument] = []
+        if include_items:
+            documents.extend(MemoryDocument.from_memory_item(item) for item in self.long_term_memory.get_all_items())
+        if include_summaries:
+            documents.extend(MemoryDocument.from_session_summary(summary, source_type="summary_compat") for summary in self.episodic_memory.get_all())
+            for session_id in self.long_term_memory.get_all_session_ids():
+                summary = self.long_term_memory.retrieve(session_id)
+                if summary:
+                    documents.append(MemoryDocument.from_session_summary(summary, source_type="summary_compat"))
+        return documents
+
+    def _calculate_text_bm25_score(self, query_terms: List[str], text: str) -> float:
+        doc_terms = self._tokenize(text)
+        if not query_terms or not doc_terms:
+            return 0.0
+        term_freq: Dict[str, int] = {}
+        for term in doc_terms:
+            term_freq[term] = term_freq.get(term, 0) + 1
+        score = 0.0
+        for term in query_terms:
+            if term in term_freq:
+                tf = term_freq[term]
+                score += (tf * 2.5) / (tf + 1.5)
+        return score
+
+    def _file_match_score(self, doc: MemoryDocument, normalized_file: str) -> float:
+        for candidate in doc.files:
+            normalized_candidate = self._normalize_path(candidate)
+            if normalized_candidate == normalized_file:
+                return 1.2
+            if normalized_file in normalized_candidate or normalized_candidate in normalized_file:
+                return 0.75
+            if normalized_candidate.split("/")[-1] == normalized_file.split("/")[-1]:
+                return 0.45
+        return 0.0
+
+    def _error_match_score(self, doc: MemoryDocument, normalized_error: str) -> float:
+        haystack = " ".join(doc.error_types + doc.concepts + [doc.content]).lower()
+        if not normalized_error:
+            return 0.0
+        if normalized_error in haystack:
+            return 1.1
+        tokens = self._tokenize(normalized_error)
+        if tokens and any(token in haystack for token in tokens):
+            return 0.55
+        return 0.0
+
+    def _recency_weight(self, timestamp: str) -> float:
+        if not timestamp:
+            return 0.0
+        try:
+            ts = datetime.fromisoformat(timestamp)
+        except Exception:
+            return 0.0
+        age_days = max((datetime.now() - ts).days, 0)
+        return max(0.0, 0.2 - min(age_days, 30) * 0.005)
+
+    def _type_weight(self, kind: str, query: str) -> float:
+        q = (query or "").lower()
+        if kind == MemoryKind.BUG.value and any(word in q for word in ["error", "exception", "失败", "错误", "bug"]):
+            return 0.35
+        if kind == MemoryKind.ARCHITECTURE.value and any(word in q for word in ["架构", "architecture", "设计"]):
+            return 0.3
+        if kind == MemoryKind.WORKFLOW.value and any(word in q for word in ["流程", "workflow", "pytest", "测试"]):
+            return 0.25
+        return 0.0
+
+    @staticmethod
+    def _normalize_path(path: Optional[str]) -> str:
+        return (path or "").replace("\\", "/").lower().strip()
 
     def retrieve_by_file_path(
         self,

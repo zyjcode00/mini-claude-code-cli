@@ -140,29 +140,48 @@ class MemoryManager:
         """
         统一召回长期记忆。
 
-        优先召回 MemoryItem；include_summaries=True 时会把旧 SessionSummary 包装为
-        kind=summary 的 MemoryItem，以保持阶段 1 的长期摘要兼容。
+        阶段4 起默认委托 MemoryRetriever.hybrid_recall，统一整合 MemoryItem 与
+        SessionSummary，并使用 BM25/关键词/元数据加权排序。
         """
         if not self.enabled:
             return []
 
-        results = self.long_term_memory.search_items(query=query, top_k=top_k)
+        return self.hybrid_recall(query=query, top_k=top_k, include_summaries=include_summaries)
 
-        if include_summaries and len(results) < top_k:
-            summary_results = self.search(query=query, top_k=top_k)
-            for summary in summary_results:
-                pseudo_item = self._summary_to_memory_item(summary)
-                if any(existing.item.id == pseudo_item.id for existing in results):
-                    continue
-                results.append(MemoryRecallResult(
-                    item=pseudo_item,
-                    score=summary.importance,
-                    source="summary_compat",
-                    reason="兼容 SessionSummary 召回",
-                ))
+    def hybrid_recall(
+        self,
+        query: str = "",
+        top_k: int = 5,
+        file_path: Optional[str] = None,
+        error_type: Optional[str] = None,
+        kinds: Optional[List[str]] = None,
+        include_summaries: bool = True,
+        include_items: bool = True,
+    ) -> List[MemoryRecallResult]:
+        """统一 Hybrid Recall 入口，返回标准 MemoryRecallResult。"""
+        if not self.enabled:
+            return []
+        return self.retriever.hybrid_recall(
+            query=query,
+            top_k=top_k,
+            file_path=file_path,
+            error_type=error_type,
+            kinds=kinds,
+            include_summaries=include_summaries,
+            include_items=include_items,
+        )
 
-        results.sort(key=lambda result: result.score, reverse=True)
-        return results[:top_k]
+    def retrieve_file_history(self, path: str, top_k: int = 5) -> List[MemoryRecallResult]:
+        """按文件路径召回 MemoryItem 与 SessionSummary 历史。"""
+        if not self.enabled:
+            return []
+        return self.hybrid_recall(query=path, top_k=top_k, file_path=path)
+
+    def retrieve_error_history(self, error: str, top_k: int = 5) -> List[MemoryRecallResult]:
+        """按错误类型/错误文本召回历史 Bug、测试失败与相关摘要。"""
+        if not self.enabled:
+            return []
+        return self.hybrid_recall(query=error, top_k=top_k, error_type=error)
 
     def _summary_to_memory_item(self, summary: SessionSummary) -> MemoryItem:
         """把旧 SessionSummary 包装为 MemoryItem 召回结果。"""
