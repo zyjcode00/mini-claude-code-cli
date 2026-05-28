@@ -20,6 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from core.compression_engine import CompressionEngine, CompressionStrategy, CompressionResult
 from core.memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory
+from core.memory_items import MemoryItem, MemoryKind, MemoryRecallResult, RawObservation
 from core.memory_models import SessionSummary
 from core.memory_retrieval import MemoryRetriever
 
@@ -87,6 +88,98 @@ class MemoryManager:
         if evicted_summary:
             self.long_term_memory.store(evicted_summary)
         return evicted_summary
+
+    def save_memory_item(self, item: MemoryItem) -> str:
+        """保存标准 MemoryItem 到长期记忆。"""
+        if not self.enabled:
+            return ""
+        return self.long_term_memory.store_item(item)
+
+    def save_observation(
+        self,
+        observation: RawObservation,
+        promote: bool = False,
+        kind: str = MemoryKind.FACT.value,
+        title: Optional[str] = None,
+        importance: float = 0.5,
+        confidence: float = 0.8,
+    ) -> Optional[MemoryItem]:
+        """
+        记录 RawObservation，并可选择立即提升为 MemoryItem。
+
+        第一版暂不单独落盘 Observation Store，而是把 observation 作为来源元数据写入
+        MemoryItem，保证写入管线和来源追溯先打通。
+        """
+        if not self.enabled or not promote:
+            return None
+
+        content = (
+            observation.user_prompt
+            or observation.assistant_message
+            or observation.tool_output
+            or observation.error
+            or ""
+        )
+        item = MemoryItem(
+            kind=kind,
+            title=title or f"{observation.event_type}: {observation.tool_name or observation.session_id or observation.id}",
+            content=content,
+            project=observation.project,
+            concepts=[observation.event_type, observation.tool_name] if observation.tool_name else [observation.event_type],
+            files=observation.files,
+            source_observation_ids=[observation.id],
+            source_session_ids=[observation.session_id] if observation.session_id else [],
+            importance=importance,
+            confidence=confidence,
+            metadata={"raw_observation": observation.to_dict()},
+        )
+        self.save_memory_item(item)
+        return item
+
+    def recall(self, query: str, top_k: int = 5, include_summaries: bool = True) -> List[MemoryRecallResult]:
+        """
+        统一召回长期记忆。
+
+        优先召回 MemoryItem；include_summaries=True 时会把旧 SessionSummary 包装为
+        kind=summary 的 MemoryItem，以保持阶段 1 的长期摘要兼容。
+        """
+        if not self.enabled:
+            return []
+
+        results = self.long_term_memory.search_items(query=query, top_k=top_k)
+
+        if include_summaries and len(results) < top_k:
+            summary_results = self.search(query=query, top_k=top_k)
+            for summary in summary_results:
+                pseudo_item = self._summary_to_memory_item(summary)
+                if any(existing.item.id == pseudo_item.id for existing in results):
+                    continue
+                results.append(MemoryRecallResult(
+                    item=pseudo_item,
+                    score=summary.importance,
+                    source="summary_compat",
+                    reason="兼容 SessionSummary 召回",
+                ))
+
+        results.sort(key=lambda result: result.score, reverse=True)
+        return results[:top_k]
+
+    def _summary_to_memory_item(self, summary: SessionSummary) -> MemoryItem:
+        """把旧 SessionSummary 包装为 MemoryItem 召回结果。"""
+        return MemoryItem(
+            id=f"summary_{summary.session_id}",
+            kind=MemoryKind.SUMMARY.value,
+            title=summary.task_goal,
+            content=summary.summary_text,
+            created_at=summary.timestamp,
+            updated_at=summary.timestamp,
+            concepts=summary.get_keywords(),
+            files=summary.get_file_paths(),
+            source_session_ids=[summary.session_id],
+            importance=summary.importance,
+            confidence=0.7,
+            metadata={"session_summary": summary.to_dict()},
+        )
 
     async def compress_messages(
         self,
@@ -171,7 +264,12 @@ class MemoryManager:
                 "enabled": False,
                 "working_memory": {"size": 0, "max_size": self.working_memory.max_size, "usage_rate": 0},
                 "episodic_memory": {"size": 0, "max_size": self.episodic_memory.max_size, "usage_rate": 0},
-                "long_term_memory": {"count": 0, "storage_dir": str(self.long_term_memory.storage_dir)},
+                "long_term_memory": {
+                    "count": 0,
+                    "summary_count": 0,
+                    "item_count": 0,
+                    "storage_dir": str(self.long_term_memory.storage_dir),
+                },
             }
 
         working_max = max(self.working_memory.max_size, 1)
@@ -190,6 +288,8 @@ class MemoryManager:
             },
             "long_term_memory": {
                 "count": len(self.long_term_memory),
+                "summary_count": len(self.long_term_memory.index),
+                "item_count": len(self.long_term_memory.item_index),
                 "storage_dir": str(self.long_term_memory.storage_dir),
             },
         }
@@ -201,6 +301,7 @@ class MemoryManager:
             return {
                 "working_memory": [],
                 "episodic_memory": [],
+                "memory_items": [],
                 "session_summaries": [s.to_dict() for s in session_summaries],
                 "history_summary": history_summary,
             }
@@ -208,6 +309,7 @@ class MemoryManager:
         return {
             "working_memory": self.working_memory.get_all(),
             "episodic_memory": [s.to_dict() for s in self.episodic_memory.get_all()],
+            "memory_items": [item.to_dict() for item in self.long_term_memory.get_all_items()],
             "session_summaries": [s.to_dict() for s in session_summaries],
             "history_summary": history_summary,
         }
@@ -237,6 +339,12 @@ class MemoryManager:
                 except Exception as e:
                     print(f"⚠️ 恢复情景记忆失败: {e}")
 
+            for item_dict in data.get("memory_items", []):
+                try:
+                    self.long_term_memory.store_item(MemoryItem.from_dict(item_dict))
+                except Exception as e:
+                    print(f"⚠️ 恢复 MemoryItem 失败: {e}")
+
         return {
             "history_summary": data.get("history_summary", ""),
             "session_summaries": session_summaries,
@@ -248,16 +356,21 @@ class MemoryManager:
         output_path.mkdir(parents=True, exist_ok=True)
 
         episodic_file = output_path / "episodic_memory.json"
+        memory_items_file = output_path / "memory_items.json"
         stats_file = output_path / "memory_statistics.json"
 
         with open(episodic_file, "w", encoding="utf-8") as f:
             json.dump([s.to_dict() for s in self.episodic_memory.get_all()], f, ensure_ascii=False, indent=2)
+
+        with open(memory_items_file, "w", encoding="utf-8") as f:
+            json.dump([item.to_dict() for item in self.long_term_memory.get_all_items()], f, ensure_ascii=False, indent=2)
 
         with open(stats_file, "w", encoding="utf-8") as f:
             json.dump(self.get_statistics(), f, ensure_ascii=False, indent=2)
 
         return {
             "episodic_memory": str(episodic_file),
+            "memory_items": str(memory_items_file),
             "memory_statistics": str(stats_file),
         }
 

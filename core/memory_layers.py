@@ -11,6 +11,7 @@ from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
 
 from .memory_models import SessionSummary
+from .memory_items import MemoryItem, MemoryKind, MemoryRecallResult, MemoryStatus
 
 
 class WorkingMemory:
@@ -182,8 +183,14 @@ class LongTermMemory:
         # 内存索引：{session_id: file_path}
         self.index: Dict[str, Path] = {}
 
+        # MemoryItem 索引：{memory_item_id: file_path}
+        self.item_index: Dict[str, Path] = {}
+
         # 倒排索引：{keyword: [session_ids]}
         self.inverted_index: Dict[str, List[str]] = {}
+
+        # MemoryItem 倒排索引：{keyword: [memory_item_ids]}
+        self.item_inverted_index: Dict[str, List[str]] = {}
 
         # 初始化时加载索引
         self._load_index()
@@ -196,7 +203,9 @@ class LongTermMemory:
                 with open(index_file, 'r', encoding='utf-8') as f:
                     data = json.load(f)
                     self.index = {k: Path(v) for k, v in data.get("index", {}).items()}
+                    self.item_index = {k: Path(v) for k, v in data.get("item_index", {}).items()}
                     self.inverted_index = data.get("inverted_index", {})
+                    self.item_inverted_index = data.get("item_inverted_index", {})
             except Exception as e:
                 # 如果加载失败，重建索引
                 print(f"⚠️ 加载索引失败，将重建索引: {e}")
@@ -209,7 +218,9 @@ class LongTermMemory:
             with open(index_file, 'w', encoding='utf-8') as f:
                 json.dump({
                     "index": {k: str(v) for k, v in self.index.items()},
-                    "inverted_index": self.inverted_index
+                    "item_index": {k: str(v) for k, v in self.item_index.items()},
+                    "inverted_index": self.inverted_index,
+                    "item_inverted_index": self.item_inverted_index
                 }, f, ensure_ascii=False, indent=2)
         except Exception as e:
             print(f"⚠️ 保存索引失败: {e}")
@@ -217,7 +228,9 @@ class LongTermMemory:
     def _rebuild_index(self):
         """重建索引"""
         self.index.clear()
+        self.item_index.clear()
         self.inverted_index.clear()
+        self.item_inverted_index.clear()
 
         # 遍历所有摘要文件
         for summary_file in self.storage_dir.glob("summary_*.json"):
@@ -237,6 +250,24 @@ class LongTermMemory:
                                 self.inverted_index[keyword].append(session_id)
             except Exception as e:
                 print(f"⚠️ 重建索引时跳过文件 {summary_file}: {e}")
+
+        # 遍历所有 MemoryItem 文件
+        for item_file in self.storage_dir.glob("memory_item_*.json"):
+            try:
+                with open(item_file, 'r', encoding='utf-8') as f:
+                    data = json.load(f)
+                    item_id = data.get("id")
+                    if item_id:
+                        self.item_index[item_id] = item_file
+
+                        keywords = self._extract_item_keywords(data)
+                        for keyword in keywords:
+                            if keyword not in self.item_inverted_index:
+                                self.item_inverted_index[keyword] = []
+                            if item_id not in self.item_inverted_index[keyword]:
+                                self.item_inverted_index[keyword].append(item_id)
+            except Exception as e:
+                print(f"⚠️ 重建 MemoryItem 索引时跳过文件 {item_file}: {e}")
 
         # 保存索引
         self._save_index()
@@ -261,6 +292,24 @@ class LongTermMemory:
             # FileChange 当前规范字段是 path；兼容旧数据中可能存在的 file_path
             file_path = fc.get("path") or fc.get("file_path", "")
             keywords.extend(self._tokenize(file_path))
+
+        return list(set(keywords))
+
+    def _extract_item_keywords(self, data: Dict[str, Any]) -> List[str]:
+        """从 MemoryItem 数据中提取关键词。"""
+        keywords = []
+
+        for field_name in ("kind", "type", "title", "content", "project", "status"):
+            keywords.extend(self._tokenize(str(data.get(field_name, ""))))
+
+        for concept in data.get("concepts", []):
+            keywords.extend(self._tokenize(str(concept)))
+
+        for file_path in data.get("files", []):
+            keywords.extend(self._tokenize(str(file_path)))
+
+        for session_id in data.get("source_session_ids", []):
+            keywords.extend(self._tokenize(str(session_id)))
 
         return list(set(keywords))
 
@@ -323,6 +372,111 @@ class LongTermMemory:
         except Exception as e:
             print(f"⚠️ 存储摘要失败: {e}")
             return ""
+
+    def store_item(self, item: MemoryItem) -> str:
+        """
+        存储 MemoryItem 到长期记忆。
+
+        Args:
+            item: 长期知识条目
+
+        Returns:
+            存储的文件路径
+        """
+        timestamp = item.updated_at.replace(":", "-").replace(" ", "_")
+        filename = f"memory_item_{item.id}_{timestamp}.json"
+        file_path = self.storage_dir / filename
+
+        try:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                json.dump(item.to_dict(), f, ensure_ascii=False, indent=2)
+
+            old_file = self.item_index.get(item.id)
+            if old_file and old_file != file_path and old_file.exists():
+                old_file.unlink()
+
+            self.item_index[item.id] = file_path
+            self._remove_id_from_inverted_index(self.item_inverted_index, item.id)
+
+            keywords = self._extract_item_keywords(item.to_dict())
+            for keyword in keywords:
+                if keyword not in self.item_inverted_index:
+                    self.item_inverted_index[keyword] = []
+                if item.id not in self.item_inverted_index[keyword]:
+                    self.item_inverted_index[keyword].append(item.id)
+
+            self._save_index()
+            return str(file_path)
+        except Exception as e:
+            print(f"⚠️ 存储 MemoryItem 失败: {e}")
+            return ""
+
+    def retrieve_item(self, item_id: str) -> Optional[MemoryItem]:
+        """根据 item_id 检索 MemoryItem。"""
+        file_path = self.item_index.get(item_id)
+        if not file_path or not file_path.exists():
+            return None
+
+        try:
+            with open(file_path, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return MemoryItem.from_dict(data)
+        except Exception as e:
+            print(f"⚠️ 读取 MemoryItem 失败: {e}")
+            return None
+
+    def search_items(self, query: str, top_k: int = 10, include_archived: bool = False) -> List[MemoryRecallResult]:
+        """关键词检索 MemoryItem，返回统一召回结果。"""
+        query_keywords = self._tokenize(query)
+        if not query_keywords:
+            return []
+
+        scores: Dict[str, float] = {}
+        matched_terms: Dict[str, List[str]] = {}
+        for keyword in query_keywords:
+            for item_id in self.item_inverted_index.get(keyword, []):
+                scores[item_id] = scores.get(item_id, 0.0) + 1.0
+                matched_terms.setdefault(item_id, []).append(keyword)
+
+        results: List[MemoryRecallResult] = []
+        for item_id, keyword_score in scores.items():
+            item = self.retrieve_item(item_id)
+            if not item:
+                continue
+            if not include_archived and item.status != MemoryStatus.ACTIVE.value:
+                continue
+
+            normalized_score = keyword_score + item.importance + item.confidence * 0.5
+            reason = "匹配关键词: " + ", ".join(sorted(set(matched_terms.get(item_id, []))))
+            results.append(MemoryRecallResult(
+                item=item,
+                score=normalized_score,
+                source="long_term_items",
+                reason=reason,
+            ))
+
+        results.sort(key=lambda result: result.score, reverse=True)
+        return results[:top_k]
+
+    def get_all_items(self) -> List[MemoryItem]:
+        """获取所有 MemoryItem。"""
+        items = []
+        for item_id in list(self.item_index.keys()):
+            item = self.retrieve_item(item_id)
+            if item:
+                items.append(item)
+        items.sort(key=lambda item: item.updated_at, reverse=True)
+        return items
+
+    def _remove_id_from_inverted_index(self, inverted_index: Dict[str, List[str]], record_id: str) -> None:
+        """从倒排索引中移除某个记录 ID，用于更新同 ID 文件。"""
+        empty_keywords = []
+        for keyword, record_ids in inverted_index.items():
+            inverted_index[keyword] = [existing_id for existing_id in record_ids if existing_id != record_id]
+            if not inverted_index[keyword]:
+                empty_keywords.append(keyword)
+        for keyword in empty_keywords:
+            inverted_index.pop(keyword, None)
 
     def retrieve(self, session_id: str) -> Optional[SessionSummary]:
         """
@@ -395,15 +549,22 @@ class LongTermMemory:
             if file_path.exists():
                 file_path.unlink()
 
+        # 删除所有 MemoryItem 文件
+        for file_path in self.item_index.values():
+            if file_path.exists():
+                file_path.unlink()
+
         # 清空索引
         self.index.clear()
+        self.item_index.clear()
         self.inverted_index.clear()
+        self.item_inverted_index.clear()
 
         # 保存空索引
         self._save_index()
 
     def __len__(self) -> int:
-        return len(self.index)
+        return len(self.index) + len(self.item_index)
 
     def __repr__(self) -> str:
-        return f"LongTermMemory(count={len(self.index)}, dir={self.storage_dir})"
+        return f"LongTermMemory(summaries={len(self.index)}, items={len(self.item_index)}, dir={self.storage_dir})"
