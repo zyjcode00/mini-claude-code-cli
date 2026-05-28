@@ -1,6 +1,9 @@
 """阶段5：Prompt 注入、Token Budget、自动历史召回与统计工具测试。"""
 
+import asyncio
 import tempfile
+
+import pytest
 
 from core.memory_context_builder import MemoryContextBuilder
 from core.memory_items import MemoryItem, MemoryKind
@@ -13,6 +16,9 @@ from core.engine import AgentEngine
 class _FakePlanManager:
     current_goal = ""
 
+    def __init__(self, plan_id=None):
+        self.plan_id = plan_id
+
     def get_formatted_plan(self):
         return ""
 
@@ -20,7 +26,7 @@ class _FakePlanManager:
         return []
 
     def get_plan_id(self):
-        return None
+        return self.plan_id
 
     def is_plan_complete(self):
         return False
@@ -122,3 +128,40 @@ def test_agent_engine_builds_file_and_error_history_context(tmp_path):
     assert "编辑 engine.py 前注意" in file_context
     assert "自动错误历史召回" in error_context
     assert "AssertionError 历史" in error_context
+
+
+def test_agent_engine_initializes_current_plan_branch_and_starts_plan_branch(tmp_path, monkeypatch):
+    monkeypatch.chdir(tmp_path)
+    engine = AgentEngine(
+        tools=[_DummyTool()],
+        model="fake-model",
+        plan_manager=_FakePlanManager(plan_id="abc123"),
+        base_url="http://example.invalid",
+        api_key="x",
+        session_id="plan_branch_regression",
+    )
+
+    assert hasattr(engine, "current_plan_branch")
+    assert engine.current_plan_branch is None
+
+    calls = []
+
+    def fake_start_plan_branch(plan_id):
+        calls.append(plan_id)
+        return True, "created"
+
+    async def fake_compress_messages():
+        return None
+
+    async def fake_call_llm(relevant_history="", user_input=""):
+        return [{"type": "text", "text": "done"}], "end_turn"
+
+    monkeypatch.setattr("core.engine.start_plan_branch", fake_start_plan_branch)
+    monkeypatch.setattr(engine, "compress_messages", fake_compress_messages)
+    monkeypatch.setattr(engine, "_call_llm", fake_call_llm)
+
+    result = asyncio.run(engine.execute_query("制定一个 plan"))
+
+    assert result == "done"
+    assert calls == ["abc123"]
+    assert engine.current_plan_branch == "abc123"
