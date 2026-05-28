@@ -76,15 +76,18 @@ mini-claude-code-cli/
 ├── LICENSE                    # MIT 开源许可证
 │
 ├── core/                      # 🧠 核心引擎层
-│   ├── engine.py              # 异步决策中枢：并发 ReAct 循环
+│   ├── engine.py              # 异步决策中枢：并发 ReAct 循环，接入主动记忆召回/保存
 │   ├── context.py             # 上下文管家：压缩与持久化
 │   ├── plan.py                # PlanManager：显式任务规划
 │   ├── prompts.py             # 提示词工厂：动态注入环境/记忆/计划
 │   ├── session_manager.py     # 会话管理器：跨会话状态持久化
 │   ├── compression_engine.py  # 智能压缩引擎：4 种自适应策略
 │   ├── memory_layers.py       # 三层记忆架构管理
-│   ├── memory_models.py       # 记忆数据模型 (Pydantic)
-│   ├── memory_retrieval.py    # 混合检索：BM25 + 语义向量
+│   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型
+│   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation
+│   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建
+│   ├── memory_context_builder.py # 记忆 Prompt 注入与 Token Budget 控制
+│   ├── memory_retrieval.py    # 统一检索层：Hybrid Recall / 文件历史 / 错误历史
 │   ├── keyword_indexer.py     # 关键词提取：jieba + TF-IDF
 │   └── bm25_retriever.py      # BM25 全文检索引擎
 │
@@ -99,9 +102,14 @@ mini-claude-code-cli/
 │   ├── plan_tool.py           # 任务计划管理接口
 │   ├── session_tool.py        # 会话清理
 │   ├── retrieval_tool.py      # 记忆检索工具
+│   └── memory_tool.py         # 长期记忆工具：save/recall/file_history/error_history/stats
 │
 ├── tests/                     # 🧪 测试套件 (40+ 测试文件)
 ├── docs/                      # 📚 设计文档与架构记录
+│   ├── architecture_summary.md
+│   ├── shadow_branch_system.md
+│   ├── memory_system_refactor_roadmap.md
+│   └── new_long_term_memory_system.md
 └── memory/                    # 持久化长期记忆存储 (运行时生成)
 ```
 
@@ -151,7 +159,30 @@ mini-claude-code-cli/
 | hybrid | 混合型任务 | 关键帧 + 语义摘要 |
 | timeline | 时序任务 | 保留时序关键节点 |
 
-### 7. 🪟 工业级环境兼容性
+### 7. 🧠 新长期记忆闭环 (MemoryManager + Hybrid Recall)
+
+在原有三层记忆基础上，项目进一步补充了面向 Code Agent 的长期记忆闭环：
+
+```text
+任务执行 → RawObservation 事件记录 → MemoryItem 结构化长期记忆
+       → Hybrid Recall 混合检索 → MemoryContextBuilder 预算控制注入
+       → 后续任务决策 / 文件编辑 / 错误修复
+```
+
+新增能力包括：
+
+- **统一入口**：`core/memory_manager.py` 负责观察、保存、召回、统计和 Prompt 记忆上下文构建
+- **结构化长期记忆**：`core/memory_items.py` 提供 `MemoryItem` 与 `RawObservation`，不再只依赖会话摘要溢出
+- **主动记忆保存**：任务完成、工具调用、文件修改、测试失败、错误修复等关键事件可沉淀为长期经验
+- **Hybrid Recall**：统一检索 `MemoryItem`、会话摘要和历史观察，并融合关键词、BM25、重要性、时间新鲜度和来源等信号
+- **文件/错误历史召回**：编辑文件前可查询 `memory_file_history`，测试或工具失败后可查询 `memory_error_history`
+- **Prompt 预算控制**：`MemoryContextBuilder` 对召回结果排序、去重、截断，避免长期记忆污染当前上下文
+- **工具化接口**：提供 `memory_save`、`memory_recall`、`memory_file_history`、`memory_error_history`、`memory_stats`
+
+> 详细说明见：[`docs/new_long_term_memory_system.md`](docs/new_long_term_memory_system.md)
+> 重构路线见：[`docs/memory_system_refactor_roadmap.md`](docs/memory_system_refactor_roadmap.md)
+
+### 8. 🪟 工业级环境兼容性
 
 - **编码自愈**：自动识别 Windows CMD 乱码，内置 `chcp 65001` 与 `chardet` 解码
 - **换行符归一化**：`edit_file` 自动处理 CRLF/LF 差异
@@ -178,6 +209,11 @@ mini-claude-code-cli/
 | `mark_task_done` | 标记任务完成 | 实时进度更新 |
 | `clean_old_sessions` | 清理旧会话 | 释放磁盘空间 |
 | `retrieve_memory` | 检索历史记忆 | BM25 + 语义向量混合检索 |
+| `memory_save` | 保存长期记忆 | 手动沉淀用户偏好、架构决策、Bug 经验、工作流 |
+| `memory_recall` | 召回长期记忆 | 基于 Hybrid Recall 查询相关历史经验 |
+| `memory_file_history` | 查询文件历史 | 修改文件前召回相关变更记录和注意事项 |
+| `memory_error_history` | 查询错误历史 | 测试/工具失败后召回相似错误与修复经验 |
+| `memory_stats` | 记忆统计 | 查看工作记忆、情景记忆、长期记忆和 MemoryItem 数量 |
 
 ---
 
@@ -246,6 +282,10 @@ pytest tests/ -v
 # 运行指定模块测试
 pytest tests/test_compression_engine.py -v
 pytest tests/test_memory_layers.py -v
+pytest tests/test_memory_manager.py -v
+pytest tests/test_memory_phase3.py -v
+pytest tests/test_memory_phase4.py -v
+pytest tests/test_memory_phase5.py -v
 ```
 
 **测试覆盖范围**：
@@ -256,6 +296,8 @@ pytest tests/test_memory_layers.py -v
 - ✅ 会话恢复与隔离
 - ✅ 压缩引擎 (4 种策略)
 - ✅ 三层记忆流转与持久化
+- ✅ MemoryManager 统一编排、MemoryItem 长期记忆与主动保存
+- ✅ Hybrid Recall、文件历史召回、错误历史召回与 Prompt 预算控制
 - ✅ BM25 检索器与记忆召回
 - ✅ Plan 状态管理与中断恢复
 
@@ -274,7 +316,9 @@ pytest tests/test_memory_layers.py -v
 - [x] **AST 符号地图**：全局类/函数索引与精准导航
 - [x] **智能压缩引擎**：4 策略自适应切换
 - [x] **三层记忆架构**：工作记忆 → 情景记忆 → 长期记忆
-- [x] **检索增强**：BM25 + 语义向量混合检索
+- [x] **长期记忆重构 Phase 1-5**：MemoryManager、MemoryItem、主动保存、Hybrid Recall、Prompt 预算注入
+- [x] **记忆工具化接口**：memory_save / memory_recall / memory_file_history / memory_error_history / memory_stats
+- [x] **检索增强**：BM25 + 关键词 + 重要性/新鲜度融合的混合召回
 - [x] **工业级兼容**：Windows 编码自愈与 CRLF/LF 归一化
 
 ### 🚧 计划中
@@ -284,7 +328,7 @@ pytest tests/test_memory_layers.py -v
 - [ ] 多模型切换与负载均衡
 - [ ] 可视化任务看板与执行轨迹
 - [ ] Docker 环境沙箱隔离
-- [ ] 向量检索深度集成
+- [ ] 向量检索深度集成与可选 agentmemory REST/MCP 对接
 
 ---
 
@@ -320,7 +364,7 @@ pytest tests/test_memory_layers.py -v
 2. **确定性自愈闭环** — 测试失败 → 错误分析 → 自动修复 → 重新验证
 3. **状态显式化** — 任务进度、记忆摘要、Git 状态全程可追踪
 4. **容错优先** — 影子分支、原子快照、自动回滚三重保险
-5. **记忆分层化** — 工作记忆 → 情景记忆 → 长期记忆，模拟人类认知
+5. **记忆分层化与可召回** — 工作记忆 → 情景记忆 → 长期记忆，并通过 Hybrid Recall 与 Token Budget 控制服务后续任务
 
 ---
 
