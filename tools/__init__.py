@@ -7,8 +7,14 @@ from .pytest_tool import PytestTool
 from .search_tool import SearchTool
 from .symbol_tool import ListSymbolsTool, FindSymbolTool
 from .git_tool import GitStatusTool, GitCommitTool, GitRollbackTool
+from .memory_tool import MemorySaveTool, MemoryRecallTool
 
-def get_default_tools(plan_manager=None):
+def get_default_tools(plan_manager=None, memory_manager=None, memory_storage_dir="memory/long_term"):
+    shared_memory_manager = memory_manager
+    memory_save_tool = MemorySaveTool(memory_manager=shared_memory_manager, long_term_storage_dir=memory_storage_dir)
+    shared_memory_manager = memory_save_tool.memory_manager
+    memory_recall_tool = MemoryRecallTool(memory_manager=shared_memory_manager)
+
     tools = [
         BashTool(),
         ReadTool(),
@@ -23,12 +29,15 @@ def get_default_tools(plan_manager=None):
         # Git 自动化工具
         GitStatusTool(),
         GitCommitTool(),
-        GitRollbackTool()
+        GitRollbackTool(),
+        # 长期记忆工具
+        memory_save_tool,
+        memory_recall_tool
     ]
-    
+
     # 如果提供了管家，就加载规划工具
     if plan_manager:
         tools.append(UpdatePlanTool(plan_manager))
         tools.append(MarkDoneTool(plan_manager))  # 新增：标记完成工具
-        
+
     return tools

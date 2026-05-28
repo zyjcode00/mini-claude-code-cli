@@ -1,5 +1,7 @@
 import json
 import os
+import re
+from pathlib import Path
 from typing import List, Dict, Any
 import anthropic
 import openai
@@ -7,6 +9,7 @@ import asyncio
 from tools.base import BaseTool
 from core.prompts import get_system_prompt
 from core.context import ContextManager  # <--- 导入新管家
+from core.memory_items import MemoryKind, ObservationType, RawObservation
 
 # Git 自动化保险导入
 from tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes, start_task_branch, finalize_task, start_plan_branch, finalize_plan
@@ -157,9 +160,10 @@ class AgentEngine:
 
     async def execute_query(self, user_input: str):
         self.context.add_message({"role": "user", "content": user_input})
+        self._observe_prompt_submit(user_input)
 
         # ========== 检索增强：自动检索相关历史 ==========
-        relevant_history = ""
+        relevant_history = self._build_relevant_memory_context(user_input)
         if self.retrieval_enabled and len(self.bm25_retriever) > 0:
             try:
                 # 使用 BM25 检索相关历史
@@ -175,7 +179,7 @@ class AgentEngine:
                             preview = content[:200] + "..." if len(content) > 200 else content
                             history_lines.append(f"{i}. (相关度: {score:.2f}) {preview}")
 
-                    relevant_history = "\n".join(history_lines) + "\n"
+                    relevant_history += "\n" + "\n".join(history_lines) + "\n"
                     print(f" [🔍] 检索到 {len(results)} 条相关历史")
             except Exception as e:
                 print(f" [⚠️] 检索失败: {e}")
@@ -214,6 +218,7 @@ class AgentEngine:
 
             if stop_reason != "tool_use":
                 final_ans = "".join([b["text"] for b in content_blocks if b["type"] == "text"])
+                self._remember_task_completion(user_input, final_ans)
                 self.save_session()
                 return final_ans
 
@@ -260,6 +265,7 @@ class AgentEngine:
                 rollback_reason = ""
 
                 for (t_id, t_name, t_input), res in zip(tool_calls_info, results):
+                    self._observe_tool_result(t_name, t_input, res)
                     # ========== Git 自动化保险逻辑 ==========
                     # 1. 检测 edit_file 失败
                     if t_name == "edit_file":
@@ -336,6 +342,144 @@ class AgentEngine:
             self.save_session()
 
         return "任务达到最大思考步数限制。"
+
+    def _build_relevant_memory_context(self, query: str, top_k: int = 5) -> str:
+        """召回与当前输入相关的长期 MemoryItem，并格式化为可注入 prompt 的文本。"""
+        if not query or not getattr(self.context, "_enable_memory_layers", False):
+            return ""
+
+        try:
+            results = self.context.memory_manager.recall(query=query, top_k=top_k, include_summaries=True)
+        except Exception as e:
+            print(f" [⚠️] 主动记忆召回失败: {e}")
+            return ""
+
+        if not results:
+            return ""
+
+        lines = ["\n[相关长期记忆]"]
+        for index, result in enumerate(results, 1):
+            item = result.item
+            files = ", ".join(item.files[:5]) if item.files else "无"
+            concepts = ", ".join(item.concepts[:8]) if item.concepts else "无"
+            content = item.content[:300] + "..." if len(item.content) > 300 else item.content
+            lines.extend([
+                f"{index}. [{item.kind}] {item.title} (相关度: {result.score:.2f}, 来源: {result.source})",
+                f"   内容: {content}",
+                f"   文件: {files}",
+                f"   概念: {concepts}",
+            ])
+
+        print(f" [🧠] 主动召回 {len(results)} 条长期记忆")
+        return "\n".join(lines) + "\n"
+
+    def _observe_prompt_submit(self, user_input: str):
+        """记录用户输入 Observation，并提升为任务型长期记忆。"""
+        observation = RawObservation(
+            session_id=self.session_id,
+            project=Path.cwd().name,
+            cwd=str(Path.cwd()),
+            event_type=ObservationType.PROMPT_SUBMIT.value,
+            user_prompt=user_input,
+            metadata={"source": "AgentEngine.execute_query"},
+        )
+        return self.context.memory_manager.save_observation(
+            observation,
+            promote=True,
+            kind=MemoryKind.TASK.value,
+            title=f"用户任务: {self._shorten(user_input, 80)}",
+            importance=0.55,
+            confidence=0.7,
+        )
+
+    def _observe_tool_result(self, tool_name: str, tool_input: Dict[str, Any], result: Any):
+        """记录工具执行结果 Observation，失败/pytest 结果会沉淀为长期 MemoryItem。"""
+        result_text = str(result)
+        failed = self._is_failure_result(result_text)
+        event_type = ObservationType.TOOL_FAILURE.value if failed else ObservationType.POST_TOOL_USE.value
+        if tool_name == "run_pytest":
+            event_type = ObservationType.TOOL_FAILURE.value if failed else ObservationType.TEST_RESULT.value
+
+        files = self._extract_files_from_tool_call(tool_name, tool_input, result_text)
+        observation = RawObservation(
+            session_id=self.session_id,
+            project=Path.cwd().name,
+            cwd=str(Path.cwd()),
+            event_type=event_type,
+            tool_name=tool_name,
+            tool_input=tool_input or {},
+            tool_output=self._shorten(result_text, 4000) if not failed else None,
+            error=self._shorten(result_text, 4000) if failed else None,
+            files=files,
+            metadata={"source": "AgentEngine.tool_dispatch", "success": not failed},
+        )
+
+        kind = MemoryKind.BUG.value if failed else MemoryKind.WORKFLOW.value
+        title_status = "失败" if failed else "成功"
+        return self.context.memory_manager.save_observation(
+            observation,
+            promote=True,
+            kind=kind,
+            title=f"工具执行{title_status}: {tool_name}",
+            importance=0.8 if failed else 0.6,
+            confidence=0.85,
+        )
+
+    def _remember_task_completion(self, user_input: str, final_answer: str):
+        """任务结束时保存一条任务完成记忆，方便跨会话召回。"""
+        content = f"用户任务: {user_input}\n完成结果: {final_answer}"
+        observation = RawObservation(
+            session_id=self.session_id,
+            project=Path.cwd().name,
+            cwd=str(Path.cwd()),
+            event_type=ObservationType.SESSION_END.value,
+            user_prompt=user_input,
+            assistant_message=final_answer,
+            files=self._extract_file_paths(content),
+            metadata={"source": "AgentEngine.final_answer"},
+        )
+        item = self.context.memory_manager.save_observation(
+            observation,
+            promote=True,
+            kind=MemoryKind.TASK.value,
+            title=f"任务完成: {self._shorten(user_input, 80)}",
+            importance=0.75,
+            confidence=0.8,
+        )
+        if item:
+            item.concepts = list(dict.fromkeys(item.concepts + self._extract_concepts(content)))
+            self.context.memory_manager.save_memory_item(item)
+        return item
+
+    @staticmethod
+    def _shorten(text: Any, limit: int) -> str:
+        text = str(text or "")
+        return text if len(text) <= limit else text[:limit] + "..."
+
+    @staticmethod
+    def _is_failure_result(result_text: str) -> bool:
+        markers = ["❌", "Traceback", "Error", "Exception", "失败", "Exit Code 1", "Exit Code 2", "Exit Code 4"]
+        return any(marker in result_text for marker in markers)
+
+    def _extract_files_from_tool_call(self, tool_name: str, tool_input: Dict[str, Any], result_text: str) -> List[str]:
+        files = []
+        if isinstance(tool_input, dict):
+            for key in ("path", "file_path"):
+                value = tool_input.get(key)
+                if value:
+                    files.append(str(value))
+        files.extend(self._extract_file_paths(result_text))
+        return list(dict.fromkeys(files))[:20]
+
+    @staticmethod
+    def _extract_file_paths(text: str) -> List[str]:
+        pattern = r"(?:[A-Za-z]:)?[\\/\w\.\-]+\.(?:py|md|json|txt|yaml|yml|toml)"
+        return list(dict.fromkeys(re.findall(pattern, text or "")))[:20]
+
+    @staticmethod
+    def _extract_concepts(text: str) -> List[str]:
+        words = re.findall(r"[A-Za-z_][A-Za-z0-9_\-]{2,}", text or "")
+        return list(dict.fromkeys(words))[:20]
 
 
 
