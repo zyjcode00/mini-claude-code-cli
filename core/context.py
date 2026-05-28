@@ -255,8 +255,11 @@ class ContextManager:
             print(f"   [Phase 2] 工作记忆: {len(self.working_memory)}/{self.working_memory.max_size}")
 
         # Phase 3: 通过 MemoryManager 使用统一压缩入口
+        async with self.messages_lock:
+            source_messages = [dict(msg) if isinstance(msg, dict) else msg for msg in self.messages]
+
         result = await self.memory_manager.compress_messages(
-            messages=self.messages,
+            messages=source_messages,
             strategy=strategy,
             llm_summarizer_func=llm_summarizer_func,
             min_keep=self.min_keep,
@@ -265,14 +268,29 @@ class ContextManager:
 
         if not result.success:
             print("   [Phase 3] 压缩失败")
+            sanitized_messages = self.compression_engine._sanitize_openai_tool_pairs(source_messages)
+            if sanitized_messages != source_messages:
+                async with self.messages_lock:
+                    if self.messages[:len(source_messages)] == source_messages:
+                        appended_messages = self.messages[len(source_messages):]
+                        self.messages = sanitized_messages + appended_messages
+                        if self._enable_memory_layers:
+                            self.memory_manager.reset_working_memory(self.messages)
+                        print("   [Phase 3] 压缩失败后已执行 OpenAI tool pair 安全清理")
             return False
 
-        # 更新消息列表
-        self.messages = result.compressed_messages
+        # 更新消息列表。注意：压缩期间可能有新消息被追加，不能用旧快照覆盖新消息。
+        async with self.messages_lock:
+            if self.messages[:len(source_messages)] == source_messages:
+                appended_messages = self.messages[len(source_messages):]
+                self.messages = result.compressed_messages + appended_messages
+            else:
+                print("   [Phase 3] 检测到压缩期间消息被修改，跳过本次上下文替换")
+                return False
 
         # Phase 2: 同步更新工作记忆
         if self._enable_memory_layers:
-            self.memory_manager.reset_working_memory(result.compressed_messages)
+            self.memory_manager.reset_working_memory(self.messages)
 
         # 如果有结构化摘要，存储到三层记忆
         if result.summary:
