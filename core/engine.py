@@ -45,6 +45,7 @@ class AgentEngine:
         # ========== Git 自动化保险状态追踪 ==========
         self.edit_failures = {}  # {"file_path": failure_count}
         self.last_snapshot_plan_step = None  # 记录上次快照时的计划步骤
+        self.current_plan_branch = None  # 当前 Plan 影子分支对应的 plan_id；必须先初始化，execute_query 会读取
         # Phase 5: Prompt 记忆注入预算配置
         self.memory_token_budget = 1500
         self.memory_recall_top_k = 8
