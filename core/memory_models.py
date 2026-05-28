@@ -16,6 +16,52 @@ from datetime import datetime
 import json
 
 
+TASK_STATUS_COMPLETED = "completed"
+TASK_STATUS_IN_PROGRESS = "in_progress"
+TASK_STATUS_FAILED = "failed"
+TASK_STATUS_CANCELLED = "cancelled"
+VALID_TASK_STATUSES = {
+    TASK_STATUS_COMPLETED,
+    TASK_STATUS_IN_PROGRESS,
+    TASK_STATUS_FAILED,
+    TASK_STATUS_CANCELLED,
+}
+TASK_STATUS_ALIASES = {
+    "done": TASK_STATUS_COMPLETED,
+    "complete": TASK_STATUS_COMPLETED,
+    "completed": TASK_STATUS_COMPLETED,
+    "success": TASK_STATUS_COMPLETED,
+    "succeeded": TASK_STATUS_COMPLETED,
+    "finished": TASK_STATUS_COMPLETED,
+    "in_progress": TASK_STATUS_IN_PROGRESS,
+    "in-progress": TASK_STATUS_IN_PROGRESS,
+    "progress": TASK_STATUS_IN_PROGRESS,
+    "ongoing": TASK_STATUS_IN_PROGRESS,
+    "pending": TASK_STATUS_IN_PROGRESS,
+    "todo": TASK_STATUS_IN_PROGRESS,
+    "failed": TASK_STATUS_FAILED,
+    "fail": TASK_STATUS_FAILED,
+    "error": TASK_STATUS_FAILED,
+    "cancelled": TASK_STATUS_CANCELLED,
+    "canceled": TASK_STATUS_CANCELLED,
+    "cancel": TASK_STATUS_CANCELLED,
+}
+
+
+def normalize_task_status(status: Any, default: str = TASK_STATUS_IN_PROGRESS) -> str:
+    """
+    将来自 LLM、旧 session 或测试数据的任务状态归一化为标准枚举。
+
+    标准枚举：completed / in_progress / failed / cancelled。
+    未知、空值或非字符串输入会回退到 default（默认 in_progress）。
+    """
+    if not isinstance(status, str):
+        return default
+
+    normalized = status.strip().lower().replace(" ", "_")
+    return TASK_STATUS_ALIASES.get(normalized, default)
+
+
 @dataclass
 class FileChange:
     """文件变更记录"""
@@ -39,11 +85,11 @@ class FileChange:
 
     @classmethod
     def from_dict(cls, data: Dict[str, Any]) -> "FileChange":
-        """从字典反序列化"""
+        """从字典反序列化，兼容旧数据中的 file_path 字段"""
         return cls(
-            path=data["path"],
-            action=data["action"],
-            summary=data["summary"],
+            path=data.get("path") or data.get("file_path", ""),
+            action=data.get("action", "modified"),
+            summary=data.get("summary", ""),
             importance=data.get("importance", 0.5),
             lines_added=data.get("lines_added", 0),
             lines_removed=data.get("lines_removed", 0)
@@ -179,8 +225,13 @@ class SessionSummary:
     message_count: int = 0  # 压缩前的消息数量
     token_count: int = 0  # 压缩前的 Token 数量
 
+    def __post_init__(self):
+        """初始化后统一任务状态，避免旧别名污染记忆系统。"""
+        self.task_status = normalize_task_status(self.task_status)
+
     def to_dict(self) -> Dict[str, Any]:
         """序列化为字典"""
+        self.task_status = normalize_task_status(self.task_status)
         return {
             "session_id": self.session_id,
             "timestamp": self.timestamp,
@@ -204,7 +255,7 @@ class SessionSummary:
             timestamp=data["timestamp"],
             summary_text=data["summary_text"],
             task_goal=data["task_goal"],
-            task_status=data["task_status"],
+            task_status=normalize_task_status(data.get("task_status")),
             files_changed=[FileChange.from_dict(fc) for fc in data.get("files_changed", [])],
             errors_encountered=[ErrorRecord.from_dict(er) for er in data.get("errors_encountered", [])],
             tools_used=[ToolUsage.from_dict(tu) for tu in data.get("tools_used", [])],
@@ -327,7 +378,7 @@ def create_summary_from_messages(
         timestamp=datetime.now().isoformat(),
         summary_text=f"包含 {len(messages)} 条消息的会话",
         task_goal=task_goal or "未知任务",
-        task_status=task_status,
+        task_status=normalize_task_status(task_status),
         importance=avg_importance,
         message_count=len(messages),
         token_count=sum(len(str(msg)) for msg in messages)

@@ -256,7 +256,10 @@ class LongTermMemory:
         # 从文件路径中提取
         files_changed = data.get("files_changed", [])
         for fc in files_changed:
-            file_path = fc.get("file_path", "")
+            if not isinstance(fc, dict):
+                continue
+            # FileChange 当前规范字段是 path；兼容旧数据中可能存在的 file_path
+            file_path = fc.get("path") or fc.get("file_path", "")
             keywords.extend(self._tokenize(file_path))
 
         return list(set(keywords))
@@ -265,8 +268,12 @@ class LongTermMemory:
         """简单分词（支持中英文）"""
         import re
 
-        # 英文单词
-        words = re.findall(r'\b[a-zA-Z]{2,}\b', text.lower())
+        # 英文/路径片段：保留下划线文件名（如 memory_layers），同时拆分为普通英文词
+        raw_words = re.findall(r'\b[a-zA-Z][a-zA-Z0-9_]{1,}\b', text.lower())
+        words = []
+        for word in raw_words:
+            words.append(word)
+            words.extend(part for part in word.split('_') if len(part) >= 2)
 
         # 中文分词（简单实现：提取 2-3 字的片段）
         # 注意：这是简化版本，实际应用中应使用 jieba 等分词工具
