@@ -39,6 +39,10 @@ class MemoryErrorHistoryArgs(BaseModel):
     top_k: int = Field(default=5, description="最多返回几条错误历史")
 
 
+class MemoryStatsArgs(BaseModel):
+    include_details: bool = Field(default=True, description="是否包含各层记忆明细统计")
+
+
 class MemorySaveTool(BaseTool):
     name = "memory_save"
     description = "保存一条可长期复用的 MemoryItem，例如架构决策、Bug 修复经验、用户偏好或工作流。"
@@ -198,13 +202,42 @@ class MemoryErrorHistoryTool(BaseTool):
             return f"❌ 查询错误历史失败: {e}"
 
 
+class MemoryStatsTool(BaseTool):
+    name = "memory_stats"
+    description = "查看三层记忆、长期 MemoryItem 与 SessionSummary 的统计信息。"
+    args_schema = MemoryStatsArgs
+
+    def __init__(self, memory_manager: Optional[MemoryManager] = None, long_term_storage_dir: str = "memory/long_term"):
+        self.memory_manager = memory_manager or MemoryManager(long_term_storage_dir=long_term_storage_dir)
+
+    def run(self, include_details: bool = True, **kwargs) -> str:
+        try:
+            stats = self.memory_manager.get_statistics()
+            working = stats.get("working_memory", {})
+            episodic = stats.get("episodic_memory", {})
+            long_term = stats.get("long_term_memory", {})
+            lines = [
+                "📊 记忆系统统计",
+                f"启用状态: {stats.get('enabled')}",
+                f"工作记忆: {working.get('size', 0)}/{working.get('max_size', 0)} (使用率 {working.get('usage_rate', 0):.0%})",
+                f"情景记忆: {episodic.get('size', 0)}/{episodic.get('max_size', 0)} (使用率 {episodic.get('usage_rate', 0):.0%})",
+                f"长期记忆: 总数 {long_term.get('count', 0)} | MemoryItem {long_term.get('item_count', 0)} | SessionSummary {long_term.get('summary_count', 0)}",
+                f"存储目录: {long_term.get('storage_dir', '')}",
+            ]
+            return "\n".join(lines)
+        except Exception as e:
+            return f"❌ 获取记忆统计失败: {e}"
+
+
 __all__ = [
     "MemorySaveTool",
     "MemoryRecallTool",
     "MemoryFileHistoryTool",
     "MemoryErrorHistoryTool",
+    "MemoryStatsTool",
     "MemorySaveArgs",
     "MemoryRecallArgs",
     "MemoryFileHistoryArgs",
     "MemoryErrorHistoryArgs",
+    "MemoryStatsArgs",
 ]

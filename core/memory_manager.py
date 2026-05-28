@@ -23,6 +23,7 @@ from core.memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory
 from core.memory_items import MemoryItem, MemoryKind, MemoryRecallResult, RawObservation
 from core.memory_models import SessionSummary
 from core.memory_retrieval import MemoryRetriever
+from core.memory_context_builder import MemoryContextBuilder
 
 
 class MemoryManager:
@@ -59,6 +60,7 @@ class MemoryManager:
             self.episodic_memory,
             self.long_term_memory,
         )
+        self.context_builder = MemoryContextBuilder()
 
     def add_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
         """添加消息到工作记忆，返回被 FIFO 淘汰的消息。"""
@@ -182,6 +184,36 @@ class MemoryManager:
         if not self.enabled:
             return []
         return self.hybrid_recall(query=error, top_k=top_k, error_type=error)
+
+    def build_prompt_memory_context(
+        self,
+        query: str,
+        token_budget: int = 1500,
+        task_type: Optional[str] = None,
+        top_k: int = 8,
+        file_path: Optional[str] = None,
+        error_type: Optional[str] = None,
+        kinds: Optional[List[str]] = None,
+    ) -> str:
+        """召回并构建受 token budget 限制的 prompt 记忆上下文。"""
+        if not self.enabled or not query:
+            return ""
+        results = self.hybrid_recall(
+            query=query,
+            top_k=max(top_k * 2, top_k),
+            file_path=file_path,
+            error_type=error_type,
+            kinds=kinds,
+            include_summaries=True,
+            include_items=True,
+        )
+        return self.context_builder.build(
+            query=query,
+            memories=results,
+            token_budget=token_budget,
+            task_type=task_type,
+            max_items=top_k,
+        )
 
     def _summary_to_memory_item(self, summary: SessionSummary) -> MemoryItem:
         """把旧 SessionSummary 包装为 MemoryItem 召回结果。"""

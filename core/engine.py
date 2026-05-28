@@ -45,8 +45,9 @@ class AgentEngine:
         # ========== Git 自动化保险状态追踪 ==========
         self.edit_failures = {}  # {"file_path": failure_count}
         self.last_snapshot_plan_step = None  # 记录上次快照时的计划步骤
-        self.current_plan_branch = None  # 当前影子分支对应的 Plan ID
-        # ===========================================
+        # Phase 5: Prompt 记忆注入预算配置
+        self.memory_token_budget = 1500
+        self.memory_recall_top_k = 8
 
         self.is_openai_compat = base_url is not None or "claude" not in model.lower()
 
@@ -230,6 +231,9 @@ class AgentEngine:
                 if block["type"] == "tool_use":
                     t_id, t_name, t_input = block["id"], block["name"], block["input"]
                     tool_obj = self.tool_map[t_name]
+                    pre_memory_context = self._build_pre_tool_memory_context(t_name, t_input)
+                    if pre_memory_context:
+                        self.context.add_message({"role": "user", "content": pre_memory_context})
                     # 包装同步工具到线程中运行，避免阻塞
                     tasks.append(asyncio.to_thread(tool_obj.run, **t_input))
                     tool_calls_info.append((t_id, t_name, t_input))  # 保存输入参数
@@ -266,6 +270,9 @@ class AgentEngine:
 
                 for (t_id, t_name, t_input), res in zip(tool_calls_info, results):
                     self._observe_tool_result(t_name, t_input, res)
+                    failure_memory_context = self._build_post_tool_failure_memory_context(t_name, str(res))
+                    if failure_memory_context:
+                        self.context.add_message({"role": "user", "content": failure_memory_context})
                     # ========== Git 自动化保险逻辑 ==========
                     # 1. 检测 edit_file 失败
                     if t_name == "edit_file":
@@ -343,35 +350,83 @@ class AgentEngine:
 
         return "任务达到最大思考步数限制。"
 
-    def _build_relevant_memory_context(self, query: str, top_k: int = 5) -> str:
-        """召回与当前输入相关的长期 MemoryItem，并格式化为可注入 prompt 的文本。"""
+    def _build_relevant_memory_context(self, query: str, top_k: int = None) -> str:
+        """召回与当前输入相关的长期记忆，并按 token budget 格式化为 prompt 注入文本。"""
         if not query or not getattr(self.context, "_enable_memory_layers", False):
             return ""
 
         try:
-            results = self.context.memory_manager.recall(query=query, top_k=top_k, include_summaries=True)
+            context = self.context.memory_manager.build_prompt_memory_context(
+                query=query,
+                token_budget=self.memory_token_budget,
+                task_type=None,
+                top_k=top_k or self.memory_recall_top_k,
+            )
         except Exception as e:
             print(f" [⚠️] 主动记忆召回失败: {e}")
             return ""
 
-        if not results:
+        if context:
+            print(" [🧠] 已按预算注入长期记忆上下文")
+        return context
+
+    def _build_pre_tool_memory_context(self, tool_name: str, tool_input: Dict[str, Any]) -> str:
+        """在文件编辑/写入前自动召回文件历史。"""
+        if tool_name not in {"edit_file", "write_full_file"} or not getattr(self.context, "_enable_memory_layers", False):
             return ""
+        path = (tool_input or {}).get("path") or (tool_input or {}).get("file_path")
+        if not path:
+            return ""
+        try:
+            context = self.context.memory_manager.build_prompt_memory_context(
+                query=str(path),
+                token_budget=500,
+                task_type="code_edit",
+                top_k=4,
+                file_path=str(path),
+            )
+        except Exception as e:
+            print(f" [⚠️] 文件历史自动召回失败: {e}")
+            return ""
+        if not context:
+            return ""
+        return f"\n[自动文件历史召回: {path}]\n{context}"
 
-        lines = ["\n[相关长期记忆]"]
-        for index, result in enumerate(results, 1):
-            item = result.item
-            files = ", ".join(item.files[:5]) if item.files else "无"
-            concepts = ", ".join(item.concepts[:8]) if item.concepts else "无"
-            content = item.content[:300] + "..." if len(item.content) > 300 else item.content
-            lines.extend([
-                f"{index}. [{item.kind}] {item.title} (相关度: {result.score:.2f}, 来源: {result.source})",
-                f"   内容: {content}",
-                f"   文件: {files}",
-                f"   概念: {concepts}",
-            ])
+    def _build_post_tool_failure_memory_context(self, tool_name: str, result_text: str) -> str:
+        """测试或工具失败后自动召回错误历史。"""
+        if not self._is_failure_result(result_text) or not getattr(self.context, "_enable_memory_layers", False):
+            return ""
+        if tool_name not in {"run_pytest", "execute_bash", "edit_file", "write_full_file"}:
+            return ""
+        error_query = self._extract_error_query(result_text)
+        try:
+            context = self.context.memory_manager.build_prompt_memory_context(
+                query=error_query,
+                token_budget=600,
+                task_type="test_failure" if tool_name == "run_pytest" else None,
+                top_k=4,
+                error_type=error_query,
+            )
+        except Exception as e:
+            print(f" [⚠️] 错误历史自动召回失败: {e}")
+            return ""
+        if not context:
+            return ""
+        return f"\n[自动错误历史召回: {error_query}]\n{context}"
 
-        print(f" [🧠] 主动召回 {len(results)} 条长期记忆")
-        return "\n".join(lines) + "\n"
+    @staticmethod
+    def _extract_error_query(result_text: str) -> str:
+        text = str(result_text or "")
+        patterns = [
+            r"([A-Za-z_][A-Za-z0-9_]*(?:Error|Exception))[:\\s]",
+            r"(AssertionError)[^\\n]*",
+            r"(Exit Code \\d+)",
+        ]
+        for pattern in patterns:
+            match = re.search(pattern, text)
+            if match:
+                return match.group(0).strip()[:300]
+        return text[:300]
 
     def _observe_prompt_submit(self, user_input: str):
         """记录用户输入 Observation，并提升为任务型长期记忆。"""
