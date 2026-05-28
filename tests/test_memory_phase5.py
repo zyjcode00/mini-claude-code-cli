@@ -31,6 +31,9 @@ class _FakePlanManager:
     def is_plan_complete(self):
         return False
 
+    def to_dict(self):
+        return {"plan_id": self.plan_id}
+
 
 class _DummyTool:
     name = "dummy"
