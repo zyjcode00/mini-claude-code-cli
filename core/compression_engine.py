@@ -10,10 +10,11 @@ Phase 3 增强功能：
 
 from typing import List, Dict, Any, Optional, Callable
 from enum import Enum
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 import json
 import hashlib
 import time
+import re
 from datetime import datetime
 
 from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage
@@ -29,6 +30,95 @@ class CompressionStrategy(Enum):
 
 
 @dataclass
+class CompressedSessionState:
+    """Structured, deterministic state extracted from compressed turns."""
+
+    task_goal: str = ""
+    current_status: str = "in_progress"
+    completed_steps: List[str] = field(default_factory=list)
+    pending_steps: List[str] = field(default_factory=list)
+    files_changed: List[Dict[str, Any]] = field(default_factory=list)
+    commands_run: List[Dict[str, Any]] = field(default_factory=list)
+    tests_run: List[Dict[str, Any]] = field(default_factory=list)
+    errors_encountered: List[Dict[str, Any]] = field(default_factory=list)
+    key_decisions: List[str] = field(default_factory=list)
+    user_preferences: List[str] = field(default_factory=list)
+    tool_safety_notes: List[str] = field(default_factory=list)
+    dropped_content_summary: str = ""
+    source_turn_ids: List[str] = field(default_factory=list)
+    created_at: str = field(default_factory=lambda: datetime.now().isoformat())
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "task_goal": self.task_goal,
+            "current_status": self.current_status,
+            "completed_steps": self.completed_steps,
+            "pending_steps": self.pending_steps,
+            "files_changed": self.files_changed,
+            "commands_run": self.commands_run,
+            "tests_run": self.tests_run,
+            "errors_encountered": self.errors_encountered,
+            "key_decisions": self.key_decisions,
+            "user_preferences": self.user_preferences,
+            "tool_safety_notes": self.tool_safety_notes,
+            "dropped_content_summary": self.dropped_content_summary,
+            "source_turn_ids": self.source_turn_ids,
+            "created_at": self.created_at,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> "CompressedSessionState":
+        return cls(
+            task_goal=data.get("task_goal", ""),
+            current_status=data.get("current_status", "in_progress"),
+            completed_steps=list(data.get("completed_steps", [])),
+            pending_steps=list(data.get("pending_steps", [])),
+            files_changed=list(data.get("files_changed", [])),
+            commands_run=list(data.get("commands_run", [])),
+            tests_run=list(data.get("tests_run", [])),
+            errors_encountered=list(data.get("errors_encountered", [])),
+            key_decisions=list(data.get("key_decisions", [])),
+            user_preferences=list(data.get("user_preferences", [])),
+            tool_safety_notes=list(data.get("tool_safety_notes", [])),
+            dropped_content_summary=data.get("dropped_content_summary", ""),
+            source_turn_ids=list(data.get("source_turn_ids", [])),
+            created_at=data.get("created_at", datetime.now().isoformat()),
+        )
+
+    def render_for_prompt(self) -> str:
+        """Render structured state as a compact prompt section."""
+        lines = [
+            "### 压缩后的会话状态",
+            f"当前目标：{self.task_goal or '未知'}",
+            f"当前状态：{self.current_status}",
+        ]
+        if self.completed_steps:
+            lines.append("已完成：")
+            lines.extend(f"- {item}" for item in self.completed_steps[:8])
+        if self.pending_steps:
+            lines.append("未完成：")
+            lines.extend(f"- {item}" for item in self.pending_steps[:8])
+        if self.files_changed:
+            lines.append("文件变更：")
+            lines.extend(f"- {item.get('path', '')}: {item.get('action', 'modified')}" for item in self.files_changed[:10])
+        if self.tests_run:
+            lines.append("测试：")
+            lines.extend(f"- {item.get('command') or item.get('summary', '')}: {item.get('status', 'unknown')}" for item in self.tests_run[:8])
+        if self.errors_encountered:
+            lines.append("关键错误：")
+            lines.extend(f"- {item.get('message', '')}" for item in self.errors_encountered[:6])
+        if self.key_decisions:
+            lines.append("关键决策：")
+            lines.extend(f"- {item}" for item in self.key_decisions[:8])
+        if self.tool_safety_notes:
+            lines.append("注意事项：")
+            lines.extend(f"- {item}" for item in self.tool_safety_notes[:6])
+        if self.dropped_content_summary:
+            lines.append(f"丢弃内容摘要：{self.dropped_content_summary}")
+        return "\n".join(lines)
+
+
+@dataclass
 class CompressionResult:
     """压缩结果"""
     success: bool
@@ -39,6 +129,7 @@ class CompressionResult:
     original_count: int = 0
     compressed_count: int = 0
     metadata: Dict[str, Any] = None
+    compressed_state: Optional[CompressedSessionState] = None
 
     def __post_init__(self):
         if self.metadata is None:
@@ -223,6 +314,12 @@ class CompressionEngine:
                 if msg in messages
             )
         to_summarize = self._select_summary_candidate_messages(messages[:keep_start])
+        builder = TurnBuilder()
+        safe_turns = builder.complete_turns_only(builder.build(messages))
+        summarized_turns = builder.complete_turns_only(builder.build(to_summarize))
+        keep_turn_ids = {turn.id for turn in builder.complete_turns_only(builder.build(keep_messages))}
+        dropped_turns = [turn for turn in safe_turns if turn.id not in keep_turn_ids and all(turn.id != st.id for st in summarized_turns)]
+        compressed_state = self._extract_compressed_state(safe_turns, dropped_turns)
 
         # 🔥 Phase 2: 检查缓存
         messages_hash = self._get_messages_hash(to_summarize)
@@ -237,7 +334,13 @@ class CompressionEngine:
                 compression_ratio=len(keep_messages) / len(messages) if messages else 0,
                 original_count=len(messages),
                 compressed_count=len(keep_messages),
-                metadata={"from_cache": True, "cache_hit": messages_hash}
+                metadata={
+                    "from_cache": True,
+                    "cache_hit": messages_hash,
+                    "compressed_state": compressed_state.to_dict(),
+                    "compressed_state_prompt": compressed_state.render_for_prompt(),
+                },
+                compressed_state=compressed_state
             )
 
         # 🔥 Phase 2: 检查频率限制
@@ -271,6 +374,20 @@ class CompressionEngine:
                 summary_text, to_summarize, 0.5
             )
 
+            compressed_state = self._extract_compressed_state(safe_turns, dropped_turns, summary_text)
+            if summary is None:
+                summary = self._generate_summary_from_messages(
+                    to_summarize or keep_messages,
+                    CompressionStrategy.LLM_SUMMARY,
+                    0.5,
+                    compressed_state,
+                )
+            else:
+                summary.summary_text = compressed_state.render_for_prompt()
+                summary.task_goal = compressed_state.task_goal or summary.task_goal
+                summary.task_status = compressed_state.current_status
+                summary.key_decisions = compressed_state.key_decisions or summary.key_decisions
+
             # 🔥 Phase 2: 缓存结果
             if len(self.summary_cache) >= self.cache_max_size:
                 # 如果缓存满了，删除最早的条目
@@ -289,7 +406,13 @@ class CompressionEngine:
                 compression_ratio=len(keep_messages) / len(messages) if messages else 0,
                 original_count=len(messages),
                 compressed_count=len(keep_messages),
-                metadata={"summary_text": summary_text, "from_cache": False}
+                metadata={
+                    "summary_text": summary_text,
+                    "from_cache": False,
+                    "compressed_state": compressed_state.to_dict(),
+                    "compressed_state_prompt": compressed_state.render_for_prompt(),
+                },
+                compressed_state=compressed_state
             )
 
         except Exception as e:
@@ -359,9 +482,12 @@ class CompressionEngine:
             if selected_turns else 0.5
         )
 
+        dropped_turns = [turn for turn in turns if turn.id not in selected_ids]
+        compressed_state = self._extract_compressed_state(selected_turns, dropped_turns)
+
         # 生成简化版摘要
         summary = self._generate_summary_from_messages(
-            compressed_messages, CompressionStrategy.KEYFRAME, avg_importance
+            compressed_messages, CompressionStrategy.KEYFRAME, avg_importance, compressed_state
         )
 
         return CompressionResult(
@@ -381,7 +507,10 @@ class CompressionEngine:
                 "error_messages": sum(1 for turn in selected_turns if "error" in turn.categories),
                 "tool_messages": sum(1 for msg in compressed_messages if msg.get("role") == "tool"),
                 "files_touched": sorted({path for turn in selected_turns for path in turn.files_touched})[:20],
-            }
+                "compressed_state": compressed_state.to_dict(),
+                "compressed_state_prompt": compressed_state.render_for_prompt(),
+            },
+            compressed_state=compressed_state
         )
 
     # ========== 策略 3: 滑动窗口 ==========
@@ -423,8 +552,10 @@ class CompressionEngine:
             compressed_messages = self._sanitize_openai_tool_pairs(compressed_messages)
 
         # 生成简化版摘要
+        sliding_turns = TurnBuilder().complete_turns_only(TurnBuilder().build(compressed_messages))
+        compressed_state = self._extract_compressed_state(sliding_turns)
         summary = self._generate_summary_from_messages(
-            compressed_messages, CompressionStrategy.SLIDING_WINDOW, 0.5
+            compressed_messages, CompressionStrategy.SLIDING_WINDOW, 0.5, compressed_state
         )
 
         return CompressionResult(
@@ -435,7 +566,12 @@ class CompressionEngine:
             compression_ratio=len(compressed_messages) / len(messages) if messages else 0,
             original_count=len(messages),
             compressed_count=len(compressed_messages),
-            metadata={"window_size": len(compressed_messages)}
+            metadata={
+                "window_size": len(compressed_messages),
+                "compressed_state": compressed_state.to_dict(),
+                "compressed_state_prompt": compressed_state.render_for_prompt(),
+            },
+            compressed_state=compressed_state
         )
 
     # ========== 策略 4: 重要性过滤 ==========
@@ -500,7 +636,8 @@ class CompressionEngine:
         self,
         messages: List[Dict[str, Any]],
         strategy: CompressionStrategy,
-        avg_importance: float
+        avg_importance: float,
+        compressed_state: Optional[CompressedSessionState] = None,
     ) -> SessionSummary:
         """
         从消息列表生成简化版的 SessionSummary（用于非 LLM 策略）
@@ -650,6 +787,12 @@ class CompressionEngine:
             else:
                 task_status = "completed"
 
+        if compressed_state:
+            summary_text = compressed_state.render_for_prompt()
+            task_goal = compressed_state.task_goal or task_goal
+            task_status = compressed_state.current_status
+            key_decisions = compressed_state.key_decisions or key_decisions
+
         return SessionSummary(
             session_id=f"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{len(messages)}",
             timestamp=datetime.now().isoformat(),
@@ -664,6 +807,165 @@ class CompressionEngine:
             message_count=len(messages),
             token_count=sum(len(str(msg)) for msg in messages)
         )
+
+    def _extract_compressed_state(
+        self,
+        turns: List[ConversationTurn],
+        dropped_turns: Optional[List[ConversationTurn]] = None,
+        llm_summary_text: str = "",
+    ) -> CompressedSessionState:
+        """Build a deterministic structured state from turn metadata and content."""
+        source_turns = [turn for turn in turns if turn.is_valid_openai_tool_turn]
+        state = CompressedSessionState(source_turn_ids=[turn.id for turn in source_turns])
+        state.task_goal = self._extract_task_goal(source_turns)
+        state.current_status = self._infer_current_status(source_turns)
+
+        file_paths = []
+        for turn in source_turns:
+            file_paths.extend(turn.files_touched)
+            text = self._turn_text(turn)
+            self._collect_steps(text, state.completed_steps, state.pending_steps)
+            self._collect_decisions(text, state.key_decisions)
+            self._collect_preferences(text, state.user_preferences)
+            self._collect_commands_and_tests(turn, text, state.commands_run, state.tests_run)
+            for error in turn.errors:
+                resolved = self._looks_resolved_after(source_turns, turn)
+                state.errors_encountered.append({
+                    "message": error[:300],
+                    "status": "resolved" if resolved else "failed",
+                    "source_turn_id": turn.id,
+                    "files": turn.files_touched[:5],
+                    "resolved": resolved,
+                })
+
+        for path in dict.fromkeys(file_paths):
+            state.files_changed.append({
+                "path": path,
+                "action": self._infer_file_action(path, source_turns),
+                "summary": "从 turn 元数据提取的文件变更",
+            })
+
+        if any((turn.has_tool_calls or turn.tool_messages) and not turn.is_valid_openai_tool_turn for turn in turns):
+            state.tool_safety_notes.append("压缩前检测到不完整或孤立 tool pair，结构化状态仅基于 provider-safe turn 聚合")
+        state.tool_safety_notes.append("压缩结果不得包含半截 assistant tool call 与 tool 响应")
+
+        if dropped_turns:
+            dropped_categories = sorted({category for turn in dropped_turns for category in turn.categories})
+            state.dropped_content_summary = f"丢弃 {len(dropped_turns)} 个较低优先级 turn"
+            if dropped_categories:
+                state.dropped_content_summary += f"，类别: {', '.join(dropped_categories[:8])}"
+
+        if llm_summary_text:
+            state.key_decisions.extend(self._extract_llm_decision_lines(llm_summary_text))
+
+        state.completed_steps = self._dedupe_keep_order(state.completed_steps)[:12]
+        state.pending_steps = self._dedupe_keep_order(state.pending_steps)[:12]
+        state.key_decisions = self._dedupe_keep_order(state.key_decisions)[:12]
+        state.user_preferences = self._dedupe_keep_order(state.user_preferences)[:8]
+        state.commands_run = self._dedupe_dicts(state.commands_run, "command")[:12]
+        state.tests_run = self._dedupe_dicts(state.tests_run, "command")[:12]
+        state.errors_encountered = self._dedupe_dicts(state.errors_encountered, "message")[:10]
+        return state
+
+    def _extract_task_goal(self, turns: List[ConversationTurn]) -> str:
+        for turn in turns:
+            if turn.user_message and isinstance(turn.user_message.get("content"), str):
+                content = turn.user_message.get("content", "").strip()
+                if content:
+                    return content[:200]
+        return ""
+
+    def _infer_current_status(self, turns: List[ConversationTurn]) -> str:
+        text = "\n".join(self._turn_text(turn) for turn in turns[-6:]).lower()
+        if any(keyword in text for keyword in ["traceback", "failed", "失败", "错误", "❌"]):
+            if not any(keyword in text for keyword in ["passed", "测试通过", "修复", "✅"]):
+                return "failed"
+        if any(keyword in text for keyword in ["全部完成", "任务完成", "已完成", "done", "completed"]):
+            return "completed"
+        return "in_progress"
+
+    def _turn_text(self, turn: ConversationTurn) -> str:
+        return "\n".join(str(msg.get("content", "")) for msg in turn.messages if isinstance(msg, dict))
+
+    def _collect_steps(self, text: str, completed: List[str], pending: List[str]) -> None:
+        for line in text.splitlines():
+            clean = line.strip(" -\t")[:220]
+            if not clean:
+                continue
+            lowered = clean.lower()
+            if any(marker in clean for marker in ["✅", "已完成", "完成:", "完成："]) or lowered.startswith(("done", "completed")):
+                completed.append(clean)
+            if any(marker in clean for marker in ["⏳", "未完成", "待办", "下一步", "todo"]):
+                pending.append(clean)
+
+    def _collect_decisions(self, text: str, decisions: List[str]) -> None:
+        keywords = ["决定", "决策", "选择", "采用", "建议", "注意", "必须", "保持", "不要"]
+        for line in text.splitlines():
+            clean = line.strip(" -\t")
+            if 8 <= len(clean) <= 260 and any(keyword in clean for keyword in keywords):
+                decisions.append(clean[:260])
+
+    def _collect_preferences(self, text: str, preferences: List[str]) -> None:
+        for line in text.splitlines():
+            clean = line.strip(" -\t")
+            if any(keyword in clean for keyword in ["用户偏好", "prefer", "preference", "希望", "要求"]):
+                preferences.append(clean[:220])
+
+    def _collect_commands_and_tests(
+        self,
+        turn: ConversationTurn,
+        text: str,
+        commands: List[Dict[str, Any]],
+        tests: List[Dict[str, Any]],
+    ) -> None:
+        command_patterns = [r"python -m pytest[^\n`]*", r"pytest[^\n`]*", r"python [^\n`]*", r"npm [^\n`]*"]
+        for pattern in command_patterns:
+            for match in re.findall(pattern, text, flags=re.IGNORECASE):
+                command = match.strip()
+                if not command:
+                    continue
+                status = "failed" if any(k in text.lower() for k in ["failed", "exit code 1", "exit code 4", "失败", "❌"]) else "passed" if any(k in text.lower() for k in ["passed", "测试通过", "✅"]) else "unknown"
+                item = {"command": command[:220], "status": status, "source_turn_id": turn.id}
+                commands.append(item)
+                if "pytest" in command.lower() or "test" in command.lower():
+                    tests.append({**item, "summary": (turn.tests[0] if turn.tests else command)[:220]})
+        for test_line in turn.tests:
+            status = "failed" if any(k in test_line.lower() for k in ["failed", "error", "失败", "❌"]) else "passed" if any(k in test_line.lower() for k in ["passed", "成功", "✅"]) else "unknown"
+            tests.append({"command": "", "summary": test_line[:220], "status": status, "source_turn_id": turn.id})
+
+    def _infer_file_action(self, path: str, turns: List[ConversationTurn]) -> str:
+        relevant_text = "\n".join(self._turn_text(turn) for turn in turns if path in turn.files_touched).lower()
+        if any(keyword in relevant_text for keyword in ["delete", "deleted", "删除"]):
+            return "deleted"
+        if any(keyword in relevant_text for keyword in ["create", "created", "新增", "创建"]):
+            return "created"
+        return "modified"
+
+    def _looks_resolved_after(self, turns: List[ConversationTurn], error_turn: ConversationTurn) -> bool:
+        later_text = "\n".join(self._turn_text(turn) for turn in turns if turn.start_index > error_turn.start_index).lower()
+        return any(keyword in later_text for keyword in ["passed", "测试通过", "修复", "resolved", "✅"])
+
+    def _extract_llm_decision_lines(self, summary_text: str) -> List[str]:
+        decisions = []
+        for line in summary_text.splitlines():
+            clean = line.strip(" -\t")
+            if any(keyword in clean for keyword in ["决策", "决定", "建议", "注意", "decision"]):
+                decisions.append(clean[:260])
+        return decisions[:5]
+
+    def _dedupe_keep_order(self, values: List[str]) -> List[str]:
+        return list(dict.fromkeys(value for value in values if value))
+
+    def _dedupe_dicts(self, values: List[Dict[str, Any]], key: str) -> List[Dict[str, Any]]:
+        result = []
+        seen = set()
+        for item in values:
+            marker = item.get(key) or json.dumps(item, ensure_ascii=False, sort_keys=True)
+            if marker in seen:
+                continue
+            seen.add(marker)
+            result.append(item)
+        return result
 
     def _is_tool_call_start(self, message: Dict[str, Any]) -> bool:
         """
