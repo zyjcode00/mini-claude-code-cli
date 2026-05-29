@@ -10,6 +10,7 @@ compression strategies can avoid cutting the pair in half.
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+import re
 from typing import Any, Dict, Iterable, List, Optional, Set
 
 
@@ -54,9 +55,20 @@ class TurnBuilder:
       unrelated context.
     """
 
-    ERROR_KEYWORDS = ("error", "exception", "traceback", "失败", "错误", "报错")
-    TEST_KEYWORDS = ("pytest", "test", "测试", "passed", "failed", "assertionerror")
-    PLAN_KEYWORDS = ("plan", "任务", "步骤", "继续", "完成")
+    ERROR_KEYWORDS = ("error", "exception", "traceback", "failed", "failure", "失败", "错误", "报错")
+    TEST_KEYWORDS = ("pytest", "unittest", "test", "测试", "passed", "failed", "assertionerror")
+    PLAN_KEYWORDS = ("plan", "todo", "步骤", "继续", "完成", "已完成", "待办")
+    FILE_EDIT_KEYWORDS = ("edit_file", "write_full_file", "created", "modified", "deleted", "创建", "修改", "删除")
+    FILE_READ_KEYWORDS = ("read_file", "cat ", "读取", "查看文件")
+    SEARCH_KEYWORDS = ("search_code", "grep", "ripgrep", "搜索")
+    COMMAND_KEYWORDS = ("execute_bash", "pytest", "python ", "npm ", "命令", "运行")
+    SUCCESS_KEYWORDS = ("passed", "success", "成功", "测试通过", "✅")
+    FAILURE_KEYWORDS = ("failed", "failure", "error", "traceback", "失败", "错误", "❌")
+
+    FILE_PATTERN = re.compile(
+        r"(?<![\w.-])(?:[A-Za-z]:)?[\w.@+-]+(?:[/\\][\w.@+-]+)+\.[A-Za-z0-9]{1,8}(?![\w.-])"
+        r"|(?<![\w.-])[\w.@+-]+\.(?:py|js|ts|tsx|jsx|json|md|txt|yaml|yml|toml|ini|cfg|java|cpp|c|h|rs|go|sh|bat|ps1)(?![\w.-])"
+    )
 
     def build(self, messages: List[Dict[str, Any]]) -> List[ConversationTurn]:
         """Return semantic turns while preserving original message order."""
@@ -187,6 +199,19 @@ class TurnBuilder:
         has_tool_calls = any(msg.get("role") == "assistant" and msg.get("tool_calls") for msg in messages)
 
         categories = self._categorize(messages)
+        files_touched = self._extract_files(messages)
+        errors = self._extract_matching_lines(messages, self.ERROR_KEYWORDS)
+        tests = self._extract_matching_lines(messages, self.TEST_KEYWORDS)
+        token_estimate = self._estimate_tokens(messages)
+        importance = self._estimate_importance(
+            messages,
+            categories,
+            is_tool_pair_complete,
+            token_estimate,
+            files_touched,
+            errors,
+            tests,
+        )
         return ConversationTurn(
             id=f"turn_{start_index}_{end_index}_{turn_index}",
             start_index=start_index,
@@ -199,12 +224,12 @@ class TurnBuilder:
             is_tool_pair_complete=is_tool_pair_complete,
             missing_tool_call_ids=missing_tool_call_ids or [],
             orphan_tool_call_ids=orphan_tool_call_ids or [],
-            token_estimate=self._estimate_tokens(messages),
-            importance=self._estimate_importance(messages, categories, is_tool_pair_complete),
+            token_estimate=token_estimate,
+            importance=importance,
             categories=categories,
-            files_touched=self._extract_files(messages),
-            errors=self._extract_matching_lines(messages, self.ERROR_KEYWORDS),
-            tests=self._extract_matching_lines(messages, self.TEST_KEYWORDS),
+            files_touched=files_touched,
+            errors=errors,
+            tests=tests,
         )
 
     def _tool_call_ids(self, message: Dict[str, Any]) -> Set[str]:
@@ -219,23 +244,50 @@ class TurnBuilder:
         messages: List[Dict[str, Any]],
         categories: List[str],
         is_tool_pair_complete: bool,
+        token_estimate: int,
+        files_touched: List[str],
+        errors: List[str],
+        tests: List[str],
     ) -> float:
-        score = 0.1
+        score = 0.08
+        text = self._messages_text(messages).lower()
+
         if any(msg.get("role") == "user" for msg in messages):
-            score += 0.2
+            score += 0.22
         if any(msg.get("tool_calls") for msg in messages):
-            score += 0.25
-        if "error" in categories:
-            score += 0.3
-        if "test" in categories:
-            score += 0.2
+            score += 0.10
+        if files_touched:
+            score += min(0.20, 0.06 * len(files_touched))
+        if errors or "error" in categories:
+            score += 0.30
+        if tests or "test" in categories:
+            score += 0.20
+        if "planning" in categories:
+            score += 0.16
+        if "code_edit" in categories:
+            score += 0.22
+        if "command" in categories:
+            score += 0.08
+        if any(keyword in text for keyword in self.SUCCESS_KEYWORDS):
+            score += 0.06
+        if any(keyword in text for keyword in self.FAILURE_KEYWORDS):
+            score += 0.08
+        if "bulk_output" in categories:
+            score -= 0.20
         if not is_tool_pair_complete:
-            score -= 0.2
-        return max(0.0, min(1.0, score))
+            score -= 0.25
+
+        # Very large turns are often file dumps/stdout; keep their metadata but
+        # avoid letting size alone dominate keyframe selection.
+        if token_estimate > 1200 and not ({"error", "test", "code_edit"} & set(categories)):
+            score -= 0.12
+
+        return max(0.0, min(1.0, round(score, 4)))
 
     def _categorize(self, messages: List[Dict[str, Any]]) -> List[str]:
-        text = "\n".join(str(msg.get("content", "")) for msg in messages).lower()
+        text = self._messages_text(messages).lower()
         categories: List[str] = []
+
         if any(msg.get("tool_calls") or msg.get("role") == "tool" for msg in messages):
             categories.append("tool")
         if any(keyword in text for keyword in self.ERROR_KEYWORDS):
@@ -244,17 +296,38 @@ class TurnBuilder:
             categories.append("test")
         if any(keyword in text for keyword in self.PLAN_KEYWORDS):
             categories.append("planning")
+        if any(keyword in text for keyword in self.FILE_EDIT_KEYWORDS):
+            categories.append("code_edit")
+        if any(keyword in text for keyword in self.FILE_READ_KEYWORDS):
+            categories.append("file_read")
+        if any(keyword in text for keyword in self.SEARCH_KEYWORDS):
+            categories.append("search")
+        if any(keyword in text for keyword in self.COMMAND_KEYWORDS):
+            categories.append("command")
+        if self._looks_like_bulk_output(text):
+            categories.append("bulk_output")
+
         return categories
 
     def _extract_files(self, messages: List[Dict[str, Any]]) -> List[str]:
         files: List[str] = []
         for msg in messages:
-            content = str(msg.get("content", ""))
-            for token in content.replace("\\", "/").split():
-                cleaned = token.strip("`'\"(),:;[]{}")
-                if "/" in cleaned and "." in cleaned:
-                    files.append(cleaned)
-        return list(dict.fromkeys(files))[:20]
+            self._extract_files_from_obj(msg, files)
+        normalized = [path.replace("\\", "/").strip("`'\"(),:;[]{}<>") for path in files]
+        return list(dict.fromkeys(path for path in normalized if path))[:20]
+
+    def _extract_files_from_obj(self, obj: Any, files: List[str]) -> None:
+        if isinstance(obj, dict):
+            for key, value in obj.items():
+                if key.lower() in {"path", "file", "filename", "filepath"} and isinstance(value, str):
+                    files.extend(match.group(0) for match in self.FILE_PATTERN.finditer(value))
+                else:
+                    self._extract_files_from_obj(value, files)
+        elif isinstance(obj, list):
+            for item in obj:
+                self._extract_files_from_obj(item, files)
+        elif isinstance(obj, str):
+            files.extend(match.group(0) for match in self.FILE_PATTERN.finditer(obj))
 
     def _extract_matching_lines(
         self,
@@ -269,3 +342,10 @@ class TurnBuilder:
                 if any(keyword in line.lower() for keyword in lowered_keywords):
                     matches.append(line[:300])
         return matches[:10]
+
+    def _messages_text(self, messages: List[Dict[str, Any]]) -> str:
+        return "\n".join(str(msg.get("content", "")) for msg in messages)
+
+    def _looks_like_bulk_output(self, text: str) -> bool:
+        line_count = text.count("\n") + 1
+        return len(text) > 4000 or line_count > 80

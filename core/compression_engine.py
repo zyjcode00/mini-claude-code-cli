@@ -18,7 +18,7 @@ from datetime import datetime
 
 from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage
 from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2
-from core.turn_builder import TurnBuilder
+from core.turn_builder import ConversationTurn, TurnBuilder
 
 
 class CompressionStrategy(Enum):
@@ -213,9 +213,16 @@ class CompressionEngine:
             print("   [警告] LLM_SUMMARY 策略需要 llm_summarizer_func，降级到 SLIDING_WINDOW")
             return self._compress_with_sliding_window(messages, 0.3, min_keep)
 
-        # 划分消息
-        to_summarize = messages[:-min_keep]
-        keep_messages = self._sanitize_openai_tool_pairs(messages[-min_keep:])
+        # 划分消息：最近完整 turn 原样保留，较旧完整 turn 作为摘要候选。
+        keep_messages = self._select_recent_complete_turn_messages(messages, min_keep)
+        keep_start = len(messages)
+        if keep_messages:
+            keep_start = min(
+                messages.index(msg)
+                for msg in keep_messages
+                if msg in messages
+            )
+        to_summarize = self._select_summary_candidate_messages(messages[:keep_start])
 
         # 🔥 Phase 2: 检查缓存
         messages_hash = self._get_messages_hash(to_summarize)
@@ -322,80 +329,21 @@ class CompressionEngine:
             CompressionResult
         """
         target_count = max(min_keep, int(len(messages) * target_ratio))
-        keyframes = []
-        keyframe_indices = set()
+        builder = TurnBuilder()
+        turns = builder.complete_turns_only(builder.build(messages))
+        selected_turns = self._select_keyframe_turns(turns, target_count, min_keep)
+        compressed_messages = builder.flatten(selected_turns)
 
-        # 1. 提取用户消息（不超过目标数量的 40%）
-        user_target = int(target_count * 0.4)
-        user_count = 0
-        for i, msg in enumerate(messages):
-            if msg.get("role") == "user" and user_count < user_target:
-                keyframes.append(msg)
-                keyframe_indices.add(i)
-                user_count += 1
-
-        # 2. 提取错误消息（不超过目标数量的 20%）
-        error_target = int(target_count * 0.2)
-        error_count = 0
-        for i, msg in enumerate(messages):
-            if i in keyframe_indices:
-                continue
-            content = str(msg.get("content", ""))
-            if any(keyword in content for keyword in ["Error", "错误", "Exception", "失败", "Traceback"]) and error_count < error_target:
-                keyframes.append(msg)
-                keyframe_indices.add(i)
-                error_count += 1
-
-        # 3. 提取工具调用（不超过目标数量的 30%）
-        tool_target = int(target_count * 0.3)
-        tool_count = 0
-        for i, msg in enumerate(messages):
-            if i in keyframe_indices or tool_count >= tool_target:
-                continue
-            if msg.get("role") == "assistant" and msg.get("tool_calls"):
-                tool_call_ids = {tc.get("id") for tc in msg.get("tool_calls", []) if tc.get("id")}
-                pair_indices = [i]
-                j = i + 1
-                while j < len(messages) and messages[j].get("role") == "tool":
-                    if messages[j].get("tool_call_id") in tool_call_ids:
-                        pair_indices.append(j)
-                    j += 1
-                found_ids = {messages[idx].get("tool_call_id") for idx in pair_indices[1:]}
-                if tool_call_ids and tool_call_ids.issubset(found_ids):
-                    for idx in pair_indices:
-                        keyframes.append(messages[idx])
-                        keyframe_indices.add(idx)
-                    tool_count += len(pair_indices)
-
-        # 4. 如果还有空间，按消息新鲜度补充（保留最新的非工具调用消息）
-        if len(keyframes) < target_count:
-            remaining_indices = [i for i in range(len(messages)) if i not in keyframe_indices]
-
-            # 按索引降序（最新的消息优先）
-            remaining_indices.sort(reverse=True)
-
-            # 补充到目标数量
-            for i in remaining_indices:
-                if len(keyframes) >= target_count:
-                    break
-                if self._is_tool_call_start(messages[i]):
-                    continue
-                keyframes.append(messages[i])
-                keyframe_indices.add(i)
-
-        # 按原始顺序排序
-        keyframe_indices_sorted = sorted(keyframe_indices)
-        compressed_messages = self._sanitize_openai_tool_pairs([messages[i] for i in keyframe_indices_sorted])
-
-        # 确保至少保留 min_keep 条消息
+        # 确保至少保留 min_keep 条消息。补齐时仍按完整 turn 选择，避免切断 tool pair。
         if len(compressed_messages) < min_keep:
-            # 🔥 修复：当消息数量 < min_keep 时，避免切片问题
             if len(messages) <= min_keep:
-                compressed_messages = messages[:]
+                compressed_messages = self._sanitize_openai_tool_pairs(messages[:])
             else:
-                compressed_messages = messages[-min_keep:]
+                recent_messages = self._select_recent_complete_turn_messages(messages, min_keep)
+                merged = compressed_messages + [msg for msg in recent_messages if msg not in compressed_messages]
+                compressed_messages = self._sanitize_openai_tool_pairs(merged)
 
-        print(f"   [关键帧提取] 提取了 {len(compressed_messages)} 条关键消息")
+        print(f"   [关键帧提取] 提取了 {len(compressed_messages)} 条关键消息（基于 turn 元数据）")
 
         # 🔥 关键验证：检查最终的消息序列是否有效
         is_valid = self._validate_message_ordering(compressed_messages)
@@ -404,9 +352,16 @@ class CompressionEngine:
             # 降级到 SLIDING_WINDOW 策略
             return self._compress_with_sliding_window(messages, 0.3, min_keep)
 
+        selected_ids = {turn.id for turn in selected_turns}
+        selected_categories = sorted({category for turn in selected_turns for category in turn.categories})
+        avg_importance = (
+            sum(turn.importance for turn in selected_turns) / len(selected_turns)
+            if selected_turns else 0.5
+        )
+
         # 生成简化版摘要
         summary = self._generate_summary_from_messages(
-            compressed_messages, CompressionStrategy.KEYFRAME, 0.5
+            compressed_messages, CompressionStrategy.KEYFRAME, avg_importance
         )
 
         return CompressionResult(
@@ -418,10 +373,14 @@ class CompressionEngine:
             original_count=len(messages),
             compressed_count=len(compressed_messages),
             metadata={
-                "keyframe_count": len(keyframe_indices),
-                "user_messages": sum(1 for i in keyframe_indices if messages[i].get("role") == "user"),
-                "error_messages": sum(1 for i in keyframe_indices if "Error" in str(messages[i].get("content", ""))),
-                "tool_messages": sum(1 for i in keyframe_indices if messages[i].get("role") == "tool")
+                "keyframe_count": len(compressed_messages),
+                "selected_turn_ids": list(selected_ids),
+                "selected_categories": selected_categories,
+                "avg_turn_importance": avg_importance,
+                "user_messages": sum(1 for msg in compressed_messages if msg.get("role") == "user"),
+                "error_messages": sum(1 for turn in selected_turns if "error" in turn.categories),
+                "tool_messages": sum(1 for msg in compressed_messages if msg.get("role") == "tool"),
+                "files_touched": sorted({path for turn in selected_turns for path in turn.files_touched})[:20],
             }
         )
 
@@ -826,6 +785,70 @@ class CompressionEngine:
 
         selected.reverse()
         return builder.flatten(selected)
+
+    def _select_keyframe_turns(
+        self,
+        turns: List[ConversationTurn],
+        target_count: int,
+        min_keep: int,
+    ) -> List[ConversationTurn]:
+        """Select keyframe turns using Turn metadata while preserving order."""
+        if not turns:
+            return []
+
+        selected_by_id: Dict[str, ConversationTurn] = {}
+
+        # Always keep the most recent complete turns for task continuity.
+        recent_budget = max(min_keep, int(target_count * 0.45))
+        recent_count = 0
+        for turn in reversed(turns):
+            if selected_by_id and recent_count >= recent_budget:
+                break
+            selected_by_id[turn.id] = turn
+            recent_count += len(turn.messages)
+
+        critical_categories = {"error", "test", "code_edit", "planning"}
+        for turn in turns:
+            if critical_categories & set(turn.categories):
+                selected_by_id[turn.id] = turn
+
+        # Fill remaining budget by importance.  Complete tool-call turns are
+        # added whole, so the resulting message list never contains half pairs.
+        ranked = sorted(turns, key=lambda t: (t.importance, t.end_index), reverse=True)
+        selected_count = sum(len(turn.messages) for turn in selected_by_id.values())
+        for turn in ranked:
+            if selected_count >= target_count and len(selected_by_id) >= 1:
+                break
+            if turn.id in selected_by_id:
+                continue
+            if "bulk_output" in turn.categories and turn.importance < 0.5:
+                continue
+            selected_by_id[turn.id] = turn
+            selected_count += len(turn.messages)
+
+        return sorted(selected_by_id.values(), key=lambda turn: turn.start_index)
+
+    def _select_summary_candidate_messages(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        """Select older complete turns worth sending to the LLM summarizer.
+
+        This removes incomplete tool pairs and deprioritizes low-value bulk
+        output while keeping errors/tests/file edits/planning turns as summary
+        candidates.
+        """
+        builder = TurnBuilder()
+        complete_turns = builder.complete_turns_only(builder.build(messages))
+        if not complete_turns:
+            return []
+
+        critical = {"error", "test", "code_edit", "planning"}
+        selected_turns = [
+            turn for turn in complete_turns
+            if (critical & set(turn.categories)) or turn.importance >= 0.35
+        ]
+        if not selected_turns:
+            selected_turns = complete_turns[-min(4, len(complete_turns)):]
+
+        return builder.flatten(selected_turns)
 
     def _parse_structured_summary(
         self,

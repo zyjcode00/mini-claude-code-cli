@@ -183,3 +183,131 @@ def test_sanitizer_uses_turn_builder_to_remove_missing_and_orphan_tool_turns():
 
     assert sanitized == [messages[0], messages[3], messages[4]]
     assert_valid_openai_tool_pairs(sanitized)
+
+
+    messages = [
+        {
+            "role": "tool",
+            "tool_call_id": "call_meta",
+            "name": "execute_bash",
+            "content": "pytest tests/test_core.py\nFAILED tests/test_core.py::test_x\nTraceback: ValueError in core/engine.py",
+        },
+        {
+            "role": "assistant",
+            "content": "已修改 core/engine.py，并计划继续运行 pytest tests/test_core.py",
+        },
+    ]
+
+    turns = TurnBuilder().build(messages)
+    orphan_turn = turns[0]
+    assistant_turn = turns[1]
+
+    assert {"tool", "error", "test", "command"}.issubset(set(orphan_turn.categories))
+    assert "core/engine.py" in orphan_turn.files_touched
+    assert orphan_turn.errors
+    assert orphan_turn.tests
+    assert orphan_turn.importance > 0.35
+
+    assert {"planning", "code_edit", "test"}.issubset(set(assistant_turn.categories))
+    assert "core/engine.py" in assistant_turn.files_touched
+    assert assistant_turn.importance > 0.5
+
+
+@pytest.mark.asyncio
+async def test_keyframe_uses_turn_metadata_and_keeps_tool_pairs_atomic():
+    engine = CompressionEngine()
+    messages = [
+        {"role": "user", "content": "old low value chat"},
+        {"role": "assistant", "content": "generic reply"},
+        {"role": "user", "content": "请修改 core/engine.py 并运行测试"},
+        {
+            "role": "tool",
+            "tool_call_id": "call_orphan",
+            "name": "execute_bash",
+            "content": "orphan should be removed",
+        },
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [tool_call("call_edit", "edit_file")],
+        },
+        {
+            "role": "tool",
+            "tool_call_id": "call_edit",
+            "name": "edit_file",
+            "content": "成功修改 core/engine.py",
+        },
+        {
+            "role": "assistant",
+            "content": "pytest tests/test_engine.py FAILED\nTraceback: AssertionError in tests/test_engine.py",
+        },
+        {"role": "assistant", "content": "final recent status"},
+    ]
+
+    result = await engine.compress(
+        messages=messages,
+        strategy=CompressionStrategy.KEYFRAME,
+        target_ratio=0.25,
+        min_keep=2,
+    )
+
+    assert result.success
+    assert result.strategy == CompressionStrategy.KEYFRAME
+    assert messages[3] not in result.compressed_messages
+    assert messages[4] in result.compressed_messages
+    assert messages[5] in result.compressed_messages
+    assert messages[6] in result.compressed_messages
+    assert "error" in result.metadata["selected_categories"]
+    assert "test" in result.metadata["selected_categories"]
+    assert "core/engine.py" in result.metadata["files_touched"]
+    assert_valid_openai_tool_pairs(result.compressed_messages)
+
+
+@pytest.mark.asyncio
+async def test_llm_summary_uses_metadata_filtered_summary_candidates_and_recent_complete_turns():
+    captured = {}
+
+    async def summarizer(prompt: str) -> str:
+        captured["prompt"] = prompt
+        return """
+        {
+            "task_goal": "phase2",
+            "task_status": "in_progress",
+            "files_changed": [],
+            "errors_encountered": [],
+            "tools_used": [],
+            "key_decisions": [],
+            "summary_text": "summary"
+        }
+        """
+
+    engine = CompressionEngine()
+    messages = [
+        {"role": "assistant", "content": "bulk\n" * 200},
+        {"role": "assistant", "content": "Traceback: RuntimeError in core/compression_engine.py"},
+        {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [tool_call("call_recent", "execute_bash")],
+        },
+        {
+            "role": "tool",
+            "tool_call_id": "call_recent",
+            "name": "execute_bash",
+            "content": "pytest tests/test_turn_builder.py passed",
+        },
+        {"role": "assistant", "content": "recent final"},
+    ]
+
+    result = await engine.compress(
+        messages=messages,
+        strategy=CompressionStrategy.LLM_SUMMARY,
+        llm_summarizer_func=summarizer,
+        min_keep=2,
+    )
+
+    assert result.success
+    assert "Traceback: RuntimeError" in captured["prompt"]
+    assert "bulk" not in captured["prompt"]
+    assert result.compressed_messages == messages[2:]
+    assert_valid_openai_tool_pairs(result.compressed_messages)
