@@ -38,6 +38,12 @@ class MemoryMaintenance:
         if "quality_score" not in item.metadata:
             item.quality_score = max(item.quality_score, item._default_quality_score())
 
+        if item.status != MemoryStatus.ACTIVE.value:
+            item.is_latest = False
+            item.metadata.setdefault("normalized_content_hash", self.normalized_hash(item))
+            item.metadata.setdefault("exact_content_hash", self.exact_hash(item))
+            return MaintenanceDecision("status_update", item, reason="显式非 active 状态更新")
+
         if item.confidence <= self.low_confidence_archive_threshold or item.is_expired():
             item.status = MemoryStatus.ARCHIVED.value
             item.is_latest = False

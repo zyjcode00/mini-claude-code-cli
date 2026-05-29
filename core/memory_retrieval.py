@@ -409,6 +409,7 @@ class MemoryRetriever:
                 matched = ", ".join((bm25_hit.matched_terms if bm25_hit else [])[:6])
                 suffix = f" ({matched})" if matched else ""
                 reasons.append(f"BM25相关 {bm25_score:.2f}{suffix}")
+                reasons.append(f"匹配关键词: {matched}" if matched else "匹配关键词")
             if importance_weight:
                 reasons.append(f"重要性 {importance_weight:.2f}")
             if recency_weight:

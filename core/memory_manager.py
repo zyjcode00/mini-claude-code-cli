@@ -120,13 +120,16 @@ class MemoryManager:
         if not self.enabled or not promote:
             return None
 
-        content = (
-            observation.user_prompt
-            or observation.assistant_message
-            or observation.tool_output
-            or observation.error
-            or ""
-        )
+        if observation.event_type == "session_end" and observation.assistant_message:
+            content = f"用户任务: {observation.user_prompt or ''}\n完成结果: {observation.assistant_message}"
+        else:
+            content = (
+                observation.user_prompt
+                or observation.assistant_message
+                or observation.tool_output
+                or observation.error
+                or ""
+            )
         item = MemoryItem(
             kind=kind,
             title=title or f"{observation.event_type}: {observation.tool_name or observation.session_id or observation.id}",
