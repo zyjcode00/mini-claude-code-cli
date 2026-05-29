@@ -430,8 +430,15 @@ class MemoryRetriever:
             if doc.id in seen:
                 continue
             seen.add(doc.id)
+            recalled_item = doc.to_memory_item()
+            if doc.item and doc.source_type == "long_term_items":
+                try:
+                    self.long_term_memory._write_item(self.long_term_memory.maintenance.record_access(doc.item))
+                    recalled_item = doc.item
+                except Exception:
+                    pass
             results.append(MemoryRecallResult(
-                item=doc.to_memory_item(),
+                item=recalled_item,
                 score=score,
                 source=doc.source_type,
                 reason="; ".join(reasons),
@@ -446,7 +453,7 @@ class MemoryRetriever:
             documents.extend(
                 MemoryDocument.from_memory_item(item)
                 for item in self.long_term_memory.get_all_items()
-                if item.status == MemoryStatus.ACTIVE.value
+                if item.status == MemoryStatus.ACTIVE.value and item.is_latest and not item.is_expired()
             )
         if include_summaries:
             documents.extend(MemoryDocument.from_session_summary(summary, source_type="summary_compat") for summary in self.episodic_memory.get_all())

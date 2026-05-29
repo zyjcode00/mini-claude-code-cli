@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from core.compression_engine import CompressionEngine, CompressionStrategy, CompressionResult
 from core.memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory
-from core.memory_items import MemoryItem, MemoryKind, MemoryRecallResult, RawObservation
+from core.memory_items import MemoryItem, MemoryKind, MemoryRecallResult, RawObservation, MemoryStatus
 from core.memory_models import SessionSummary
 from core.memory_retrieval import MemoryRetriever
 from core.memory_context_builder import MemoryContextBuilder
@@ -328,6 +328,18 @@ class MemoryManager:
                 },
             }
 
+        items = self.long_term_memory.get_all_items()
+        item_status_counts = {
+            MemoryStatus.ACTIVE.value: 0,
+            MemoryStatus.SUPERSEDED.value: 0,
+            MemoryStatus.ARCHIVED.value: 0,
+        }
+        latest_count = 0
+        for item in items:
+            item_status_counts[item.status] = item_status_counts.get(item.status, 0) + 1
+            if item.is_latest:
+                latest_count += 1
+
         working_max = max(self.working_memory.max_size, 1)
         episodic_max = max(self.episodic_memory.max_size, 1)
         return {
@@ -346,6 +358,11 @@ class MemoryManager:
                 "count": len(self.long_term_memory),
                 "summary_count": len(self.long_term_memory.index),
                 "item_count": len(self.long_term_memory.item_index),
+                "item_status_counts": item_status_counts,
+                "active_count": item_status_counts.get(MemoryStatus.ACTIVE.value, 0),
+                "superseded_count": item_status_counts.get(MemoryStatus.SUPERSEDED.value, 0),
+                "archived_count": item_status_counts.get(MemoryStatus.ARCHIVED.value, 0),
+                "latest_count": latest_count,
                 "storage_dir": str(self.long_term_memory.storage_dir),
             },
         }

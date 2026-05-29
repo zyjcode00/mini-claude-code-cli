@@ -15,6 +15,7 @@ from typing import Any, Dict, List, Optional, Tuple
 from .memory_models import SessionSummary
 from .memory_items import MemoryItem, MemoryKind, MemoryRecallResult, MemoryStatus
 from .memory_index import BM25MemoryDocument, MemoryIndexManager
+from .memory_maintenance import MemoryMaintenance
 
 
 class WorkingMemory:
@@ -197,6 +198,9 @@ class LongTermMemory:
 
         # Phase 2: 持久化 BM25 索引，随 store/store_item 增量更新。
         self.index_manager = MemoryIndexManager(self.storage_dir)
+
+        # Phase 3: MemoryItem 生命周期治理。
+        self.maintenance = MemoryMaintenance()
 
         # 初始化时加载索引
         self._load_index()
@@ -523,12 +527,17 @@ class LongTermMemory:
         """
         存储 MemoryItem 到长期记忆。
 
-        Args:
-            item: 长期知识条目
-
-        Returns:
-            存储的文件路径
+        保存前会执行 Phase 3 生命周期治理：低质量归档、重复合并、supersede 旧版本。
         """
+        decision = self.maintenance.prepare_for_save(item, self.get_all_items())
+        if decision.action == "merge_duplicate":
+            return self._write_item(decision.item)
+        if decision.action == "supersede" and decision.matched_item:
+            self._write_item(self.maintenance.mark_superseded(decision.matched_item, decision.item))
+        return self._write_item(decision.item)
+
+    def _write_item(self, item: MemoryItem) -> str:
+        """直接写入 MemoryItem 并同步轻量索引和 BM25 索引。"""
         timestamp = item.updated_at.replace(":", "-").replace(" ", "_")
         filename = f"memory_item_{item.id}_{timestamp}.json"
         file_path = self.storage_dir / filename
@@ -552,7 +561,7 @@ class LongTermMemory:
                     self.item_inverted_index[keyword].append(item.id)
 
             self._save_index()
-            if item.status == MemoryStatus.ACTIVE.value:
+            if item.status == MemoryStatus.ACTIVE.value and item.is_latest and not item.is_expired():
                 self.index_manager.add_or_update(self._item_to_bm25_document(item), force=True)
             else:
                 self.index_manager.remove(item.id, force=True)
@@ -593,7 +602,9 @@ class LongTermMemory:
             item = self.retrieve_item(item_id)
             if not item:
                 continue
-            if not include_archived and item.status != MemoryStatus.ACTIVE.value:
+            if not include_archived and (
+                item.status != MemoryStatus.ACTIVE.value or not item.is_latest or item.is_expired()
+            ):
                 continue
 
             normalized_score = keyword_score + item.importance + item.confidence * 0.5
