@@ -18,6 +18,7 @@ from datetime import datetime
 
 from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage
 from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2
+from core.turn_builder import TurnBuilder
 
 
 class CompressionStrategy(Enum):
@@ -449,94 +450,12 @@ class CompressionEngine:
             CompressionResult
         """
         target_count = max(min_keep, int(len(messages) * target_ratio))
+        compressed_messages = self._select_recent_complete_turn_messages(messages, target_count)
 
-        # 保留最近的消息
-        compressed_messages = messages[-target_count:]
+        if len(compressed_messages) < min_keep and len(messages) <= min_keep:
+            compressed_messages = self._sanitize_openai_tool_pairs(messages[:])
 
-        # 🔥🔥🔥 关键修复：调整起始位置，确保不破坏工具调用对（双向修复）
-        # 问题1：当第一条消息是 tool，但没有对应的 assistant with tool_calls
-        # 问题2：当 assistant with tool_calls 但没有对应的 tool 消息（GPT-5.5 严格要求）
-        start_idx = 0
-        while start_idx < len(compressed_messages):
-            msg = compressed_messages[start_idx]
-
-            # 🔥 情况1：如果消息是 tool，需要找到对应的 assistant with tool_calls
-            if msg.get("role") == "tool":
-                tool_call_id = msg.get("tool_call_id")
-                found_matching_assistant = False
-
-                # 向前查找对应的 assistant
-                for back_idx in range(start_idx - 1, -1, -1):
-                    prev_msg = compressed_messages[back_idx]
-                    if prev_msg.get("role") == "assistant" and "tool_calls" in prev_msg:
-                        for tc in prev_msg.get("tool_calls", []):
-                            if tc.get("id") == tool_call_id:
-                                found_matching_assistant = True
-                                break
-                    if found_matching_assistant:
-                        break
-
-                # 如果没找到对应的 assistant，删除这个孤立的 tool 消息
-                if not found_matching_assistant:
-                    print(f"   [滑动窗口] 删除孤立 tool 消息 (index={start_idx}, tool_call_id={tool_call_id})")
-                    compressed_messages.pop(start_idx)
-                    continue
-
-            # 🔥🔥🔥 情况2：如果消息是 assistant with tool_calls，需要确保后续有对应的 tool
-            # GPT-5.5 严格要求：每个 tool_call_id 都必须有对应的 tool 消息
-            elif msg.get("role") == "assistant" and "tool_calls" in msg:
-                tool_calls = msg.get("tool_calls", [])
-                all_tools_found = True
-
-                for tc in tool_calls:
-                    tool_call_id = tc.get("id")
-                    found_tool = False
-
-                    # 向后查找对应的 tool 消息
-                    for after_idx in range(start_idx + 1, len(compressed_messages)):
-                        next_msg = compressed_messages[after_idx]
-                        if next_msg.get("role") == "tool" and next_msg.get("tool_call_id") == tool_call_id:
-                            found_tool = True
-                            break
-
-                    if not found_tool:
-                        all_tools_found = False
-                        print(f"   [滑动窗口] Assistant 消息 (index={start_idx}) 的 tool_call_id={tool_call_id} 没有对应 tool")
-                        break
-
-                # 🔥🔥🔥 如果 assistant 的 tool_calls 不完整，删除这条 assistant 消息
-                # GPT-5.5 严格要求：不允许孤立的 assistant with tool_calls
-                if not all_tools_found:
-                    print(f"   [滑动窗口] 删除孤立 assistant 消息 (index={start_idx}, 有 {len(tool_calls)} 个 tool_calls)")
-                    compressed_messages.pop(start_idx)
-                    continue
-
-            start_idx += 1
-
-        # 如果截断后数量太少，补充
-        if len(compressed_messages) < min_keep:
-            # 🔥 修复：当消息数量 < min_keep 时，避免切片问题
-            if len(messages) <= min_keep:
-                compressed_messages = messages[:]
-            else:
-                compressed_messages = messages[-min_keep:]
-                # 再次检查起始位置的工具调用完整性
-                start_idx = 0
-                while start_idx < len(compressed_messages):
-                    msg = compressed_messages[start_idx]
-                    if msg.get("role") == "tool":
-                        tool_call_id = msg.get("tool_call_id")
-                        found = any(
-                            compressed_messages[i].get("role") == "assistant" and
-                            any(tc.get("id") == tool_call_id for tc in compressed_messages[i].get("tool_calls", []))
-                            for i in range(start_idx)
-                        )
-                        if not found:
-                            compressed_messages.pop(start_idx)
-                            continue
-                    start_idx += 1
-
-        print(f"   [滑动窗口] 保留最近 {len(compressed_messages)} 条消息（已验证工具调用完整性）")
+        print(f"   [滑动窗口] 保留最近 {len(compressed_messages)} 条消息（基于完整 turn）")
 
         # 🔥 关键验证：检查最终的消息序列是否有效
         is_valid = self._validate_message_ordering(compressed_messages)
@@ -883,47 +802,30 @@ class CompressionEngine:
         - assistant(tool_calls) 若任一 tool_call_id 找不到后续 tool，删除该 assistant。
         """
         sanitized = [dict(msg) if isinstance(msg, dict) else msg for msg in messages]
-        changed = True
+        turns = TurnBuilder().build(sanitized)
+        complete_messages = TurnBuilder().build_complete_messages(sanitized)
+        if len(complete_messages) != len(sanitized):
+            removed = len(sanitized) - len(complete_messages)
+            incomplete_turns = [turn for turn in turns if not turn.is_valid_openai_tool_turn]
+            print(f"   [工具调用清理] 删除 {removed} 条半截 tool pair 消息，涉及 {len(incomplete_turns)} 个不完整 turn")
+        return complete_messages
 
-        while changed:
-            changed = False
-            remove_indices = set()
+    def _select_recent_complete_turn_messages(self, messages: List[Dict[str, Any]], target_count: int) -> List[Dict[str, Any]]:
+        """Select recent complete turns without splitting OpenAI tool pairs."""
+        builder = TurnBuilder()
+        complete_turns = builder.complete_turns_only(builder.build(messages))
+        selected = []
+        selected_count = 0
 
-            for i, msg in enumerate(sanitized):
-                if not isinstance(msg, dict):
-                    continue
+        for turn in reversed(complete_turns):
+            turn_size = len(turn.messages)
+            if selected and selected_count >= target_count:
+                break
+            selected.append(turn)
+            selected_count += turn_size
 
-                if msg.get("role") == "tool":
-                    tool_call_id = msg.get("tool_call_id")
-                    block_start = i
-                    while block_start > 0 and isinstance(sanitized[block_start - 1], dict) and sanitized[block_start - 1].get("role") == "tool":
-                        block_start -= 1
-                    prev_msg = sanitized[block_start - 1] if block_start > 0 and isinstance(sanitized[block_start - 1], dict) else None
-                    found_assistant = bool(
-                        tool_call_id
-                        and prev_msg
-                        and prev_msg.get("role") == "assistant"
-                        and any(tc.get("id") == tool_call_id for tc in prev_msg.get("tool_calls", []))
-                    )
-                    if not found_assistant:
-                        remove_indices.add(i)
-
-                elif msg.get("role") == "assistant" and msg.get("tool_calls"):
-                    expected_ids = {tc.get("id") for tc in msg.get("tool_calls", []) if tc.get("id")}
-                    contiguous_tool_ids = set()
-                    j = i + 1
-                    while j < len(sanitized) and isinstance(sanitized[j], dict) and sanitized[j].get("role") == "tool":
-                        contiguous_tool_ids.add(sanitized[j].get("tool_call_id"))
-                        j += 1
-                    if not expected_ids.issubset(contiguous_tool_ids):
-                        remove_indices.add(i)
-
-            if remove_indices:
-                changed = True
-                print(f"   [工具调用清理] 删除 {len(remove_indices)} 条半截 tool pair 消息")
-                sanitized = [msg for i, msg in enumerate(sanitized) if i not in remove_indices]
-
-        return sanitized
+        selected.reverse()
+        return builder.flatten(selected)
 
     def _parse_structured_summary(
         self,
