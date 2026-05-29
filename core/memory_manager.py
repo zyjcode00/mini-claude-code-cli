@@ -20,7 +20,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from core.compression_engine import CompressionEngine, CompressionStrategy, CompressionResult
 from core.memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory
-from core.memory_items import MemoryItem, MemoryKind, MemoryRecallResult, RawObservation
+from core.memory_items import MemoryItem, MemoryKind, MemoryRecallResult, RawObservation, MemoryStatus
 from core.memory_models import SessionSummary
 from core.memory_retrieval import MemoryRetriever
 from core.memory_context_builder import MemoryContextBuilder
@@ -120,13 +120,16 @@ class MemoryManager:
         if not self.enabled or not promote:
             return None
 
-        content = (
-            observation.user_prompt
-            or observation.assistant_message
-            or observation.tool_output
-            or observation.error
-            or ""
-        )
+        if observation.event_type == "session_end" and observation.assistant_message:
+            content = f"用户任务: {observation.user_prompt or ''}\n完成结果: {observation.assistant_message}"
+        else:
+            content = (
+                observation.user_prompt
+                or observation.assistant_message
+                or observation.tool_output
+                or observation.error
+                or ""
+            )
         item = MemoryItem(
             kind=kind,
             title=title or f"{observation.event_type}: {observation.tool_name or observation.session_id or observation.id}",
@@ -164,6 +167,7 @@ class MemoryManager:
         kinds: Optional[List[str]] = None,
         include_summaries: bool = True,
         include_items: bool = True,
+        current_task_goal: Optional[str] = None,  # 🔥 新增：当前任务目标
     ) -> List[MemoryRecallResult]:
         """统一 Hybrid Recall 入口，返回标准 MemoryRecallResult。"""
         if not self.enabled:
@@ -176,6 +180,7 @@ class MemoryManager:
             kinds=kinds,
             include_summaries=include_summaries,
             include_items=include_items,
+            current_task_goal=current_task_goal,  # 🔥 传递任务目标
         )
 
     def retrieve_file_history(self, path: str, top_k: int = 5) -> List[MemoryRecallResult]:
@@ -199,6 +204,7 @@ class MemoryManager:
         file_path: Optional[str] = None,
         error_type: Optional[str] = None,
         kinds: Optional[List[str]] = None,
+        current_task_goal: Optional[str] = None,  # 🔥 新增：当前任务目标
     ) -> str:
         """召回并构建受 token budget 限制的 prompt 记忆上下文。"""
         if not self.enabled or not query:
@@ -211,6 +217,7 @@ class MemoryManager:
             kinds=kinds,
             include_summaries=True,
             include_items=True,
+            current_task_goal=current_task_goal,  # 🔥 传递任务目标
         )
         return self.context_builder.build(
             query=query,
@@ -328,6 +335,18 @@ class MemoryManager:
                 },
             }
 
+        items = self.long_term_memory.get_all_items()
+        item_status_counts = {
+            MemoryStatus.ACTIVE.value: 0,
+            MemoryStatus.SUPERSEDED.value: 0,
+            MemoryStatus.ARCHIVED.value: 0,
+        }
+        latest_count = 0
+        for item in items:
+            item_status_counts[item.status] = item_status_counts.get(item.status, 0) + 1
+            if item.is_latest:
+                latest_count += 1
+
         working_max = max(self.working_memory.max_size, 1)
         episodic_max = max(self.episodic_memory.max_size, 1)
         return {
@@ -346,6 +365,11 @@ class MemoryManager:
                 "count": len(self.long_term_memory),
                 "summary_count": len(self.long_term_memory.index),
                 "item_count": len(self.long_term_memory.item_index),
+                "item_status_counts": item_status_counts,
+                "active_count": item_status_counts.get(MemoryStatus.ACTIVE.value, 0),
+                "superseded_count": item_status_counts.get(MemoryStatus.SUPERSEDED.value, 0),
+                "archived_count": item_status_counts.get(MemoryStatus.ARCHIVED.value, 0),
+                "latest_count": latest_count,
                 "storage_dir": str(self.long_term_memory.storage_dir),
             },
         }

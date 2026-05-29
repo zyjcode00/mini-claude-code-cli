@@ -167,6 +167,15 @@ class MemoryItem:
     confidence: float = 0.8
     status: str = MemoryStatus.ACTIVE.value
     version: int = 1
+    parent_id: Optional[str] = None
+    supersedes: List[str] = field(default_factory=list)
+    related_ids: List[str] = field(default_factory=list)
+    is_latest: bool = True
+    forget_after: Optional[str] = None
+    last_accessed_at: Optional[str] = None
+    access_count: int = 0
+    last_injected_at: Optional[str] = None
+    quality_score: float = 0.5
     metadata: Dict[str, Any] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
@@ -180,6 +189,14 @@ class MemoryItem:
         self.importance = _clamp_float(self.importance, default=0.5)
         self.confidence = _clamp_float(self.confidence, default=0.8)
         self.version = int(self.version or 1)
+        self.supersedes = [str(item) for item in _as_list(self.supersedes)]
+        self.related_ids = [str(item) for item in _as_list(self.related_ids)]
+        self.is_latest = bool(self.is_latest)
+        try:
+            self.access_count = max(0, int(self.access_count or 0))
+        except (TypeError, ValueError):
+            self.access_count = 0
+        self.quality_score = _clamp_float(self.quality_score, default=self._default_quality_score())
         self.metadata = dict(self.metadata or {})
 
     def to_dict(self) -> Dict[str, Any]:
@@ -201,6 +218,15 @@ class MemoryItem:
             "confidence": self.confidence,
             "status": self.status,
             "version": self.version,
+            "parent_id": self.parent_id,
+            "supersedes": list(self.supersedes),
+            "related_ids": list(self.related_ids),
+            "is_latest": self.is_latest,
+            "forget_after": self.forget_after,
+            "last_accessed_at": self.last_accessed_at,
+            "access_count": self.access_count,
+            "last_injected_at": self.last_injected_at,
+            "quality_score": self.quality_score,
             "metadata": dict(self.metadata),
         }
 
@@ -222,6 +248,15 @@ class MemoryItem:
             confidence=data.get("confidence", 0.8),
             status=data.get("status", MemoryStatus.ACTIVE.value),
             version=data.get("version", 1),
+            parent_id=data.get("parent_id"),
+            supersedes=data.get("supersedes", []),
+            related_ids=data.get("related_ids", []),
+            is_latest=data.get("is_latest", True),
+            forget_after=data.get("forget_after"),
+            last_accessed_at=data.get("last_accessed_at"),
+            access_count=data.get("access_count", 0),
+            last_injected_at=data.get("last_injected_at"),
+            quality_score=data.get("quality_score", 0.5),
             metadata=data.get("metadata", {}),
         )
 
@@ -244,6 +279,37 @@ class MemoryItem:
             " ".join(self.source_session_ids),
         ]
         return "\n".join(part for part in parts if part)
+
+    def _default_quality_score(self) -> float:
+        """根据基础质量信号给出默认质量分。"""
+        score = self.confidence * 0.55 + self.importance * 0.35
+        if self.metadata.get("explicit_memory_save") or self.metadata.get("source") == "memory_save":
+            score += 0.1
+        if self.metadata.get("tests_passed") is True:
+            score += 0.1
+        if self.metadata.get("tests_passed") is False:
+            score -= 0.15
+        return max(0.0, min(1.0, score))
+
+    def mark_accessed(self, injected: bool = False) -> None:
+        """记录一次召回/注入访问。"""
+        now = _now_iso()
+        self.last_accessed_at = now
+        self.access_count += 1
+        if injected:
+            self.last_injected_at = now
+        self.quality_score = max(self.quality_score, min(1.0, self.quality_score + 0.02))
+        self.updated_at = now
+
+    def is_expired(self, now: Optional[datetime] = None) -> bool:
+        """判断 forget_after 是否已过期。"""
+        if not self.forget_after:
+            return False
+        try:
+            expire_at = datetime.fromisoformat(self.forget_after)
+        except Exception:
+            return False
+        return expire_at <= (now or datetime.now())
 
 
 @dataclass

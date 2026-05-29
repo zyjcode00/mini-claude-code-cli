@@ -222,6 +222,7 @@ class MemoryStatsTool(BaseTool):
                 f"工作记忆: {working.get('size', 0)}/{working.get('max_size', 0)} (使用率 {working.get('usage_rate', 0):.0%})",
                 f"情景记忆: {episodic.get('size', 0)}/{episodic.get('max_size', 0)} (使用率 {episodic.get('usage_rate', 0):.0%})",
                 f"长期记忆: 总数 {long_term.get('count', 0)} | MemoryItem {long_term.get('item_count', 0)} | SessionSummary {long_term.get('summary_count', 0)}",
+                f"MemoryItem 状态: active {long_term.get('active_count', 0)} | superseded {long_term.get('superseded_count', 0)} | archived {long_term.get('archived_count', 0)} | latest {long_term.get('latest_count', 0)}",
                 f"存储目录: {long_term.get('storage_dir', '')}",
             ]
             return "\n".join(lines)

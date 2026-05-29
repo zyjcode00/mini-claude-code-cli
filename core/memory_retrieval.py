@@ -9,7 +9,46 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional, Tuple
 from .memory_models import SessionSummary
 from .memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory
-from .memory_items import MemoryItem, MemoryKind, MemoryRecallResult
+from .memory_items import MemoryItem, MemoryKind, MemoryRecallResult, MemoryStatus
+from .memory_index import BM25MemoryDocument, BM25MemoryIndex
+
+
+RRF_K = 60
+RRF_DEFAULT_WEIGHTS: Dict[str, float] = {
+    "bm25": 0.45,
+    "vector": 0.30,
+    "metadata": 0.20,
+    "graph": 0.05,
+}
+RRF_FILE_HISTORY_WEIGHTS: Dict[str, float] = {
+    "metadata": 0.45,
+    "bm25": 0.35,
+    "vector": 0.15,
+    "graph": 0.05,
+}
+RRF_ERROR_HISTORY_WEIGHTS: Dict[str, float] = {
+    "bm25": 0.45,
+    "metadata": 0.35,
+    "vector": 0.15,
+    "graph": 0.05,
+}
+RRF_ARCHITECTURE_WEIGHTS: Dict[str, float] = {
+    "bm25": 0.40,
+    "vector": 0.35,
+    "metadata": 0.20,
+    "graph": 0.05,
+}
+
+
+@dataclass
+class RetrievalHit:
+    """Single retrieval-source hit used by RRF fusion."""
+
+    doc_id: str
+    rank: int
+    score: float
+    source: str
+    reason: str = ""
 
 
 @dataclass
@@ -361,29 +400,8 @@ class MemoryRetriever:
         return score
 
     def _tokenize(self, text: str) -> List[str]:
-        """
-        简单分词（支持中英文）
-
-        Args:
-            text: 输入文本
-
-        Returns:
-            词项列表
-        """
-        import re
-
-        # 英文单词
-        words = re.findall(r'\b[a-zA-Z]{2,}\b', text.lower())
-
-        # 中文分词（简单实现：提取 2-3 字的片段）
-        # 注意：这是简化版本，实际应用中应使用 jieba 等分词工具
-        chinese_2char = re.findall(r'[\u4e00-\u9fa5]{2}', text)
-        chinese_3char = re.findall(r'[\u4e00-\u9fa5]{3}', text)
-
-        # 合并并去重
-        chinese = list(set(chinese_2char + chinese_3char))
-
-        return words + chinese
+        """统一使用 BM25MemoryIndex 的 Phase 1 分词器。"""
+        return BM25MemoryIndex.tokenize(text)
 
     def hybrid_recall(
         self,
@@ -394,71 +412,212 @@ class MemoryRetriever:
         kinds: Optional[List[str]] = None,
         include_summaries: bool = True,
         include_items: bool = True,
+        current_task_goal: Optional[str] = None,  # 🔥 新增：当前任务目标
     ) -> List[MemoryRecallResult]:
-        """统一 Hybrid Recall：整合 MemoryItem、Episodic SessionSummary 与长期 SessionSummary。"""
+        """统一 Hybrid Recall：用 RRF 融合 BM25、Vector 与 Metadata 召回。"""
         documents = self._build_documents(include_summaries=include_summaries, include_items=include_items)
-        query_terms = self._tokenize(" ".join(part for part in [query, file_path or "", error_type or ""] if part))
-        ranked: List[Tuple[MemoryDocument, float, List[str]]] = []
-
+        # BM25/Vector should rank semantic/textual query evidence.  File paths are
+        # represented as a separate metadata source so an exact file match does
+        # not also dominate BM25/vector and collapse the RRF scale separation.
+        bm25_query = " ".join(part for part in [query, error_type or ""] if part)
+        query_terms = self._tokenize(bm25_query)
         normalized_file = self._normalize_path(file_path) if file_path else ""
         normalized_error = (error_type or "").lower()
         allowed_kinds = {kind.lower() for kind in kinds} if kinds else None
+        candidate_docs = [
+            doc for doc in documents
+            if not allowed_kinds or doc.kind.lower() in allowed_kinds
+        ]
 
-        for doc in documents:
-            if allowed_kinds and doc.kind.lower() not in allowed_kinds:
-                continue
+        bm25_hits = self._search_bm25(candidate_docs, bm25_query, top_k=max(len(candidate_docs), top_k))
+        vector_hits = self._search_vector(candidate_docs, bm25_query, top_k=max(len(candidate_docs), top_k))
+        retrieval_hits: List[RetrievalHit] = []
+        bm25_by_doc: Dict[str, Any] = {}
+        vector_by_doc: Dict[str, Any] = {}
+        metadata_by_doc: Dict[str, List[RetrievalHit]] = {}
 
+        for rank, hit in enumerate(sorted(bm25_hits.values(), key=lambda item: item.score, reverse=True), start=1):
+            bm25_by_doc[hit.doc_id] = hit
+            matched = ", ".join(getattr(hit, "matched_terms", [])[:6])
+            reason = f"BM25 rank{rank}"
+            if matched:
+                reason += f" ({matched})"
+            reason += f"; BM25相关 {hit.score:.2f}"
+            retrieval_hits.append(RetrievalHit(hit.doc_id, rank, hit.score, "bm25", reason))
+
+        for rank, hit in enumerate(sorted(vector_hits.values(), key=lambda item: item.score, reverse=True), start=1):
+            vector_by_doc[hit.doc_id] = hit
+            retrieval_hits.append(RetrievalHit(
+                hit.doc_id,
+                rank,
+                hit.score,
+                "vector",
+                f"Vector rank{rank}; Vector相关 {hit.score:.2f}",
+            ))
+
+        metadata_raw: List[Tuple[MemoryDocument, float, List[str]]] = []
+        for doc in candidate_docs:
             file_match = self._file_match_score(doc, normalized_file) if normalized_file else 0.0
             error_match = self._error_match_score(doc, normalized_error) if normalized_error else 0.0
-            if normalized_file and file_match <= 0:
-                continue
-            if normalized_error and error_match <= 0 and doc.kind != MemoryKind.BUG.value:
-                continue
-
-            bm25_score = self._calculate_text_bm25_score(query_terms, doc.content) if query_terms else 0.0
             importance_weight = max(0.0, min(doc.importance, 1.0)) * 0.35
             recency_weight = self._recency_weight(doc.timestamp)
             type_weight = self._type_weight(doc.kind, query)
-            score = bm25_score + importance_weight + recency_weight + file_match + error_match + type_weight
 
-            reasons = []
-            if bm25_score:
-                reasons.append(f"匹配关键词/文本相关 {bm25_score:.2f}")
+            reasons: List[str] = []
+            if file_match:
+                label = "file exact" if file_match >= 1.2 else "file partial"
+                reasons.append(f"{label} {file_match:.2f}")
+                reasons.append(f"文件匹配 {file_match:.2f}")
+            if error_match:
+                label = "error exact" if error_match >= 1.1 else "error partial"
+                reasons.append(f"{label} {error_match:.2f}")
+                reasons.append(f"错误匹配 {error_match:.2f}")
             if importance_weight:
                 reasons.append(f"重要性 {importance_weight:.2f}")
             if recency_weight:
                 reasons.append(f"时间 {recency_weight:.2f}")
-            if file_match:
-                reasons.append(f"文件匹配 {file_match:.2f}")
-            if error_match:
-                reasons.append(f"错误匹配 {error_match:.2f}")
             if type_weight:
                 reasons.append(f"类型匹配 {type_weight:.2f}")
 
-            if score > 0 or not query_terms:
-                ranked.append((doc, score, reasons or ["默认召回"]))
+            score = file_match + error_match + importance_weight + recency_weight + type_weight
+            if score > 0:
+                metadata_raw.append((doc, score, reasons))
 
-        ranked.sort(key=lambda item: item[1], reverse=True)
+        metadata_raw.sort(key=lambda item: item[1], reverse=True)
+        for rank, (doc, score, reasons) in enumerate(metadata_raw, start=1):
+            hit = RetrievalHit(doc.id, rank, score, "metadata", f"Metadata rank{rank}: " + "; ".join(reasons))
+            retrieval_hits.append(hit)
+            metadata_by_doc.setdefault(doc.id, []).append(hit)
+
+        weights = self._rrf_weights(query=query, file_path=file_path, error_type=error_type)
+        doc_by_id = {doc.id: doc for doc in candidate_docs}
+        fused: Dict[str, float] = {}
+        reasons_by_doc: Dict[str, List[str]] = {}
+        for hit in retrieval_hits:
+            if hit.doc_id not in doc_by_id:
+                continue
+            fused[hit.doc_id] = fused.get(hit.doc_id, 0.0) + weights.get(hit.source, 0.0) / (RRF_K + hit.rank)
+            reasons_by_doc.setdefault(hit.doc_id, []).append(hit.reason)
+
+        if not query_terms and not normalized_file and not normalized_error:
+            for doc in candidate_docs:
+                fused.setdefault(doc.id, 0.0)
+                reasons_by_doc.setdefault(doc.id, ["默认召回"])
+
+        ranked = sorted(
+            ((doc_by_id[doc_id], score, reasons_by_doc.get(doc_id, [])) for doc_id, score in fused.items()),
+            key=lambda item: item[1],
+            reverse=True,
+        )
         results: List[MemoryRecallResult] = []
         seen = set()
         for doc, score, reasons in ranked:
             if doc.id in seen:
                 continue
+            if normalized_file and self._file_match_score(doc, normalized_file) <= 0:
+                continue
+            if normalized_error and self._error_match_score(doc, normalized_error) <= 0 and doc.kind != MemoryKind.BUG.value:
+                continue
             seen.add(doc.id)
+            recalled_item = doc.to_memory_item()
+            if doc.item and doc.source_type == "long_term_items":
+                try:
+                    self.long_term_memory._write_item(self.long_term_memory.maintenance.record_access(doc.item))
+                    recalled_item = doc.item
+                except Exception:
+                    pass
+            reason_parts = [f"RRF {score:.4f}", *reasons]
             results.append(MemoryRecallResult(
-                item=doc.to_memory_item(),
+                item=recalled_item,
                 score=score,
                 source=doc.source_type,
-                reason="; ".join(reasons),
+                reason="; ".join(reason_parts),
             ))
             if len(results) >= top_k:
                 break
+
+        # 🔥 新增：基于任务目标的相关性过滤
+        if current_task_goal and results:
+            results = self._filter_by_task_relevance(results, current_task_goal)
+
         return results
+
+    def _filter_by_task_relevance(
+        self,
+        results: List[MemoryRecallResult],
+        task_goal: str,
+        min_relevance_score: float = 0.15,
+    ) -> List[MemoryRecallResult]:
+        """
+        基于任务目标过滤记忆相关性
+
+        Args:
+            results: 检索结果列表
+            task_goal: 当前任务目标
+            min_relevance_score: 最小相关性阈值 (0-1)
+
+        Returns:
+            过滤后的结果列表
+        """
+        if not task_goal or not results:
+            return results
+
+        # 提取任务目标关键词
+        task_keywords = set(self._tokenize(task_goal.lower()))
+
+        if not task_keywords:
+            return results
+
+        filtered = []
+        for result in results:
+            # 提取记忆关键词
+            memory_keywords = set()
+
+            # 从标题提取
+            if result.item and hasattr(result.item, 'title') and result.item.title:
+                memory_keywords.update(self._tokenize(result.item.title.lower()))
+
+            # 从内容提取（限制前500字符）
+            if result.item and hasattr(result.item, 'content') and result.item.content:
+                content_preview = result.item.content[:500].lower()
+                memory_keywords.update(self._tokenize(content_preview))
+
+            # 计算 Jaccard 相似度
+            if task_keywords and memory_keywords:
+                overlap = task_keywords & memory_keywords
+                union = task_keywords | memory_keywords
+                relevance = len(overlap) / len(union) if union else 0
+
+                # 如果相关性足够高，保留
+                if relevance >= min_relevance_score:
+                    filtered.append(result)
+
+        # 如果过滤后为空，返回原始结果（避免过度过滤）
+        return filtered if filtered else results
+
+    def _rrf_weights(
+        self,
+        query: str = "",
+        file_path: Optional[str] = None,
+        error_type: Optional[str] = None,
+    ) -> Dict[str, float]:
+        if error_type:
+            return dict(RRF_ERROR_HISTORY_WEIGHTS)
+        if file_path:
+            return dict(RRF_FILE_HISTORY_WEIGHTS)
+        q = (query or "").lower()
+        if any(word in q for word in ["架构", "architecture", "设计"]):
+            return dict(RRF_ARCHITECTURE_WEIGHTS)
+        return dict(RRF_DEFAULT_WEIGHTS)
 
     def _build_documents(self, include_summaries: bool = True, include_items: bool = True) -> List[MemoryDocument]:
         documents: List[MemoryDocument] = []
         if include_items:
-            documents.extend(MemoryDocument.from_memory_item(item) for item in self.long_term_memory.get_all_items())
+            documents.extend(
+                MemoryDocument.from_memory_item(item)
+                for item in self.long_term_memory.get_all_items()
+                if item.status == MemoryStatus.ACTIVE.value and item.is_latest and not item.is_expired()
+            )
         if include_summaries:
             documents.extend(MemoryDocument.from_session_summary(summary, source_type="summary_compat") for summary in self.episodic_memory.get_all())
             for session_id in self.long_term_memory.get_all_session_ids():
@@ -466,6 +625,100 @@ class MemoryRetriever:
                 if summary:
                     documents.append(MemoryDocument.from_session_summary(summary, source_type="summary_compat"))
         return documents
+
+    def _search_bm25(self, documents: List[MemoryDocument], query: str, top_k: int) -> Dict[str, Any]:
+        """Search BM25, preferring Phase 2 persisted index for long-term docs."""
+        if not query:
+            return {}
+
+        persisted_hits: Dict[str, Any] = {}
+        if hasattr(self.long_term_memory, "index_manager"):
+            try:
+                valid_long_term_ids = {
+                    doc.id
+                    for doc in documents
+                    if doc.source_type in {"long_term_items", "summary_compat"}
+                }
+                raw_hits = self.long_term_memory.index_manager.search(query, top_k=max(top_k, len(valid_long_term_ids)))
+                persisted_hits = {hit.doc_id: hit for hit in raw_hits if hit.doc_id in valid_long_term_ids}
+            except Exception:
+                try:
+                    self.long_term_memory.rebuild_search_index()
+                    raw_hits = self.long_term_memory.index_manager.search(query, top_k=top_k)
+                    valid_ids = {doc.id for doc in documents}
+                    persisted_hits = {hit.doc_id: hit for hit in raw_hits if hit.doc_id in valid_ids}
+                except Exception:
+                    persisted_hits = {}
+
+        transient_docs = [
+            doc for doc in documents
+            if doc.source_type not in {"long_term_items", "summary_compat"}
+        ]
+        if not transient_docs:
+            return persisted_hits
+
+        transient_index = self._build_bm25_index(transient_docs)
+        for hit in transient_index.search(query, top_k=max(top_k, len(transient_docs))):
+            persisted_hits[hit.doc_id] = hit
+        return persisted_hits
+
+    def _search_vector(self, documents: List[MemoryDocument], query: str, top_k: int) -> Dict[str, Any]:
+        """Search vector index for long-term docs and transient in-memory docs."""
+        if not query:
+            return {}
+
+        vector_hits: Dict[str, Any] = {}
+        valid_ids = {doc.id for doc in documents}
+        if hasattr(self.long_term_memory, "index_manager"):
+            try:
+                raw_hits = self.long_term_memory.index_manager.vector_search(query, top_k=max(top_k, len(valid_ids)))
+                vector_hits.update({hit.doc_id: hit for hit in raw_hits if hit.doc_id in valid_ids})
+            except Exception:
+                vector_hits = {}
+
+        transient_docs = [doc for doc in documents if doc.source_type not in {"long_term_items", "summary_compat"}]
+        if transient_docs and hasattr(self.long_term_memory, "index_manager"):
+            try:
+                from .memory_index import VectorMemoryDocument, VectorMemoryIndex
+
+                provider = self.long_term_memory.index_manager.vector_provider
+                transient_index = VectorMemoryIndex(provider=provider)
+                transient_index.add_documents(
+                    VectorMemoryDocument(
+                        doc_id=doc.id,
+                        text="\n".join(part for part in [self._document_title(doc), doc.content, " ".join(doc.concepts), " ".join(doc.files)] if part),
+                        metadata={"source_type": doc.source_type, "session_id": doc.session_id},
+                    )
+                    for doc in transient_docs
+                )
+                for hit in transient_index.search(query, top_k=max(top_k, len(transient_docs))):
+                    vector_hits[hit.doc_id] = hit
+            except Exception:
+                pass
+        return vector_hits
+
+    def _build_bm25_index(self, documents: List[MemoryDocument]) -> BM25MemoryIndex:
+        index = BM25MemoryIndex()
+        for doc in documents:
+            index.add_or_update(BM25MemoryDocument(
+                doc_id=doc.id,
+                title=self._document_title(doc),
+                content=doc.content,
+                concepts=doc.concepts,
+                files=doc.files,
+                kind=doc.kind,
+                error=" ".join(doc.error_types),
+                project=doc.project,
+                metadata={"source_type": doc.source_type, "session_id": doc.session_id},
+            ))
+        return index
+
+    def _document_title(self, doc: MemoryDocument) -> str:
+        if doc.item:
+            return doc.item.title
+        if doc.summary:
+            return doc.summary.task_goal
+        return doc.id
 
     def _calculate_text_bm25_score(self, query_terms: List[str], text: str) -> float:
         doc_terms = self._tokenize(text)

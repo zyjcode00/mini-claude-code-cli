@@ -1,0 +1,491 @@
+{
+  "total_cases": 12,
+  "hit_at_1": 0.9166666666666666,
+  "hit_at_3": 1.0,
+  "hit_at_5": 1.0,
+  "mrr": 0.9583333333333334,
+  "forbidden_violation_rate": 0.0,
+  "by_category": {
+    "architecture": {
+      "cases": 2.0,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@5": 1.0,
+      "mrr": 1.0,
+      "forbidden_violation_rate": 0.0
+    },
+    "chinese_query": {
+      "cases": 1.0,
+      "hit@1": 0.0,
+      "hit@3": 1.0,
+      "hit@5": 1.0,
+      "mrr": 0.5,
+      "forbidden_violation_rate": 0.0
+    },
+    "error_history": {
+      "cases": 3.0,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@5": 1.0,
+      "mrr": 1.0,
+      "forbidden_violation_rate": 0.0
+    },
+    "file_history": {
+      "cases": 1.0,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@5": 1.0,
+      "mrr": 1.0,
+      "forbidden_violation_rate": 0.0
+    },
+    "lifecycle": {
+      "cases": 1.0,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@5": 1.0,
+      "mrr": 1.0,
+      "forbidden_violation_rate": 0.0
+    },
+    "phase_task": {
+      "cases": 2.0,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@5": 1.0,
+      "mrr": 1.0,
+      "forbidden_violation_rate": 0.0
+    },
+    "preference": {
+      "cases": 1.0,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@5": 1.0,
+      "mrr": 1.0,
+      "forbidden_violation_rate": 0.0
+    },
+    "semantic_rewrite": {
+      "cases": 1.0,
+      "hit@1": 1.0,
+      "hit@3": 1.0,
+      "hit@5": 1.0,
+      "mrr": 1.0,
+      "forbidden_violation_rate": 0.0
+    }
+  },
+  "case_results": [
+    {
+      "case_id": "phase5_rrf_done",
+      "category": "phase_task",
+      "query": "Phase 5 是不是已经做了 RRF，多路召回现在怎么融合排序？",
+      "expected_any": [
+        "bench_phase5_rrf_fusion"
+      ],
+      "forbidden": [],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_phase5_rrf_fusion",
+        "bench_arch_retrieval_not_rewrite",
+        "bench_phase3_lifecycle_governance",
+        "bench_phase4_vector_index",
+        "bench_phase2_index_persistence"
+      ],
+      "ranked_titles": [
+        "Phase 5 实现 RRF 多路召回融合",
+        "记忆检索主干不需要推倒重写",
+        "Phase 3 完成 MemoryItem 生命周期治理",
+        "Phase 4 实现轻量 VectorIndex",
+        "Phase 2 实现 IndexPersistence 和增量索引"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0156; BM25 rank1 (5, phase, rrf, 召回, 多路, 多路召); BM25相关 41.73; Vector rank1; Vector相关 0.53; Metadata rank1: 重要性 0.34; 时间 0.20",
+        "RRF 0.0147; BM25 rank2 (rrf, 已经); BM25相关 12.54; Vector rank8; Vector相关 0.02; Metadata rank7: 重要性 0.33; 时间 0.20",
+        "RRF 0.0147; BM25 rank3 (phase); BM25相关 4.10; Vector rank7; Vector相关 0.03; Metadata rank6: 重要性 0.33; 时间 0.20",
+        "RRF 0.0146; BM25 rank5 (phase); BM25相关 4.06; Vector rank5; Vector相关 0.09; Metadata rank5: 重要性 0.33; 时间 0.20",
+        "RRF 0.0102; BM25 rank4 (phase); BM25相关 4.09; Metadata rank3: 重要性 0.34; 时间 0.20"
+      ],
+      "hit_rank": 1,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": []
+    },
+    {
+      "case_id": "phase4_vector_index",
+      "category": "phase_task",
+      "query": "Phase 4 加的是不是向量检索和 HashEmbeddingProvider？",
+      "expected_any": [
+        "bench_phase4_vector_index"
+      ],
+      "forbidden": [],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_phase4_vector_index",
+        "bench_phase5_rrf_fusion",
+        "bench_phase3_lifecycle_governance",
+        "bench_arch_retrieval_not_rewrite",
+        "bench_phase2_index_persistence"
+      ],
+      "ranked_titles": [
+        "Phase 4 实现轻量 VectorIndex",
+        "Phase 5 实现 RRF 多路召回融合",
+        "Phase 3 完成 MemoryItem 生命周期治理",
+        "记忆检索主干不需要推倒重写",
+        "Phase 2 实现 IndexPersistence 和增量索引"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0154; BM25 rank1 (4, embedding, hash, hashembeddingprovider, phase, provider); BM25相关 33.87; Vector rank1; Vector相关 0.42; Metadata rank5: 重要性 0.33; 时间 0.20",
+        "RRF 0.0150; BM25 rank5 (phase); BM25相关 4.04; Vector rank3; Vector相关 0.09; Metadata rank1: 重要性 0.34; 时间 0.20",
+        "RRF 0.0149; BM25 rank3 (phase); BM25相关 4.10; Vector rank4; Vector相关 0.08; Metadata rank6: 重要性 0.33; 时间 0.20",
+        "RRF 0.0147; BM25 rank2 (embedding, 检索); BM25相关 6.66; Vector rank7; Vector相关 0.03; Metadata rank7: 重要性 0.33; 时间 0.20",
+        "RRF 0.0103; BM25 rank4 (phase); BM25相关 4.09; Metadata rank2: 重要性 0.34; 时间 0.20"
+      ],
+      "hit_rank": 1,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": []
+    },
+    {
+      "case_id": "index_persistence_incremental",
+      "category": "file_history",
+      "query": "core/memory_index.py 里 IndexPersistence 和增量 BM25 索引是什么时候做的？",
+      "expected_any": [
+        "bench_phase2_index_persistence"
+      ],
+      "forbidden": [],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_phase2_index_persistence",
+        "bench_phase5_rrf_fusion",
+        "bench_phase4_vector_index",
+        "bench_bug_winerror5_index_json",
+        "bench_phase3_lifecycle_governance"
+      ],
+      "ranked_titles": [
+        "Phase 2 实现 IndexPersistence 和增量索引",
+        "Phase 5 实现 RRF 多路召回融合",
+        "Phase 4 实现轻量 VectorIndex",
+        "WinError 5 保存索引失败时保留 pending snapshot",
+        "Phase 3 完成 MemoryItem 生命周期治理"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0155; BM25 rank1 (25, bm25, core, core/memory_index.py, index, indexpersistence); BM25相关 52.02; Vector rank1; Vector相关 0.70; Metadata rank2: 重要性 0.34; 时间 0.20",
+        "RRF 0.0152; BM25 rank2 (25, bm25, core, memory, py); BM25相关 10.68; Vector rank4; Vector相关 0.15; Metadata rank1: 重要性 0.34; 时间 0.20",
+        "RRF 0.0149; BM25 rank4 (core, core/memory_index.py, index, memory, persistence, py); BM25相关 10.07; Vector rank2; Vector相关 0.25; Metadata rank6: 重要性 0.33; 时间 0.20",
+        "RRF 0.0147; BM25 rank5 (core, index, memory, py, 索引); BM25相关 6.18; Vector rank5; Vector相关 0.12; Metadata rank3: 重要性 0.34; 时间 0.20",
+        "RRF 0.0147; BM25 rank6 (core, memory, py); BM25相关 0.74; Vector rank3; Vector相关 0.15; Metadata rank5: 重要性 0.33; 时间 0.20"
+      ],
+      "hit_rank": 1,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": []
+    },
+    {
+      "case_id": "lifecycle_filters_old_memory",
+      "category": "lifecycle",
+      "query": "长期记忆现在怎么过滤 archived superseded expired 旧记忆？",
+      "expected_any": [
+        "bench_phase3_lifecycle_governance"
+      ],
+      "forbidden": [
+        "bench_old_keyword_retrieval_archived"
+      ],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_phase3_lifecycle_governance",
+        "bench_arch_retrieval_not_rewrite",
+        "bench_bug_openai_tool_pairing",
+        "bench_phase4_vector_index",
+        "bench_bug_module_not_found_pytest"
+      ],
+      "ranked_titles": [
+        "Phase 3 完成 MemoryItem 生命周期治理",
+        "记忆检索主干不需要推倒重写",
+        "OpenAI strict tool_calls 必须和 tool response 成对",
+        "Phase 4 实现轻量 VectorIndex",
+        "pytest ModuleNotFoundError 需要从项目根目录运行"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0154; BM25 rank1 (archived, expired, 期记, 期记忆, 记忆, 长期); BM25相关 26.78; Vector rank1; Vector相关 0.19; Metadata rank5: 重要性 0.33; 时间 0.20",
+        "RRF 0.0151; BM25 rank2 (期记, 期记忆, 记忆, 长期, 长期记); BM25相关 11.04; Vector rank2; Vector相关 0.17; Metadata rank7: 重要性 0.33; 时间 0.20",
+        "RRF 0.0078; Vector rank4; Vector相关 0.03; Metadata rank4: 重要性 0.33; 时间 0.20",
+        "RRF 0.0078; Vector rank3; Vector相关 0.04; Metadata rank6: 重要性 0.33; 时间 0.20",
+        "RRF 0.0075; Vector rank5; Vector相关 0.03; Metadata rank9: 重要性 0.32; 时间 0.20"
+      ],
+      "hit_rank": 1,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": []
+    },
+    {
+      "case_id": "architecture_not_rewrite",
+      "category": "architecture",
+      "query": "现在记忆检索还要推倒重写吗，下一步应该先做 Graph 还是质量测评？",
+      "expected_any": [
+        "bench_arch_retrieval_not_rewrite"
+      ],
+      "forbidden": [
+        "bench_old_keyword_retrieval_archived"
+      ],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_arch_retrieval_not_rewrite",
+        "bench_phase3_lifecycle_governance",
+        "bench_phase2_index_persistence",
+        "bench_context_compression_strategy_doc",
+        "bench_bug_winerror5_index_json"
+      ],
+      "ranked_titles": [
+        "记忆检索主干不需要推倒重写",
+        "Phase 3 完成 MemoryItem 生命周期治理",
+        "Phase 2 实现 IndexPersistence 和增量索引",
+        "上下文压缩系统重构路线保存在 docs",
+        "WinError 5 保存索引失败时保留 pending snapshot"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0152; BM25 rank1 (graph, 一步, 下一, 下一步, 倒重, 倒重写); BM25相关 57.35; Vector rank2; Vector相关 0.12; Metadata rank7: 重要性 0.33; 时间 0.20",
+        "RRF 0.0149; BM25 rank2 (记忆); BM25相关 1.65; Vector rank5; Vector相关 0.03; Metadata rank6: 重要性 0.33; 时间 0.20",
+        "RRF 0.0079; Vector rank4; Vector相关 0.07; Metadata rank3: 重要性 0.34; 时间 0.20",
+        "RRF 0.0078; Vector rank1; Vector相关 0.17; Metadata rank10: 重要性 0.30; 时间 0.20",
+        "RRF 0.0078; Vector rank6; Vector相关 0.02; Metadata rank2: 重要性 0.34; 时间 0.20"
+      ],
+      "hit_rank": 1,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": []
+    },
+    {
+      "case_id": "winerror5_index_failure",
+      "category": "error_history",
+      "query": "PS D:\\LLM\\mini-claude-code-cli> python .\\main.py 保存索引失败 WinError 5 拒绝访问 index.json",
+      "expected_any": [
+        "bench_bug_winerror5_index_json"
+      ],
+      "forbidden": [],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_bug_winerror5_index_json",
+        "bench_bug_module_not_found_pytest",
+        "bench_phase2_index_persistence",
+        "bench_phase5_rrf_fusion",
+        "bench_phase4_vector_index"
+      ],
+      "ranked_titles": [
+        "WinError 5 保存索引失败时保留 pending snapshot",
+        "pytest ModuleNotFoundError 需要从项目根目录运行",
+        "Phase 2 实现 IndexPersistence 和增量索引",
+        "Phase 5 实现 RRF 多路召回融合",
+        "Phase 4 实现轻量 VectorIndex"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0156; BM25 rank1 (5, error, index, index.json, json, main); BM25相关 72.03; Vector rank1; Vector相关 0.41; Metadata rank1: 重要性 0.34; 时间 0.20; 类型匹配 0.35",
+        "RRF 0.0151; BM25 rank2 (error, py, python, 失败); BM25相关 9.70; Vector rank4; Vector相关 0.08; Metadata rank3: 重要性 0.32; 时间 0.20; 类型匹配 0.35",
+        "RRF 0.0148; BM25 rank3 (index, json, py, 保存, 索引); BM25相关 7.54; Vector rank6; Vector相关 0.05; Metadata rank5: 重要性 0.34; 时间 0.20",
+        "RRF 0.0147; BM25 rank7 (5, py); BM25相关 3.16; Vector rank2; Vector相关 0.21; Metadata rank4: 重要性 0.34; 时间 0.20",
+        "RRF 0.0146; BM25 rank6 (index, py, 索引); BM25相关 3.33; Vector rank3; Vector相关 0.09; Metadata rank7: 重要性 0.33; 时间 0.20"
+      ],
+      "hit_rank": 1,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": []
+    },
+    {
+      "case_id": "openai_tool_pairing_bad_request",
+      "category": "error_history",
+      "query": "BadRequestError assistant tool_calls 后没有紧邻 tool response 是怎么修的？",
+      "expected_any": [
+        "bench_bug_openai_tool_pairing"
+      ],
+      "forbidden": [],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_bug_openai_tool_pairing",
+        "bench_bug_winerror5_index_json",
+        "bench_bug_module_not_found_pytest",
+        "bench_phase3_lifecycle_governance",
+        "bench_phase5_rrf_fusion"
+      ],
+      "ranked_titles": [
+        "OpenAI strict tool_calls 必须和 tool response 成对",
+        "WinError 5 保存索引失败时保留 pending snapshot",
+        "pytest ModuleNotFoundError 需要从项目根目录运行",
+        "Phase 3 完成 MemoryItem 生命周期治理",
+        "Phase 5 实现 RRF 多路召回融合"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0155; BM25 rank1 (assistant, bad, badrequesterror, calls, error, request); BM25相关 61.30; Vector rank1; Vector相关 0.64; Metadata rank2: 重要性 0.33; 时间 0.20; 类型匹配 0.35",
+        "RRF 0.0153; BM25 rank2 (error); BM25相关 2.61; Vector rank3; Vector相关 0.08; Metadata rank1: 重要性 0.34; 时间 0.20; 类型匹配 0.35",
+        "RRF 0.0150; BM25 rank3 (error); BM25相关 2.50; Vector rank4; Vector相关 0.03; Metadata rank3: 重要性 0.32; 时间 0.20; 类型匹配 0.35",
+        "RRF 0.0078; Vector rank2; Vector相关 0.09; Metadata rank7: 重要性 0.33; 时间 0.20",
+        "RRF 0.0031; Metadata rank4: 重要性 0.34; 时间 0.20"
+      ],
+      "hit_rank": 1,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": []
+    },
+    {
+      "case_id": "module_not_found_core_pytest",
+      "category": "error_history",
+      "query": "Traceback ModuleNotFoundError No module named core pytest 应该怎么办？",
+      "expected_any": [
+        "bench_bug_module_not_found_pytest"
+      ],
+      "forbidden": [],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_bug_module_not_found_pytest",
+        "bench_bug_winerror5_index_json",
+        "bench_preference_tdd_pytest_required",
+        "bench_phase3_lifecycle_governance",
+        "bench_phase5_rrf_fusion"
+      ],
+      "ranked_titles": [
+        "pytest ModuleNotFoundError 需要从项目根目录运行",
+        "WinError 5 保存索引失败时保留 pending snapshot",
+        "用户要求功能实现必须测试通过",
+        "Phase 3 完成 MemoryItem 生命周期治理",
+        "Phase 5 实现 RRF 多路召回融合"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0155; BM25 rank1 (core, error, found, module, modulenotfounderror, named); BM25相关 56.19; Vector rank1; Vector相关 0.42; Metadata rank3: 重要性 0.32; 时间 0.20; 类型匹配 0.35",
+        "RRF 0.0150; BM25 rank3 (core, error); BM25相关 3.08; Vector rank5; Vector相关 0.02; Metadata rank1: 重要性 0.34; 时间 0.20; 类型匹配 0.35",
+        "RRF 0.0149; BM25 rank2 (pytest, traceback); BM25相关 11.95; Vector rank3; Vector相关 0.14; Metadata rank9: 重要性 0.32; 时间 0.20",
+        "RRF 0.0145; BM25 rank5 (core, not); BM25相关 2.26; Vector rank6; Vector相关 0.01; Metadata rank6: 重要性 0.33; 时间 0.20",
+        "RRF 0.0144; BM25 rank10 (core); BM25相关 0.49; Vector rank2; Vector相关 0.34; Metadata rank4: 重要性 0.34; 时间 0.20"
+      ],
+      "hit_rank": 1,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": []
+    },
+    {
+      "case_id": "user_tdd_preference",
+      "category": "preference",
+      "query": "用户对实现功能和测试有什么要求，是不是必须 pytest 通过才能说完成？",
+      "expected_any": [
+        "bench_preference_tdd_pytest_required"
+      ],
+      "forbidden": [],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_preference_tdd_pytest_required",
+        "bench_phase5_rrf_fusion",
+        "bench_bug_module_not_found_pytest",
+        "bench_phase3_lifecycle_governance",
+        "bench_phase2_index_persistence"
+      ],
+      "ranked_titles": [
+        "用户要求功能实现必须测试通过",
+        "Phase 5 实现 RRF 多路召回融合",
+        "pytest ModuleNotFoundError 需要从项目根目录运行",
+        "Phase 3 完成 MemoryItem 生命周期治理",
+        "Phase 2 实现 IndexPersistence 和增量索引"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0152; BM25 rank1 (pytest, 功能, 完成, 实现, 实现功, 必须); BM25相关 39.07; Vector rank1; Vector相关 0.33; Metadata rank8: 重要性 0.32; 时间 0.20",
+        "RRF 0.0149; BM25 rank6 (实现); BM25相关 1.79; Vector rank2; Vector相关 0.23; Metadata rank1: 重要性 0.34; 时间 0.20",
+        "RRF 0.0148; BM25 rank2 (pytest); BM25相关 6.86; Vector rank5; Vector相关 0.08; Metadata rank9: 重要性 0.32; 时间 0.20",
+        "RRF 0.0148; BM25 rank5 (完成); BM25相关 2.37; Vector rank3; Vector相关 0.18; Metadata rank5: 重要性 0.33; 时间 0.20",
+        "RRF 0.0147; BM25 rank3 (完成, 实现); BM25相关 3.57; Vector rank9; Vector相关 0.05; Metadata rank3: 重要性 0.34; 时间 0.20"
+      ],
+      "hit_rank": 1,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": []
+    },
+    {
+      "case_id": "context_compression_doc",
+      "category": "architecture",
+      "query": "上下文压缩系统重构文档里说 token budget 和结构化摘要怎么做？",
+      "expected_any": [
+        "bench_context_compression_strategy_doc"
+      ],
+      "forbidden": [],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_context_compression_strategy_doc",
+        "bench_phase5_rrf_fusion",
+        "bench_phase2_index_persistence",
+        "bench_phase3_lifecycle_governance",
+        "bench_arch_retrieval_not_rewrite"
+      ],
+      "ranked_titles": [
+        "上下文压缩系统重构路线保存在 docs",
+        "Phase 5 实现 RRF 多路召回融合",
+        "Phase 2 实现 IndexPersistence 和增量索引",
+        "Phase 3 完成 MemoryItem 生命周期治理",
+        "记忆检索主干不需要推倒重写"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0152; BM25 rank1 (budget, token, 上下, 上下文, 下文, 下文压); BM25相关 83.29; Vector rank1; Vector相关 0.42; Metadata rank10: 重要性 0.30; 时间 0.20",
+        "RRF 0.0080; Vector rank4; Vector相关 0.10; Metadata rank1: 重要性 0.34; 时间 0.20",
+        "RRF 0.0078; Vector rank5; Vector相关 0.08; Metadata rank2: 重要性 0.34; 时间 0.20",
+        "RRF 0.0078; Vector rank3; Vector相关 0.13; Metadata rank5: 重要性 0.33; 时间 0.20",
+        "RRF 0.0078; Vector rank2; Vector相关 0.19; Metadata rank7: 重要性 0.33; 时间 0.20"
+      ],
+      "hit_rank": 1,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": []
+    },
+    {
+      "case_id": "semantic_rewrite_rrf",
+      "category": "semantic_rewrite",
+      "query": "BM25 和向量结果冲突时现在还是简单加权吗，还是倒数排名融合？",
+      "expected_any": [
+        "bench_phase5_rrf_fusion"
+      ],
+      "forbidden": [],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_phase5_rrf_fusion",
+        "bench_phase2_index_persistence",
+        "bench_arch_retrieval_not_rewrite",
+        "bench_phase4_vector_index",
+        "bench_bug_openai_tool_pairing"
+      ],
+      "ranked_titles": [
+        "Phase 5 实现 RRF 多路召回融合",
+        "Phase 2 实现 IndexPersistence 和增量索引",
+        "记忆检索主干不需要推倒重写",
+        "Phase 4 实现轻量 VectorIndex",
+        "OpenAI strict tool_calls 必须和 tool response 成对"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0155; BM25 rank1 (25, bm25, 融合); BM25相关 13.86; Vector rank2; Vector相关 0.14; Metadata rank1: 重要性 0.34; 时间 0.20",
+        "RRF 0.0154; BM25 rank2 (25, bm25); BM25相关 9.75; Vector rank1; Vector相关 0.21; Metadata rank2: 重要性 0.34; 时间 0.20",
+        "RRF 0.0149; BM25 rank3 (25, bm25); BM25相关 6.73; Vector rank3; Vector相关 0.12; Metadata rank7: 重要性 0.33; 时间 0.20",
+        "RRF 0.0145; BM25 rank4 (向量); BM25相关 2.08; Vector rank7; Vector相关 0.03; Metadata rank6: 重要性 0.33; 时间 0.20",
+        "RRF 0.0077; Vector rank5; Vector相关 0.08; Metadata rank4: 重要性 0.33; 时间 0.20"
+      ],
+      "hit_rank": 1,
+      "reciprocal_rank": 1.0,
+      "forbidden_hits": []
+    },
+    {
+      "case_id": "chinese_quality_question",
+      "category": "chinese_query",
+      "query": "现在的长期记忆检索是不是已经不是以前那种简单关键词鸡肋检索了？",
+      "expected_any": [
+        "bench_arch_retrieval_not_rewrite",
+        "bench_phase5_rrf_fusion"
+      ],
+      "forbidden": [
+        "bench_old_keyword_retrieval_archived"
+      ],
+      "top_k": 5,
+      "ranked_ids": [
+        "bench_phase3_lifecycle_governance",
+        "bench_arch_retrieval_not_rewrite",
+        "bench_context_compression_strategy_doc",
+        "bench_bug_module_not_found_pytest",
+        "bench_preference_tdd_pytest_required"
+      ],
+      "ranked_titles": [
+        "Phase 3 完成 MemoryItem 生命周期治理",
+        "记忆检索主干不需要推倒重写",
+        "上下文压缩系统重构路线保存在 docs",
+        "pytest ModuleNotFoundError 需要从项目根目录运行",
+        "用户要求功能实现必须测试通过"
+      ],
+      "ranked_reasons": [
+        "RRF 0.0152; BM25 rank2 (期记, 期记忆, 的长, 的长期, 记忆, 长期); BM25相关 12.70; Vector rank1; Vector相关 0.06; Metadata rank6: 重要性 0.33; 时间 0.20",
+        "RRF 0.0151; BM25 rank1 (已经, 忆检, 忆检索, 期记, 期记忆, 检索); BM25相关 28.15; Vector rank3; Vector相关 0.05; Metadata rank7: 重要性 0.33; 时间 0.20",
+        "RRF 0.0100; BM25 rank3 (关键); BM25相关 1.96; Metadata rank10: 重要性 0.30; 时间 0.20",
+        "RRF 0.0077; Vector rank2; Vector相关 0.06; Metadata rank9: 重要性 0.32; 时间 0.20",
+        "RRF 0.0076; Vector rank4; Vector相关 0.04; Metadata rank8: 重要性 0.32; 时间 0.20"
+      ],
+      "hit_rank": 2,
+      "reciprocal_rank": 0.5,
+      "forbidden_hits": []
+    }
+  ]
+}
