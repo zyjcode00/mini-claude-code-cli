@@ -2,7 +2,7 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import anthropic
 import openai
 import asyncio
@@ -11,6 +11,7 @@ from core.prompts import get_system_prompt
 from core.context import ContextManager  # <--- 导入新管家
 from core.context_assembler import ContextAssembler, ContextBudget
 from core.memory_items import MemoryKind, ObservationType, RawObservation
+from core.memory_manager import MemoryManager
 
 # Git 自动化保险导入
 from tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes, start_task_branch, finalize_task, start_plan_branch, finalize_plan
@@ -18,7 +19,8 @@ from tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes
 class AgentEngine:
     def __init__(self, tools: List[BaseTool], model: str, plan_manager, # <--- 传入管家
                  base_url: str = None, api_key: str = None,
-                 max_history: int = 100, min_keep: int = 4, session_id="default"):
+                 max_history: int = 100, min_keep: int = 4, session_id="default",
+                 memory_manager: Optional[MemoryManager] = None):
         self.tools = tools
         self.model = model
         self.plan_manager = plan_manager  # <--- 保存管家引用
@@ -27,7 +29,13 @@ class AgentEngine:
 
         # --- 核心修改：使用 ContextManager 替代原有的 self.messages ---
         # 🔥 新增：传入 plan_manager，让压缩引擎能查询真实任务状态
-        self.context = ContextManager(max_history=max_history, min_keep=min_keep, plan_manager=plan_manager)
+        # 可注入共享 MemoryManager，使 tools 与上下文共用同一套长期记忆索引/缓存。
+        self.context = ContextManager(
+            max_history=max_history,
+            min_keep=min_keep,
+            plan_manager=plan_manager,
+            memory_manager=memory_manager,
+        )
         self.last_oa_msg = None
         self.session_id = session_id
         self.session_path = f"sessions/{session_id}.json"

@@ -8,6 +8,7 @@ from rich.panel import Panel
 from rich.markdown import Markdown
 from rich.prompt import Prompt
 from core.plan import PlanManager  # 🔥 改为导入类而非全局实例
+from core.memory_manager import MemoryManager
 
 # 1. 核心引擎导入
 from core.engine import AgentEngine
@@ -99,8 +100,10 @@ async def main():
     # 🔥 创建独立的 PlanManager 实例（每个 session 独立）
     plan_manager = PlanManager()
 
-    # 3. 初始化工具集 (使用工厂函数)
-    tools_list = get_default_tools(plan_manager=plan_manager)
+    # 3. 初始化共享记忆管理器与工具集
+    # tools 和 AgentEngine/ContextManager 共用同一个 MemoryManager，避免启动时重复加载长期记忆索引。
+    memory_manager = MemoryManager(plan_manager=plan_manager)
+    tools_list = get_default_tools(plan_manager=plan_manager, memory_manager=memory_manager)
 
     # 4. 初始化核心引擎
     engine = AgentEngine(
@@ -111,7 +114,8 @@ async def main():
         base_url=agent_config["base_url"],
         api_key=agent_config["api_key"],
         max_history=150,
-        min_keep=8
+        min_keep=8,
+        memory_manager=memory_manager
     )
     engine.plan_manager = plan_manager
 

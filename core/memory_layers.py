@@ -6,6 +6,8 @@
 
 import json
 import os
+import tempfile
+import time
 from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, List, Optional, Tuple
@@ -208,20 +210,96 @@ class LongTermMemory:
                     self.item_inverted_index = data.get("item_inverted_index", {})
             except Exception as e:
                 # 如果加载失败，重建索引
-                print(f"⚠️ 加载索引失败，将重建索引: {e}")
+                backup_path = self._backup_corrupt_index(index_file)
+                backup_hint = f"，已备份损坏索引到: {backup_path}" if backup_path else ""
+                print(f"⚠️ 加载索引失败，将重建索引: {e}{backup_hint}")
                 self._rebuild_index()
 
-    def _save_index(self):
-        """保存索引到磁盘"""
-        index_file = self.storage_dir / "index.json"
+    def _backup_corrupt_index(self, index_file: Path) -> str:
+        """备份无法解析的索引文件，避免重建时直接覆盖现场。"""
+        if not index_file.exists():
+            return ""
+
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S_%f")
+        backup_path = index_file.with_name(f"{index_file.name}.corrupt_{timestamp}.bak")
         try:
-            with open(index_file, 'w', encoding='utf-8') as f:
-                json.dump({
-                    "index": {k: str(v) for k, v in self.index.items()},
-                    "item_index": {k: str(v) for k, v in self.item_index.items()},
-                    "inverted_index": self.inverted_index,
-                    "item_inverted_index": self.item_inverted_index
-                }, f, ensure_ascii=False, indent=2)
+            index_file.replace(backup_path)
+            return str(backup_path)
+        except Exception as backup_error:
+            print(f"⚠️ 备份损坏索引失败: {backup_error}")
+            return ""
+
+    def _serialize_index(self) -> Dict[str, Any]:
+        """把内存索引转换为可持久化 JSON 的普通字典。"""
+        return {
+            "index": {k: str(v) for k, v in self.index.items()},
+            "item_index": {k: str(v) for k, v in self.item_index.items()},
+            "inverted_index": self.inverted_index,
+            "item_inverted_index": self.item_inverted_index,
+        }
+
+    def _save_index(self):
+        """保存索引到磁盘。
+
+        Windows 下 os.replace 在目标文件被杀毒软件、编辑器、同步盘或另一个
+        Python 进程短暂占用时可能抛 PermissionError(WinError 5)。索引只是缓存，
+        单次保存失败不应影响启动/工具调用，因此这里采用：
+        1. 内容未变化时跳过写入，降低启动期无意义 replace；
+        2. PermissionError 短暂重试；
+        3. 仍失败时保留一个 fallback 快照并清理临时文件，避免刷屏和 tmp 堆积。
+        """
+        index_file = self.storage_dir / "index.json"
+        payload = self._serialize_index()
+
+        try:
+            serialized = json.dumps(payload, ensure_ascii=False, indent=2)
+            if index_file.exists():
+                try:
+                    if index_file.read_text(encoding='utf-8') == serialized:
+                        return
+                except OSError:
+                    # 读旧索引失败时继续尝试写入；写入失败会走下面的降级逻辑。
+                    pass
+
+            fd, tmp_name = tempfile.mkstemp(
+                prefix="index.",
+                suffix=".tmp",
+                dir=str(self.storage_dir),
+                text=True,
+            )
+            tmp_path = Path(tmp_name)
+            try:
+                with os.fdopen(fd, 'w', encoding='utf-8') as f:
+                    f.write(serialized)
+                    f.flush()
+                    os.fsync(f.fileno())
+
+                last_error = None
+                for attempt in range(5):
+                    try:
+                        os.replace(tmp_path, index_file)
+                        return
+                    except PermissionError as replace_error:
+                        last_error = replace_error
+                        time.sleep(0.05 * (attempt + 1))
+
+                # 降级：目标 index.json 暂时不可替换时，保留最新快照，下一次重建/保存仍可继续。
+                fallback_file = self.storage_dir / "index.pending.json"
+                try:
+                    os.replace(tmp_path, fallback_file)
+                    print(f"⚠️ 保存索引失败，已保留待恢复快照 {fallback_file}: {last_error}")
+                except Exception:
+                    try:
+                        tmp_path.unlink()
+                    except OSError:
+                        pass
+                    print(f"⚠️ 保存索引失败: {last_error}")
+            except Exception:
+                try:
+                    tmp_path.unlink()
+                except OSError:
+                    pass
+                raise
         except Exception as e:
             print(f"⚠️ 保存索引失败: {e}")
 

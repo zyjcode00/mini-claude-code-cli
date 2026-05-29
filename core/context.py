@@ -49,7 +49,7 @@ class ContextManager:
     - 支持 3 种压缩策略：LLM_SUMMARY/KEYFRAME/SLIDING_WINDOW
     """
 
-    def __init__(self, max_history=100, min_keep=4, plan_manager=None):
+    def __init__(self, max_history=100, min_keep=4, plan_manager=None, memory_manager: Optional[MemoryManager] = None):
         self.max_history = max_history
         self.min_keep = min_keep
         self.plan_manager = plan_manager  # 🔥 新增：保存 Plan 状态引用
@@ -60,8 +60,9 @@ class ContextManager:
         # Phase 1: 结构化摘要列表（将被 Phase 2 替代，但保持向后兼容）
         self.session_summaries: List[SessionSummary] = []
 
-        # Phase 2: 三层记忆架构统一由 MemoryManager 编排
-        self.memory_manager = MemoryManager(plan_manager=plan_manager)
+        # Phase 2: 三层记忆架构统一由 MemoryManager 编排。
+        # 可注入共享实例，避免 tools 与 AgentEngine/ContextManager 启动时重复加载长期记忆索引。
+        self.memory_manager = memory_manager or MemoryManager(plan_manager=plan_manager)
         self.working_memory = self.memory_manager.working_memory
         self.episodic_memory = self.memory_manager.episodic_memory
         self.long_term_memory = self.memory_manager.long_term_memory
@@ -624,23 +625,34 @@ class ContextManager:
 
         print("[Phase 2] 所有记忆已清空")
 
-    def export_memories(self) -> Dict[str, Any]:
+    def export_memories(self, include_memory_items: bool = False) -> Dict[str, Any]:
         """
         导出所有记忆为可序列化的字典（用于持久化到 session 文件）
+
+        Args:
+            include_memory_items: 是否把长期 MemoryItem 嵌入导出结果。
+                运行时 session 保存应保持 False，避免 session 文件膨胀和启动重复写盘；
+                备份/迁移场景可显式设为 True。
 
         Returns:
             包含三层记忆数据的字典
         """
-        return self.memory_manager.export_memories(self.session_summaries, self.history_summary)
+        return self.memory_manager.export_memories(
+            self.session_summaries,
+            self.history_summary,
+            include_memory_items=include_memory_items,
+        )
 
-    def import_memories(self, data: Dict[str, Any]):
+    def import_memories(self, data: Dict[str, Any], import_memory_items: bool = False):
         """
         从字典导入记忆数据（用于从 session 文件恢复）
 
         Args:
             data: 包含记忆数据的字典
+            import_memory_items: 是否导入内嵌长期 MemoryItem。启动恢复 session 时应为 False，
+                因为长期记忆已由 LongTermMemory(index.json) 加载。
         """
-        imported = self.memory_manager.import_memories(data)
+        imported = self.memory_manager.import_memories(data, import_memory_items=import_memory_items)
         self.history_summary = imported["history_summary"]
         self.session_summaries = imported["session_summaries"]
 

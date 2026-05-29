@@ -39,6 +39,7 @@ class CompressedSessionState:
     completed_steps: List[str] = field(default_factory=list)
     pending_steps: List[str] = field(default_factory=list)
     files_changed: List[Dict[str, Any]] = field(default_factory=list)
+    files_read: List[Dict[str, Any]] = field(default_factory=list)
     commands_run: List[Dict[str, Any]] = field(default_factory=list)
     tests_run: List[Dict[str, Any]] = field(default_factory=list)
     errors_encountered: List[Dict[str, Any]] = field(default_factory=list)
@@ -56,6 +57,7 @@ class CompressedSessionState:
             "completed_steps": self.completed_steps,
             "pending_steps": self.pending_steps,
             "files_changed": self.files_changed,
+            "files_read": self.files_read,
             "commands_run": self.commands_run,
             "tests_run": self.tests_run,
             "errors_encountered": self.errors_encountered,
@@ -75,6 +77,7 @@ class CompressedSessionState:
             completed_steps=list(data.get("completed_steps", [])),
             pending_steps=list(data.get("pending_steps", [])),
             files_changed=list(data.get("files_changed", [])),
+            files_read=list(data.get("files_read", [])),
             commands_run=list(data.get("commands_run", [])),
             tests_run=list(data.get("tests_run", [])),
             errors_encountered=list(data.get("errors_encountered", [])),
@@ -102,6 +105,16 @@ class CompressedSessionState:
         if self.files_changed:
             lines.append("文件变更：")
             lines.extend(f"- {item.get('path', '')}: {item.get('action', 'modified')}" for item in self.files_changed[:10])
+        if self.files_read:
+            lines.append("已读取文件：")
+            for item in self.files_read[:12]:
+                path = item.get("path", "")
+                line_range = item.get("line_range") or ""
+                count = item.get("read_count", 1)
+                suffix = f" ({line_range})" if line_range else ""
+                repeat = f"，累计读取 {count} 次" if count and count > 1 else ""
+                lines.append(f"- {path}{suffix}{repeat}")
+            lines.append("下一步提示：上述文件内容已读取；除非需要精确缺失行号，否则应基于现有进展输出总结，避免重复读取同一批文件。")
         if self.tests_run:
             lines.append("测试：")
             lines.extend(f"- {item.get('command') or item.get('summary', '')}: {item.get('status', 'unknown')}" for item in self.tests_run[:8])
@@ -1019,6 +1032,7 @@ class CompressionEngine:
             self._collect_decisions(text, state.key_decisions)
             self._collect_preferences(text, state.user_preferences)
             self._collect_commands_and_tests(turn, text, state.commands_run, state.tests_run)
+            self._collect_files_read(turn, state.files_read)
             for error in turn.errors:
                 resolved = self._looks_resolved_after(source_turns, turn)
                 state.errors_encountered.append({
@@ -1055,16 +1069,51 @@ class CompressionEngine:
         state.user_preferences = self._dedupe_keep_order(state.user_preferences)[:8]
         state.commands_run = self._dedupe_dicts(state.commands_run, "command")[:12]
         state.tests_run = self._dedupe_dicts(state.tests_run, "command")[:12]
+        state.files_read = self._merge_files_read(state.files_read)[:20]
         state.errors_encountered = self._dedupe_dicts(state.errors_encountered, "message")[:10]
         return state
 
     def _extract_task_goal(self, turns: List[ConversationTurn]) -> str:
-        for turn in turns:
+        plan_goal = self._extract_plan_goal()
+        if plan_goal:
+            return plan_goal[:200]
+
+        fallback = ""
+        for turn in reversed(turns):
             if turn.user_message and isinstance(turn.user_message.get("content"), str):
-                content = turn.user_message.get("content", "").strip()
-                if content:
+                content = " ".join(turn.user_message.get("content", "").split())
+                if not content:
+                    continue
+                if not fallback:
+                    fallback = content
+                if not self._is_low_information_user_message(content):
                     return content[:200]
+        return fallback[:200]
+
+    def _extract_plan_goal(self) -> str:
+        if not self.plan_manager:
+            return ""
+        for attr in ("current_goal", "goal"):
+            value = getattr(self.plan_manager, attr, "")
+            if isinstance(value, str) and value.strip():
+                return " ".join(value.split())
+        try:
+            plan_data = self.plan_manager.to_dict()
+        except Exception:
+            plan_data = None
+        if isinstance(plan_data, dict):
+            for key in ("goal", "current_goal", "title"):
+                value = plan_data.get(key)
+                if isinstance(value, str) and value.strip():
+                    return " ".join(value.split())
         return ""
+
+    def _is_low_information_user_message(self, content: str) -> bool:
+        normalized = re.sub(r"[\s。！？!,.，、~～]+", "", content).lower()
+        low_info = {
+            "你好", "您好", "hello", "hi", "hey", "在吗", "ok", "好的", "好", "嗯", "继续", "接着", "goon", "thanks", "谢谢",
+        }
+        return normalized in low_info or len(normalized) <= 1
 
     def _infer_current_status(self, turns: List[ConversationTurn]) -> str:
         text = "\n".join(self._turn_text(turn) for turn in turns[-6:]).lower()
@@ -1101,6 +1150,70 @@ class CompressionEngine:
             clean = line.strip(" -\t")
             if any(keyword in clean for keyword in ["用户偏好", "prefer", "preference", "希望", "要求"]):
                 preferences.append(clean[:220])
+
+    def _collect_files_read(self, turn: ConversationTurn, files_read: List[Dict[str, Any]]) -> None:
+        for assistant in turn.assistant_messages:
+            for tool_call in assistant.get("tool_calls", []) or []:
+                function = tool_call.get("function", {}) if isinstance(tool_call, dict) else {}
+                if function.get("name") != "read_file":
+                    continue
+                args = self._parse_tool_arguments(function.get("arguments", {}))
+                path = args.get("path") or args.get("file_path") or args.get("filename")
+                if not isinstance(path, str) or not path.strip():
+                    continue
+                start_line = args.get("start_line") or args.get("start")
+                end_line = args.get("end_line") or args.get("end")
+                line_range = self._format_line_range(start_line, end_line)
+                files_read.append({
+                    "path": path.replace("\\", "/"),
+                    "line_range": line_range,
+                    "read_count": 1,
+                    "source_turn_id": turn.id,
+                })
+
+    def _parse_tool_arguments(self, arguments: Any) -> Dict[str, Any]:
+        if isinstance(arguments, dict):
+            return arguments
+        if isinstance(arguments, str) and arguments.strip():
+            try:
+                parsed = json.loads(arguments)
+                return parsed if isinstance(parsed, dict) else {}
+            except Exception:
+                return {}
+        return {}
+
+    def _format_line_range(self, start_line: Any, end_line: Any) -> str:
+        if start_line is None and end_line is None:
+            return ""
+        if start_line is not None and end_line is not None:
+            return f"L{start_line}-L{end_line}"
+        if start_line is not None:
+            return f"from L{start_line}"
+        return f"to L{end_line}"
+
+    def _merge_files_read(self, values: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+        merged: Dict[str, Dict[str, Any]] = {}
+        for item in values:
+            path = item.get("path")
+            if not path:
+                continue
+            entry = merged.setdefault(path, {"path": path, "line_ranges": [], "read_count": 0, "source_turn_ids": []})
+            line_range = item.get("line_range")
+            if line_range and line_range not in entry["line_ranges"]:
+                entry["line_ranges"].append(line_range)
+            entry["read_count"] += int(item.get("read_count") or 1)
+            source_turn_id = item.get("source_turn_id")
+            if source_turn_id and source_turn_id not in entry["source_turn_ids"]:
+                entry["source_turn_ids"].append(source_turn_id)
+        result = []
+        for entry in merged.values():
+            ranges = entry.pop("line_ranges")
+            if ranges:
+                entry["line_range"] = ", ".join(ranges[:4])
+                if len(ranges) > 4:
+                    entry["line_range"] += f", +{len(ranges) - 4} ranges"
+            result.append(entry)
+        return result
 
     def _collect_commands_and_tests(
         self,
