@@ -17,7 +17,9 @@ import time
 from dataclasses import dataclass, field
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Callable, Dict, Iterable, List, Optional, Set
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set, Tuple
+
+from .memory_embedding import EmbeddingProvider, HashEmbeddingProvider
 
 
 @dataclass
@@ -289,6 +291,144 @@ class BM25MemoryIndex:
         return tokens
 
 
+@dataclass
+class VectorMemoryDocument:
+    """Document accepted by VectorMemoryIndex."""
+
+    doc_id: str
+    text: str
+    metadata: Dict[str, Any] = field(default_factory=dict)
+    updated_at: str = ""
+
+
+@dataclass
+class VectorSearchHit:
+    """Ranked vector hit."""
+
+    doc_id: str
+    score: float
+    metadata: Dict[str, Any] = field(default_factory=dict)
+
+
+@dataclass
+class VectorIndexLoadResult:
+    """Result of loading a persisted vector index."""
+
+    index: Optional["VectorMemoryIndex"]
+    disabled: bool = False
+    reason: str = ""
+
+
+class VectorMemoryIndex:
+    """Small in-process cosine-similarity vector index.
+
+    The index stores doc embeddings in JSON and validates provider/model
+    dimensions on load so stale vectors cannot silently pollute recall.
+    """
+
+    VERSION = 1
+
+    def __init__(self, provider: Optional[EmbeddingProvider] = None):
+        self.provider = provider or HashEmbeddingProvider()
+        self.provider_name = self.provider.provider_name
+        self.model = self.provider.model
+        self.dimensions = int(self.provider.dimensions)
+        self.vectors: Dict[str, Dict[str, Any]] = {}
+
+    def add_or_update(self, document: VectorMemoryDocument) -> None:
+        if not document.doc_id:
+            raise ValueError("VectorMemoryDocument.doc_id is required")
+        embedding = [float(value) for value in self.provider.embed(document.text or document.doc_id)]
+        if self.dimensions <= 0:
+            self.dimensions = len(embedding)
+        if len(embedding) != self.dimensions:
+            raise ValueError(f"Embedding dimension mismatch: expected {self.dimensions}, got {len(embedding)}")
+        self.vectors[document.doc_id] = {
+            "doc_id": document.doc_id,
+            "embedding": embedding,
+            "provider": self.provider_name,
+            "model": self.model,
+            "dimensions": self.dimensions,
+            "updated_at": document.updated_at or datetime.now().isoformat(timespec="seconds"),
+            "metadata": dict(document.metadata or {}),
+        }
+
+    def add_documents(self, documents: Iterable[VectorMemoryDocument]) -> None:
+        for document in documents:
+            self.add_or_update(document)
+
+    def remove(self, doc_id: str) -> None:
+        self.vectors.pop(doc_id, None)
+
+    def search(self, query: str, top_k: int = 10) -> List[VectorSearchHit]:
+        if not query or not self.vectors:
+            return []
+        query_embedding = [float(value) for value in self.provider.embed(query)]
+        if len(query_embedding) != self.dimensions:
+            raise ValueError(f"Query embedding dimension mismatch: expected {self.dimensions}, got {len(query_embedding)}")
+        ranked: List[Tuple[str, float]] = []
+        for doc_id, record in self.vectors.items():
+            embedding = record.get("embedding", [])
+            if len(embedding) != self.dimensions:
+                continue
+            ranked.append((doc_id, self._cosine_similarity(query_embedding, embedding)))
+        ranked.sort(key=lambda item: item[1], reverse=True)
+        return [
+            VectorSearchHit(doc_id=doc_id, score=score, metadata=dict(self.vectors.get(doc_id, {})))
+            for doc_id, score in ranked[:top_k]
+            if score > 0
+        ]
+
+    def to_dict(self) -> Dict[str, Any]:
+        return {
+            "version": self.VERSION,
+            "provider": self.provider_name,
+            "model": self.model,
+            "dimensions": self.dimensions,
+            "vectors": self.vectors,
+        }
+
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any], provider: Optional[EmbeddingProvider] = None) -> "VectorMemoryIndex":
+        index = cls(provider=provider)
+        persisted_dimensions = int(data.get("dimensions", 0))
+        if persisted_dimensions and persisted_dimensions != index.dimensions:
+            raise ValueError(f"Persisted vector dimension {persisted_dimensions} != active provider dimension {index.dimensions}")
+        if data.get("provider") and data.get("provider") != index.provider_name:
+            raise ValueError(f"Persisted vector provider {data.get('provider')} != active provider {index.provider_name}")
+        if data.get("model") and data.get("model") != index.model:
+            raise ValueError(f"Persisted vector model {data.get('model')} != active model {index.model}")
+        index.dimensions = persisted_dimensions or index.dimensions
+        index.vectors = dict(data.get("vectors", {}))
+        return index
+
+    @classmethod
+    def load_checked(cls, data: Dict[str, Any], provider: Optional[EmbeddingProvider] = None) -> VectorIndexLoadResult:
+        try:
+            if data.get("version") != cls.VERSION:
+                return VectorIndexLoadResult(index=None, disabled=True, reason="version mismatch")
+            return VectorIndexLoadResult(index=cls.from_dict(data, provider=provider))
+        except Exception as error:
+            return VectorIndexLoadResult(index=None, disabled=True, reason=str(error))
+
+    def clear(self) -> None:
+        self.vectors.clear()
+
+    def __len__(self) -> int:
+        return len(self.vectors)
+
+    @staticmethod
+    def _cosine_similarity(left: List[float], right: List[float]) -> float:
+        if not left or not right or len(left) != len(right):
+            return 0.0
+        dot = sum(a * b for a, b in zip(left, right))
+        left_norm = math.sqrt(sum(a * a for a in left))
+        right_norm = math.sqrt(sum(b * b for b in right))
+        if left_norm <= 0 or right_norm <= 0:
+            return 0.0
+        return dot / (left_norm * right_norm)
+
+
 class IndexPersistence:
     """Atomic JSON persistence wrapper for BM25MemoryIndex.
 
@@ -401,6 +541,115 @@ class IndexPersistence:
         return self.clock().isoformat(timespec="seconds")
 
 
+class VectorIndexPersistence:
+    """Atomic JSON persistence wrapper for VectorMemoryIndex."""
+
+    SCHEMA_VERSION = 1
+
+    def __init__(
+        self,
+        path: str | Path,
+        provider: Optional[EmbeddingProvider] = None,
+        debounce_seconds: float = 0.0,
+        drop_stale: bool = False,
+        clock: Optional[Callable[[], datetime]] = None,
+    ):
+        self.path = Path(path)
+        self.provider = provider or HashEmbeddingProvider()
+        self.debounce_seconds = debounce_seconds
+        self.drop_stale = drop_stale
+        self.clock = clock or datetime.now
+        self.created_at = self._now_iso()
+        self.updated_at = self.created_at
+        self.dirty = False
+        self.disabled = False
+        self.disabled_reason = ""
+        self._last_save_at = 0.0
+
+    def load(self) -> Optional[VectorMemoryIndex]:
+        if not self.path.exists():
+            return None
+        try:
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+            if data.get("schema_version") != self.SCHEMA_VERSION:
+                self.disabled = True
+                self.disabled_reason = "schema version mismatch"
+                return None
+            self.created_at = data.get("created_at") or self.created_at
+            self.updated_at = data.get("updated_at") or self.updated_at
+            index_data = data.get("indexes", {}).get("vector")
+            if not isinstance(index_data, dict):
+                self.disabled = True
+                self.disabled_reason = "missing vector payload"
+                return None
+            result = VectorMemoryIndex.load_checked(index_data, provider=self.provider)
+            if result.disabled:
+                self.disabled = True
+                self.disabled_reason = result.reason
+                if self.drop_stale:
+                    self.disabled = False
+                    self.disabled_reason = ""
+                    return VectorMemoryIndex(provider=self.provider)
+                return None
+            return result.index
+        except Exception as error:
+            self.disabled = True
+            self.disabled_reason = str(error)
+            return None
+
+    def save(self, index: VectorMemoryIndex, force: bool = False) -> None:
+        if self.disabled:
+            return
+        self.dirty = True
+        now = time.monotonic()
+        if not force and self.debounce_seconds > 0 and now - self._last_save_at < self.debounce_seconds:
+            return
+        self.flush(index)
+
+    def flush(self, index: VectorMemoryIndex) -> None:
+        if self.disabled:
+            return
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.updated_at = self._now_iso()
+        payload = {
+            "schema_version": self.SCHEMA_VERSION,
+            "embedding_provider": index.provider_name,
+            "embedding_model": index.model,
+            "dimensions": index.dimensions,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "indexes": {"vector": index.to_dict()},
+        }
+        serialized = json.dumps(payload, ensure_ascii=False, indent=2)
+        if self.path.exists():
+            try:
+                if self.path.read_text(encoding="utf-8") == serialized:
+                    self.dirty = False
+                    self._last_save_at = time.monotonic()
+                    return
+            except OSError:
+                pass
+        fd, tmp_name = tempfile.mkstemp(prefix=f"{self.path.name}.", suffix=".tmp", dir=str(self.path.parent), text=True)
+        tmp_path = Path(tmp_name)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(serialized)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(tmp_path, self.path)
+            self.dirty = False
+            self._last_save_at = time.monotonic()
+        finally:
+            if tmp_path.exists():
+                try:
+                    tmp_path.unlink()
+                except OSError:
+                    pass
+
+    def _now_iso(self) -> str:
+        return self.clock().isoformat(timespec="seconds")
+
+
 class MemoryIndexManager:
     """Incrementally maintained index manager for long-term memory."""
 
@@ -409,36 +658,86 @@ class MemoryIndexManager:
         storage_dir: str | Path,
         debounce_seconds: float = 0.0,
         embedding_provider: Optional[str] = None,
+        vector_provider: Optional[EmbeddingProvider] = None,
+        drop_stale_vector_index: bool = False,
     ):
         self.storage_dir = Path(storage_dir)
+        self.vector_provider = vector_provider or HashEmbeddingProvider()
         self.persistence = IndexPersistence(
             self.storage_dir / "indexes" / "bm25.json",
             debounce_seconds=debounce_seconds,
             embedding_provider=embedding_provider,
         )
+        self.vector_persistence = VectorIndexPersistence(
+            self.storage_dir / "indexes" / "vector.json",
+            provider=self.vector_provider,
+            debounce_seconds=debounce_seconds,
+            drop_stale=drop_stale_vector_index,
+        )
         self.bm25 = self.persistence.load() or BM25MemoryIndex()
+        self.vector = self.vector_persistence.load() or VectorMemoryIndex(provider=self.vector_provider)
+        self.vector_disabled = self.vector_persistence.disabled
+        self.vector_disabled_reason = self.vector_persistence.disabled_reason
         self.needs_rebuild = self.persistence.path.exists() and len(self.bm25) == 0
 
     def add_or_update(self, document: BM25MemoryDocument, force: bool = False) -> None:
         self.bm25.add_or_update(document)
         self.persistence.save(self.bm25, force=force)
+        self.vector_add_or_update(self._bm25_to_vector_document(document), force=force)
+
+    def vector_add_or_update(self, document: VectorMemoryDocument, force: bool = False) -> None:
+        if self.vector_disabled:
+            return
+        self.vector.add_or_update(document)
+        self.vector_persistence.save(self.vector, force=force)
 
     def remove(self, doc_id: str, force: bool = False) -> None:
         self.bm25.remove(doc_id)
         self.persistence.save(self.bm25, force=force)
+        if not self.vector_disabled:
+            self.vector.remove(doc_id)
+            self.vector_persistence.save(self.vector, force=force)
 
     def search(self, query: str, top_k: int = 10) -> List[BM25SearchHit]:
         return self.bm25.search(query, top_k=top_k)
 
+    def vector_search(self, query: str, top_k: int = 10) -> List[VectorSearchHit]:
+        if self.vector_disabled:
+            return []
+        return self.vector.search(query, top_k=top_k)
+
     def rebuild(self, documents: Iterable[BM25MemoryDocument], force: bool = True) -> None:
+        docs = list(documents)
         self.bm25 = BM25MemoryIndex()
-        self.bm25.add_documents(documents)
+        self.bm25.add_documents(docs)
+        if not self.vector_disabled:
+            self.vector = VectorMemoryIndex(provider=self.vector_provider)
+            self.vector.add_documents(self._bm25_to_vector_document(doc) for doc in docs)
+            self.vector_persistence.save(self.vector, force=force)
         self.needs_rebuild = False
         self.persistence.save(self.bm25, force=force)
 
     def flush(self) -> None:
         if self.persistence.dirty:
             self.persistence.flush(self.bm25)
+        if self.vector_persistence.dirty and not self.vector_disabled:
+            self.vector_persistence.flush(self.vector)
 
     def __len__(self) -> int:
         return len(self.bm25)
+
+    def _bm25_to_vector_document(self, document: BM25MemoryDocument) -> VectorMemoryDocument:
+        text_parts = [
+            document.title,
+            document.content,
+            " ".join(document.concepts),
+            " ".join(document.files),
+            document.kind,
+            document.error,
+            document.project,
+        ]
+        return VectorMemoryDocument(
+            doc_id=document.doc_id,
+            text="\n".join(part for part in text_parts if part),
+            metadata=dict(document.metadata or {}),
+        )

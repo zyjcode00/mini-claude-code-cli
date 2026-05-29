@@ -380,6 +380,7 @@ class MemoryRetriever:
         bm25_query = " ".join(part for part in [query, file_path or "", error_type or ""] if part)
         query_terms = self._tokenize(bm25_query)
         bm25_hits = self._search_bm25(documents, bm25_query, top_k=max(len(documents), top_k))
+        vector_hits = self._search_vector(documents, bm25_query, top_k=max(len(documents), top_k))
         ranked: List[Tuple[MemoryDocument, float, List[str]]] = []
 
         normalized_file = self._normalize_path(file_path) if file_path else ""
@@ -399,10 +400,12 @@ class MemoryRetriever:
 
             bm25_hit = bm25_hits.get(doc.id)
             bm25_score = bm25_hit.score if bm25_hit else 0.0
+            vector_hit = vector_hits.get(doc.id)
+            vector_score = (vector_hit.score * 0.8) if vector_hit else 0.0
             importance_weight = max(0.0, min(doc.importance, 1.0)) * 0.35
             recency_weight = self._recency_weight(doc.timestamp)
             type_weight = self._type_weight(doc.kind, query)
-            score = bm25_score + importance_weight + recency_weight + file_match + error_match + type_weight
+            score = bm25_score + vector_score + importance_weight + recency_weight + file_match + error_match + type_weight
 
             reasons = []
             if bm25_score:
@@ -410,6 +413,8 @@ class MemoryRetriever:
                 suffix = f" ({matched})" if matched else ""
                 reasons.append(f"BM25相关 {bm25_score:.2f}{suffix}")
                 reasons.append(f"匹配关键词: {matched}" if matched else "匹配关键词")
+            if vector_score:
+                reasons.append(f"Vector相关 {vector_score:.2f}")
             if importance_weight:
                 reasons.append(f"重要性 {importance_weight:.2f}")
             if recency_weight:
@@ -499,6 +504,41 @@ class MemoryRetriever:
         for hit in transient_index.search(query, top_k=max(top_k, len(transient_docs))):
             persisted_hits[hit.doc_id] = hit
         return persisted_hits
+
+    def _search_vector(self, documents: List[MemoryDocument], query: str, top_k: int) -> Dict[str, Any]:
+        """Search vector index for long-term docs and transient in-memory docs."""
+        if not query:
+            return {}
+
+        vector_hits: Dict[str, Any] = {}
+        valid_ids = {doc.id for doc in documents}
+        if hasattr(self.long_term_memory, "index_manager"):
+            try:
+                raw_hits = self.long_term_memory.index_manager.vector_search(query, top_k=max(top_k, len(valid_ids)))
+                vector_hits.update({hit.doc_id: hit for hit in raw_hits if hit.doc_id in valid_ids})
+            except Exception:
+                vector_hits = {}
+
+        transient_docs = [doc for doc in documents if doc.source_type not in {"long_term_items", "summary_compat"}]
+        if transient_docs and hasattr(self.long_term_memory, "index_manager"):
+            try:
+                from .memory_index import VectorMemoryDocument, VectorMemoryIndex
+
+                provider = self.long_term_memory.index_manager.vector_provider
+                transient_index = VectorMemoryIndex(provider=provider)
+                transient_index.add_documents(
+                    VectorMemoryDocument(
+                        doc_id=doc.id,
+                        text="\n".join(part for part in [self._document_title(doc), doc.content, " ".join(doc.concepts), " ".join(doc.files)] if part),
+                        metadata={"source_type": doc.source_type, "session_id": doc.session_id},
+                    )
+                    for doc in transient_docs
+                )
+                for hit in transient_index.search(query, top_k=max(top_k, len(transient_docs))):
+                    vector_hits[hit.doc_id] = hit
+            except Exception:
+                pass
+        return vector_hits
 
     def _build_bm25_index(self, documents: List[MemoryDocument]) -> BM25MemoryIndex:
         index = BM25MemoryIndex()
