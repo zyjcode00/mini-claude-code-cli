@@ -1,0 +1,54 @@
+{
+  "id": "mem_e55aec398b84432d9a4389df18e6f1c4",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 core/compression_engine.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:06:16.945477",
+  "updated_at": "2026-05-29T12:06:16.945477",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_266d4543547f44b4862efb2275ff26c4"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_266d4543547f44b4862efb2275ff26c4",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:06:16.945477",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "        # 划分消息：最近完整 turn 原样保留，较旧完整 turn 作为摘要候选。\n        keep_messages = self._select_recent_complete_turn_messages(messages, min_keep)\n        keep_start = len(messages)\n        if keep_messages:\n            keep_start = min(\n                messages.index(msg)\n                for msg in keep_messages\n                if msg in messages\n            )\n        to_summarize = self._select_summary_candidate_messages(messages[:keep_start])\n",
+        "old_str": "        # 划分消息\n        to_summarize = messages[:-min_keep]\n        keep_messages = self._sanitize_openai_tool_pairs(messages[-min_keep:])\n",
+        "path": "core/compression_engine.py"
+      },
+      "tool_output": "成功: 已更新 core/compression_engine.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

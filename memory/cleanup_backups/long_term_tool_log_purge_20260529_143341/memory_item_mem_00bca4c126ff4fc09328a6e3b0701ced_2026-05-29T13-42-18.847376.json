@@ -1,0 +1,55 @@
+{
+  "id": "mem_00bca4c126ff4fc09328a6e3b0701ced",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "    def export_memories(self) -> Dict[str, Any]:\n        \"\"\"\n        导出所有记忆为可序列化的字典（用于持久化到 session 文件）\n\n        Returns:\n            包含三层记忆数据的字典\n        \"\"\"\n        return self.memory_manager.export_memories(self.session_summaries, self.history_summary)\n\n    def import_memories(self, data: Dict[str, Any]):\n        \"\"\"\n        从字典导入记忆数据（用于从 session 文件恢复）\n\n        Args:\n            data: 包含记忆数据的字典\n        \"\"\"\n        imported = self.memory_manager.import_memories(data)\n        self.history_summary = imported[\"history_summary\"]\n        self.session_summaries = imported[\"session_summaries\"]\n\n        if not self._enable_memory_layers:\n            print(\"[Phase 1] 已恢复历史摘要和会话摘要\")\n            return\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:42:18.847376",
+  "updated_at": "2026-05-29T13:42:18.847376",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/context.py"
+  ],
+  "source_observation_ids": [
+    "obs_fb7bd2b579274e33b4e48c64c876d394"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_fb7bd2b579274e33b4e48c64c876d394",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:42:18.847376",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 650,
+        "path": "core/context.py",
+        "raw_mode": true,
+        "start_line": 628
+      },
+      "tool_output": "    def export_memories(self) -> Dict[str, Any]:\n        \"\"\"\n        导出所有记忆为可序列化的字典（用于持久化到 session 文件）\n\n        Returns:\n            包含三层记忆数据的字典\n        \"\"\"\n        return self.memory_manager.export_memories(self.session_summaries, self.history_summary)\n\n    def import_memories(self, data: Dict[str, Any]):\n        \"\"\"\n        从字典导入记忆数据（用于从 session 文件恢复）\n\n        Args:\n            data: 包含记忆数据的字典\n        \"\"\"\n        imported = self.memory_manager.import_memories(data)\n        self.history_summary = imported[\"history_summary\"]\n        self.session_summaries = imported[\"session_summaries\"]\n\n        if not self._enable_memory_layers:\n            print(\"[Phase 1] 已恢复历史摘要和会话摘要\")\n            return\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/context.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

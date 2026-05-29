@@ -1,0 +1,58 @@
+{
+  "id": "mem_1322681e46374dc996ac9cedfe52cfab",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: execute_bash",
+  "content": "STDOUT:\n============================= test session starts =============================\r\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\r\ncachedir: .pytest_cache\r\nrootdir: D:\\LLM\\mini-claude-code-cli\r\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\r\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\r\ncollecting ... collected 9 items\r\n\r\ntests/test_turn_builder.py::test_turn_builder_keeps_plain_messages_as_individual_turns PASSED [ 11%]\r\ntests/test_turn_builder.py::test_turn_builder_groups_complete_openai_tool_call_pair_atomically PASSED [ 22%]\r\ntests/test_turn_builder.py::test_turn_builder_marks_missing_tool_response_incomplete PASSED [ 33%]\r\ntests/test_turn_builder.py::test_turn_builder_marks_orphan_tool_message_incomplete PASSED [ 44%]\r\ntests/test_turn_builder.py::test_turn_builder_build_complete_messages_drops_incomplete_tool_turns PASSED [ 55%]\r\ntests/test_turn_builder.py::test_sliding_window_selects_complete_turns_without_splitting_tool_pair PASSED [ 66%]\r\ntests/test_turn_builder.py::test_sanitizer_uses_turn_builder_to_remove_missing_and_orphan_tool_turns PASSED [ 77%]\r\ntests/test_turn_builder.py::test_keyframe_uses_turn_metadata_and_keeps_tool_pairs_atomic FAILED [ 88%]\r\ntests/test_turn_builder.py::test_llm_summary_uses_metadata_filtered_summary_candidates_and_recent_complete_turns PASSED [100%]\r\n\r\n================================== FAILURES ===================================\r\n________ test_keyframe_uses_turn_metadata_and_keeps_tool_pairs_atomic _________\r\n\r\n    @pytest.mark.asyncio\r\n    async def test_keyframe_uses_turn_metadata_and_keeps_tool_pairs_atomic():\r\n        engine = CompressionEngine()\r\n        messages = [\r\n            {\"role\": \"user\", \"content\": \"old low value chat\"},\r\n            {\"role\": \"assistant\", \"content\": \"generic reply\"},\r\n            {\"role\": \"user\", \"content\": \"请修改 core/engine.py 并运行测试\"},\r\n            {\r\n                \"role\": \"tool\",\r\n                \"tool_call_id\": \"call_orphan\",\r\n                \"name\": \"execute_bash\",\r\n                \"content\": \"orphan should be removed\",\r\n            },\r\n            {\r\n                \"role\": \"assistant\",\r\n                \"content\": \"\",\r\n                \"tool_calls\": [tool_call(\"call_edit\", \"edit_file\")],\r\n            },\r\n            {\r\n                \"role\": \"tool\",\r\n                \"tool_call_id\": \"call_edit\",\r\n                \"name\": \"edit_file\",\r\n                \"content\": \"成功修改 core/engine.py\",\r\n            },\r\n            {\r\n                \"role\": \"assistant\",\r\n                \"content\": \"pytest tests/test_engine.py FAILED\\nTraceback: AssertionError in tests/test_engine.py\",\r\n            },\r\n            {\"role\": \"assistant\", \"content\": \"final recent status\"},\r\n        ]\r\n    \r\n        result = await engine.compress(\r\n            messages=messages,\r\n            strategy=CompressionStrategy.KEYFRAME,\r\n            target_ratio=0.25,\r\n            min_keep=2,\r\n        )\r\n    \r\n        assert result.success\r\n        assert result.strategy == CompressionStrategy.KEYFRAME\r\n>       assert messages[3] in result.compressed_messages\r\nE       AssertionError: assert {'role': 'tool', 'tool_call_id': 'call_orphan', 'name': 'execute_bash', 'content': 'orphan should be removed'} in [{'role': 'user', 'content': '\\u8bf7\\u4fee\\u6539 core/engine.py \\u5e76\\u8fd0\\u884c\\u6d4b\\u8bd5'}, {'role': 'assistant', 'content': '', 'tool_calls': [{'id': 'call_edit', 'type': 'function', 'function': {'name': 'edit_file', 'arguments': '{}'}}]}, {'role': 'tool', 'tool_call_id': 'call_edit', 'name': 'edit_file', 'content': '\\u6210\\u529f\\u4fee\\u6539 core/engine.py'}, {'role': 'assistant', 'content': 'pytest tests/test_engine.py FAILED\\nTraceback: AssertionError in tests/test_engine.py'}, {'role': 'assistant', 'content': 'final recent status'}]\r\nE        +  where [{'role': 'user', 'content': '\\u8bf7\\u4fee\\u6539 core/engine.py \\u5e76\\u8fd0\\u884c\\u6d4b\\u8bd5'}, {'role': 'assista...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:09:42.114828",
+  "updated_at": "2026-05-29T12:09:42.114828",
+  "concepts": [
+    "tool_failure",
+    "execute_bash"
+  ],
+  "files": [
+    "tests/test_turn_builder.py",
+    "core/engine.py",
+    "tests/test_engine.py",
+    "tests\\test_turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_7bbf366dea734010a235fb5a55238f8a"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_7bbf366dea734010a235fb5a55238f8a",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:09:42.114828",
+      "event_type": "tool_failure",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -m pytest tests/test_turn_builder.py -vv"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "STDOUT:\n============================= test session starts =============================\r\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\r\ncachedir: .pytest_cache\r\nrootdir: D:\\LLM\\mini-claude-code-cli\r\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\r\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\r\ncollecting ... collected 9 items\r\n\r\ntests/test_turn_builder.py::test_turn_builder_keeps_plain_messages_as_individual_turns PASSED [ 11%]\r\ntests/test_turn_builder.py::test_turn_builder_groups_complete_openai_tool_call_pair_atomically PASSED [ 22%]\r\ntests/test_turn_builder.py::test_turn_builder_marks_missing_tool_response_incomplete PASSED [ 33%]\r\ntests/test_turn_builder.py::test_turn_builder_marks_orphan_tool_message_incomplete PASSED [ 44%]\r\ntests/test_turn_builder.py::test_turn_builder_build_complete_messages_drops_incomplete_tool_turns PASSED [ 55%]\r\ntests/test_turn_builder.py::test_sliding_window_selects_complete_turns_without_splitting_tool_pair PASSED [ 66%]\r\ntests/test_turn_builder.py::test_sanitizer_uses_turn_builder_to_remove_missing_and_orphan_tool_turns PASSED [ 77%]\r\ntests/test_turn_builder.py::test_keyframe_uses_turn_metadata_and_keeps_tool_pairs_atomic FAILED [ 88%]\r\ntests/test_turn_builder.py::test_llm_summary_uses_metadata_filtered_summary_candidates_and_recent_complete_turns PASSED [100%]\r\n\r\n================================== FAILURES ===================================\r\n________ test_keyframe_uses_turn_metadata_and_keeps_tool_pairs_atomic _________\r\n\r\n    @pytest.mark.asyncio\r\n    async def test_keyframe_uses_turn_metadata_and_keeps_tool_pairs_atomic():\r\n        engine = CompressionEngine()\r\n        messages = [\r\n            {\"role\": \"user\", \"content\": \"old low value chat\"},\r\n            {\"role\": \"assistant\", \"content\": \"generic reply\"},\r\n            {\"role\": \"user\", \"content\": \"请修改 core/engine.py 并运行测试\"},\r\n            {\r\n                \"role\": \"tool\",\r\n                \"tool_call_id\": \"call_orphan\",\r\n                \"name\": \"execute_bash\",\r\n                \"content\": \"orphan should be removed\",\r\n            },\r\n            {\r\n                \"role\": \"assistant\",\r\n                \"content\": \"\",\r\n                \"tool_calls\": [tool_call(\"call_edit\", \"edit_file\")],\r\n            },\r\n            {\r\n                \"role\": \"tool\",\r\n                \"tool_call_id\": \"call_edit\",\r\n                \"name\": \"edit_file\",\r\n                \"content\": \"成功修改 core/engine.py\",\r\n            },\r\n            {\r\n                \"role\": \"assistant\",\r\n                \"content\": \"pytest tests/test_engine.py FAILED\\nTraceback: AssertionError in tests/test_engine.py\",\r\n            },\r\n            {\"role\": \"assistant\", \"content\": \"final recent status\"},\r\n        ]\r\n    \r\n        result = await engine.compress(\r\n            messages=messages,\r\n            strategy=CompressionStrategy.KEYFRAME,\r\n            target_ratio=0.25,\r\n            min_keep=2,\r\n        )\r\n    \r\n        assert result.success\r\n        assert result.strategy == CompressionStrategy.KEYFRAME\r\n>       assert messages[3] in result.compressed_messages\r\nE       AssertionError: assert {'role': 'tool', 'tool_call_id': 'call_orphan', 'name': 'execute_bash', 'content': 'orphan should be removed'} in [{'role': 'user', 'content': '\\u8bf7\\u4fee\\u6539 core/engine.py \\u5e76\\u8fd0\\u884c\\u6d4b\\u8bd5'}, {'role': 'assistant', 'content': '', 'tool_calls': [{'id': 'call_edit', 'type': 'function', 'function': {'name': 'edit_file', 'arguments': '{}'}}]}, {'role': 'tool', 'tool_call_id': 'call_edit', 'name': 'edit_file', 'content': '\\u6210\\u529f\\u4fee\\u6539 core/engine.py'}, {'role': 'assistant', 'content': 'pytest tests/test_engine.py FAILED\\nTraceback: AssertionError in tests/test_engine.py'}, {'role': 'assistant', 'content': 'final recent status'}]\r\nE        +  where [{'role': 'user', 'content': '\\u8bf7\\u4fee\\u6539 core/engine.py \\u5e76\\u8fd0\\u884c\\u6d4b\\u8bd5'}, {'role': 'assista...",
+      "files": [
+        "tests/test_turn_builder.py",
+        "core/engine.py",
+        "tests/test_engine.py",
+        "tests\\test_turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

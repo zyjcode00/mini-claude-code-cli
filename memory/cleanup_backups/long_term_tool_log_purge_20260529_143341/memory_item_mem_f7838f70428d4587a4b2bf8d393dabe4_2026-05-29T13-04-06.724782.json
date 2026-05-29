@@ -1,0 +1,48 @@
+{
+  "id": "mem_f7838f70428d4587a4b2bf8d393dabe4",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "Command executed with no output.",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:04:06.724782",
+  "updated_at": "2026-05-29T13:04:06.724782",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_c1d47a22f8474629a444501b1a9a491f"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_c1d47a22f8474629a444501b1a9a491f",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:04:06.724782",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python - <<\"PY\"\nprint('hello')\nPY\n echo done"
+      },
+      "tool_output": "Command executed with no output.",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

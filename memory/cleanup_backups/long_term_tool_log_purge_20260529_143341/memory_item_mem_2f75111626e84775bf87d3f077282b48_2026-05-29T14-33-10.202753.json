@@ -1,0 +1,55 @@
+{
+  "id": "mem_2f75111626e84775bf87d3f077282b48",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: find_symbol_definition",
+  "content": "🔍 找到 1 个匹配项\n\n================================================================================\n\n\n[1] FUNCTION: search_items\n    父类: LongTermMemory\n    📁 文件: memory_layers.py\n    📍 行号: L506 - L537\n\n    💬 文档字符串:\n       关键词检索 MemoryItem，返回统一召回结果。\n\n    📝 代码片段 (前 10 行):\n     506 |     def search_items(self, query: str, top_k: int = 10, include_archived: bool = False) -> List[MemoryRecallResult]:\n     507 |         \"\"\"关键词检索 MemoryItem，返回统一召回结果。\"\"\"\n     508 |         query_keywords = self._tokenize(query)\n     509 |         if not query_keywords:\n     510 |             return []\n     511 | \n     512 |         scores: Dict[str, float] = {}\n     513 |         matched_terms: Dict[str, List[str]] = {}\n     514 |         for keyword in query_keywords:\n     515 |             for item_id in self.item_inverted_index.get(keyword, []):\n\n--------------------------------------------------------------------------------",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:33:10.202753",
+  "updated_at": "2026-05-29T14:33:10.202753",
+  "concepts": [
+    "post_tool_use",
+    "find_symbol_definition"
+  ],
+  "files": [
+    "core",
+    "memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_45374a389b5f4f22a1bde0472bd000a2"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_45374a389b5f4f22a1bde0472bd000a2",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:33:10.202753",
+      "event_type": "post_tool_use",
+      "tool_name": "find_symbol_definition",
+      "tool_input": {
+        "name": "search_items",
+        "path": "core"
+      },
+      "tool_output": "🔍 找到 1 个匹配项\n\n================================================================================\n\n\n[1] FUNCTION: search_items\n    父类: LongTermMemory\n    📁 文件: memory_layers.py\n    📍 行号: L506 - L537\n\n    💬 文档字符串:\n       关键词检索 MemoryItem，返回统一召回结果。\n\n    📝 代码片段 (前 10 行):\n     506 |     def search_items(self, query: str, top_k: int = 10, include_archived: bool = False) -> List[MemoryRecallResult]:\n     507 |         \"\"\"关键词检索 MemoryItem，返回统一召回结果。\"\"\"\n     508 |         query_keywords = self._tokenize(query)\n     509 |         if not query_keywords:\n     510 |             return []\n     511 | \n     512 |         scores: Dict[str, float] = {}\n     513 |         matched_terms: Dict[str, List[str]] = {}\n     514 |         for keyword in query_keywords:\n     515 |             for item_id in self.item_inverted_index.get(keyword, []):\n\n--------------------------------------------------------------------------------",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core",
+        "memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

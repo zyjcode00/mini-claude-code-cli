@@ -1,0 +1,48 @@
+{
+  "id": "mem_71d7140a784142cc9f1e86080af75304",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "Command executed with no output.",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:37:06.912138",
+  "updated_at": "2026-05-29T13:37:06.912138",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_f08ca33e0d3d48879f608675c0a78347"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f08ca33e0d3d48879f608675c0a78347",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:37:06.912138",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -c \"import json, os; from pathlib import Path;\\nfor p in [Path('memory/long_term'), Path('sessions')]:\\n files=list(p.glob('*.json')) if p.exists() else []; total=sum(f.stat().st_size for f in files); print(str(p),'json_files=',len(files),'size_kb=',round(total/1024,1));\\n [print(' ',f.name,round(f.stat().st_size/1024,1),'KB') for f in sorted(files,key=lambda x:x.stat().st_size, reverse=True)[:10]]\\nidx=Path('memory/long_term/index.json')\\nif idx.exists():\\n data=json.loads(idx.read_text(encoding='utf-8')); print('index counts:', {k: len(v) if isinstance(v, dict) else 'na' for k,v in data.items() if k in ['index','item_index','inverted_index','item_inverted_index']})\""
+      },
+      "tool_output": "Command executed with no output.",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

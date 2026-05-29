@@ -1,0 +1,55 @@
+{
+  "id": "mem_52377d4db23f4c58953bffb5e422819f",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "--- 文件: core/memory_layers.py (第 521 至 570 行，共 570 行) ---\n 521 |                 matched_session_ids.update(self.inverted_index[keyword])\n 522 | \n 523 |         # 加载匹配的摘要\n 524 |         results = []\n 525 |         for session_id in matched_session_ids:\n 526 |             summary = self.retrieve(session_id)\n 527 |             if summary:\n 528 |                 results.append(summary)\n 529 | \n 530 |         # 按重要性排序\n 531 |         results.sort(key=lambda s: s.importance, reverse=True)\n 532 | \n 533 |         return results[:top_k]\n 534 | \n 535 |     def get_all_session_ids(self) -> List[str]:\n 536 |         \"\"\"获取所有会话 ID\"\"\"\n 537 |         return list(self.index.keys())\n 538 | \n 539 |     def count(self) -> int:\n 540 |         \"\"\"获取摘要总数\"\"\"\n 541 |         return len(self.index)\n 542 | \n 543 |     def clear(self):\n 544 |         \"\"\"清空长期记忆（删除所有文件）\"\"\"\n 545 |         import shutil\n 546 | \n 547 |         # 删除所有摘要文件\n 548 |         for file_path in self.index.values():\n 549 |             if file_path.exists():\n 550 |                 file_path.unlink()\n 551 | \n 552 |         # 删除所有 MemoryItem 文件\n 553 |         for file_path in self.item_index.values():\n 554 |             if file_path.exists():\n 555 |                 file_path.unlink()\n 556 | \n 557 |         # 清空索引\n 558 |         self.index.clear()\n 559 |         self.item_index.clear()\n 560 |         self.inverted_index.clear()\n 561 |         self.item_inverted_index.clear()\n 562 | \n 563 |         # 保存空索引\n 564 |         self._save_index()\n 565 | \n 566 |     def __len__(self) -> int:\n 567 |         return len(self.index) + len(self.item_index)\n 568 | \n 569 |     def __repr__(self) -> str:\n 570 |         return f\"LongTermMemory(summaries={len(self.index)}, items={len(self.item_index)}, dir={self.storage_dir})\"\n--- 读取完毕 ---",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:58:48.151142",
+  "updated_at": "2026-05-29T12:58:48.151142",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_b46716751b76409585d757deb824a02b"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_b46716751b76409585d757deb824a02b",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:58:48.151142",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 570,
+        "path": "core/memory_layers.py",
+        "raw_mode": false,
+        "start_line": 521
+      },
+      "tool_output": "--- 文件: core/memory_layers.py (第 521 至 570 行，共 570 行) ---\n 521 |                 matched_session_ids.update(self.inverted_index[keyword])\n 522 | \n 523 |         # 加载匹配的摘要\n 524 |         results = []\n 525 |         for session_id in matched_session_ids:\n 526 |             summary = self.retrieve(session_id)\n 527 |             if summary:\n 528 |                 results.append(summary)\n 529 | \n 530 |         # 按重要性排序\n 531 |         results.sort(key=lambda s: s.importance, reverse=True)\n 532 | \n 533 |         return results[:top_k]\n 534 | \n 535 |     def get_all_session_ids(self) -> List[str]:\n 536 |         \"\"\"获取所有会话 ID\"\"\"\n 537 |         return list(self.index.keys())\n 538 | \n 539 |     def count(self) -> int:\n 540 |         \"\"\"获取摘要总数\"\"\"\n 541 |         return len(self.index)\n 542 | \n 543 |     def clear(self):\n 544 |         \"\"\"清空长期记忆（删除所有文件）\"\"\"\n 545 |         import shutil\n 546 | \n 547 |         # 删除所有摘要文件\n 548 |         for file_path in self.index.values():\n 549 |             if file_path.exists():\n 550 |                 file_path.unlink()\n 551 | \n 552 |         # 删除所有 MemoryItem 文件\n 553 |         for file_path in self.item_index.values():\n 554 |             if file_path.exists():\n 555 |                 file_path.unlink()\n 556 | \n 557 |         # 清空索引\n 558 |         self.index.clear()\n 559 |         self.item_index.clear()\n 560 |         self.inverted_index.clear()\n 561 |         self.item_inverted_index.clear()\n 562 | \n 563 |         # 保存空索引\n 564 |         self._save_index()\n 565 | \n 566 |     def __len__(self) -> int:\n 567 |         return len(self.index) + len(self.item_index)\n 568 | \n 569 |     def __repr__(self) -> str:\n 570 |         return f\"LongTermMemory(summaries={len(self.index)}, items={len(self.item_index)}, dir={self.storage_dir})\"\n--- 读取完毕 ---",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

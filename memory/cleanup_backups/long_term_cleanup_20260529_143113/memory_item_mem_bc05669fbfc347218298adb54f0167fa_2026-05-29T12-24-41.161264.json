@@ -1,0 +1,94 @@
+{
+  "id": "mem_bc05669fbfc347218298adb54f0167fa",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 100 处匹配，分布在 5 个文件中\n\n================================================================================\n\n[FILE] architecture_summary.md (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       7 | - ✅ Tool calling (file operations, code search, Git management, test execution)\n       8 | - ✅ Task planning system (structured Plan management)\n       9 | - ✅ Three-layer memory architecture (Working / Episodic / Long-term)\n>>>   10 | - ✅ Multi-strategy context compression (LLM_SUMMARY / KEYFRAME / SLIDING_WINDOW / IMPORTANCE_FILTER)\n      11 | - ✅ Session persistence and recovery\n      12 | - ✅ Git automation safety net (shadow branches, auto snapshots, failure rollback)\n      13 | \n    [上下文]\n      79 | |--------|-------------|\n      80 | | `execute_query(input)` | Main reasoning loop (max 80 steps) |\n      81 | | `_call_llm()` | Async LLM call + 3-layer memory injection |\n>>>   82 | | `compress_messages()` | Async context compression |\n      83 | | `save_session()` / `load_session()` | Session state persistence |\n      84 | \n      85 | ### context.py — Context & Memory Manager\n\n[FILE] context_compression_strategy_architecture.md (71 处匹配)\n--------------------------------------------------------------------------------\n>>>    1 | # Mini Claude Code CLI 上下文压缩策略优化架构规划\n       2 | \n       3 | > 项目路径：`D:\\LLM\\mini-claude-code-cli`\n       4 | > 文档位置：`docs/context_compression_strategy_architecture.md`\n    [上下文]\n       7 | > - `docs/memory_system_refactor_roadmap.md`\n       8 | > - `docs/new_long_term_memory_system.md`\n       9 | >\n>>>   10 | > 核心结论：下一步压缩策略不应继续停留在“按消息裁剪 + 出错后清理”的层面，而应升级为 **按 turn 原子化建模、分层压缩、结构化状态迁移、长期记忆联动、发送前协议校验** 的上下文管理系统。\n      11 | \n      12 | ---\n      13 | \n    [上下文]\n      15 | \n      16 | 当前项目已经具备：\n      17 | \n>>>   18 | - `CompressionEngine` 多策略压缩：`LLM_SUMMARY` / `KEYFRAME` / `SLIDING_WINDOW` / `IMPORTANCE_FILTER`；\n      19 | - `ContextManager` 负责消息管理、压缩触发、摘要写入；\n      20 | - `MemoryManager` / `MemoryItem` / `MemoryContextBuilder` 负责长期记忆、召回和 Prompt 预算注入；\n      21 | - OpenAI-compatible tool pair sanitizer，用于避免 `assistant.tool_calls` 缺失对应 `tool` 响应导致 400。\n    [上下文]\n      16 | 当前项目已经具备：\n      17 | \n      18 | - `CompressionEngine` 多策略压缩：`LLM_SUMMARY` / `KEYFRAME` / `SLIDING_WINDOW` / `IMPORTANCE_FILTER`；\n>>>   19 | - `ContextManager` 负责消息管理、压缩触发、摘要写入；\n      20 | - `MemoryManager` / `MemoryItem` / `MemoryContextBuilder` 负责长期记忆、召回和 Prompt 预算注入；\n      21 | - OpenAI-compatible tool pair sanitizer，用于避免 `assistant.tool_calls` 缺失对应 `tool` 响应导致 400。\n      22 | \n    [上下文]\n      20 | - `MemoryManager` / `MemoryItem` / `MemoryContextBuilder` 负责长期记忆、召回和 Prompt 预算注入；\n      21 | - OpenAI-compatible tool pair sanitizer，用于避免 `assistant.tool_calls` 缺失对应 `tool` 响应导致 400。\n      22 | \n>>>   23 | 但是当前压缩系统仍有几个结构性缺陷：\n      24 | \n      25 | 1. **压缩单位仍偏 message 级别**\n      26 |    很多策略按消息列表裁剪，容易破坏一次用户请求、assistant 工具调用、tool 返回、assistant 总结之间的完整语义链。\n    [上下文]\n      22 | \n      23 | 但是当前压缩系统仍有几个结构性缺陷：\n      24 | \n>>>   25 | 1. **压缩单位仍偏 message 级别**\n      26 |    很多策略按消息列表裁剪，容易破坏一次用户请求、assistant 工具调用、tool 返回、assistant 总结之间的完整语义链。\n      27 | \n      28 | 2. **tool call pair 只是在最后被清理，而不是从建模阶段就原子化**\n    [上下文]\n      26 |    很多策略按消息列表裁剪，容易破坏一次用户请求、assistant 工具调用、tool 返回、assistant 总结之间的完整语义链。\n      27 | \n      28 | 2. **tool call pair 只是在最后被清理，而不是从建模阶段就原子化**\n>>>   29 |    当前 sanitizer 能止血，但理想系统应该在压缩前就把 `assistant(tool_calls) + tool responses` 视为不可拆分块。\n      30 | \n      31 | 3. **压缩结果偏自然语言 summary，缺少结构化状态迁移**\n      32 |    Coding agent 真正需要保留的是：当前目标、已改文件、失败错误、测试状态、关键决策、未完成事项，而不是完整聊天。\n    [上下文]\n      28 | 2. **tool call pair 只是在最后被清理，而不是从建模阶段就原子化**\n      29 |    当前 sanitizer 能止血，但理想系统应该在压缩前就把 `assistant(tool_calls) + tool responses` 视为不可拆分块。\n      30 | \n>>>   31 | 3. **压缩结果偏自然语言 summary，缺少结构化状态迁移**\n      32 |    Coding agent 真正需要保留的是：当前目标、已改文件、失败错误、测试状态、关键决策、未完成事项，而不是完整聊天。\n      33 | \n      34 | 4. **长期记忆和上下文压缩边界还可以更清晰**\n    [上下文]\n      29 |    当前 sanitizer 能止血，但理想系统应该在压缩前就把 `assistant(tool_call...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:24:41.161264",
+  "updated_at": "2026-05-29T12:24:41.161264",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    "docs",
+    "architecture_summary.md",
+    "context.py",
+    "context_compression_strategy_architecture.md",
+    "docs/context_compression_strategy_architecture.md",
+    "docs/memory_system_refactor_roadmap.md",
+    "docs/new_long_term_memory_system.md",
+    "tests/test_openai_tool_pairing.py",
+    "tests/test_turn_builder.py",
+    "tests/test_compressed_session_state.py",
+    "tests/test_provider_message_validator.py",
+    "memory_system_refactor_roadmap.md",
+    "memory_layers.py",
+    "memory_models.py",
+    "memory_retrieval.py",
+    "compression_engine.py",
+    "prompts.py",
+    "engine.py",
+    "keyword_indexer.py",
+    "index.json"
+  ],
+  "source_observation_ids": [
+    "obs_73ac9ccbb98149d29c8f2ad8c2c190b5"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_73ac9ccbb98149d29c8f2ad8c2c190b5",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:24:41.161264",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 3,
+        "file_pattern": "*.md",
+        "path": "docs",
+        "pattern": "phase 3|CompressedSessionState|结构化|状态|context compression|压缩"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 100 处匹配，分布在 5 个文件中\n\n================================================================================\n\n[FILE] architecture_summary.md (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       7 | - ✅ Tool calling (file operations, code search, Git management, test execution)\n       8 | - ✅ Task planning system (structured Plan management)\n       9 | - ✅ Three-layer memory architecture (Working / Episodic / Long-term)\n>>>   10 | - ✅ Multi-strategy context compression (LLM_SUMMARY / KEYFRAME / SLIDING_WINDOW / IMPORTANCE_FILTER)\n      11 | - ✅ Session persistence and recovery\n      12 | - ✅ Git automation safety net (shadow branches, auto snapshots, failure rollback)\n      13 | \n    [上下文]\n      79 | |--------|-------------|\n      80 | | `execute_query(input)` | Main reasoning loop (max 80 steps) |\n      81 | | `_call_llm()` | Async LLM call + 3-layer memory injection |\n>>>   82 | | `compress_messages()` | Async context compression |\n      83 | | `save_session()` / `load_session()` | Session state persistence |\n      84 | \n      85 | ### context.py — Context & Memory Manager\n\n[FILE] context_compression_strategy_architecture.md (71 处匹配)\n--------------------------------------------------------------------------------\n>>>    1 | # Mini Claude Code CLI 上下文压缩策略优化架构规划\n       2 | \n       3 | > 项目路径：`D:\\LLM\\mini-claude-code-cli`\n       4 | > 文档位置：`docs/context_compression_strategy_architecture.md`\n    [上下文]\n       7 | > - `docs/memory_system_refactor_roadmap.md`\n       8 | > - `docs/new_long_term_memory_system.md`\n       9 | >\n>>>   10 | > 核心结论：下一步压缩策略不应继续停留在“按消息裁剪 + 出错后清理”的层面，而应升级为 **按 turn 原子化建模、分层压缩、结构化状态迁移、长期记忆联动、发送前协议校验** 的上下文管理系统。\n      11 | \n      12 | ---\n      13 | \n    [上下文]\n      15 | \n      16 | 当前项目已经具备：\n      17 | \n>>>   18 | - `CompressionEngine` 多策略压缩：`LLM_SUMMARY` / `KEYFRAME` / `SLIDING_WINDOW` / `IMPORTANCE_FILTER`；\n      19 | - `ContextManager` 负责消息管理、压缩触发、摘要写入；\n      20 | - `MemoryManager` / `MemoryItem` / `MemoryContextBuilder` 负责长期记忆、召回和 Prompt 预算注入；\n      21 | - OpenAI-compatible tool pair sanitizer，用于避免 `assistant.tool_calls` 缺失对应 `tool` 响应导致 400。\n    [上下文]\n      16 | 当前项目已经具备：\n      17 | \n      18 | - `CompressionEngine` 多策略压缩：`LLM_SUMMARY` / `KEYFRAME` / `SLIDING_WINDOW` / `IMPORTANCE_FILTER`；\n>>>   19 | - `ContextManager` 负责消息管理、压缩触发、摘要写入；\n      20 | - `MemoryManager` / `MemoryItem` / `MemoryContextBuilder` 负责长期记忆、召回和 Prompt 预算注入；\n      21 | - OpenAI-compatible tool pair sanitizer，用于避免 `assistant.tool_calls` 缺失对应 `tool` 响应导致 400。\n      22 | \n    [上下文]\n      20 | - `MemoryManager` / `MemoryItem` / `MemoryContextBuilder` 负责长期记忆、召回和 Prompt 预算注入；\n      21 | - OpenAI-compatible tool pair sanitizer，用于避免 `assistant.tool_calls` 缺失对应 `tool` 响应导致 400。\n      22 | \n>>>   23 | 但是当前压缩系统仍有几个结构性缺陷：\n      24 | \n      25 | 1. **压缩单位仍偏 message 级别**\n      26 |    很多策略按消息列表裁剪，容易破坏一次用户请求、assistant 工具调用、tool 返回、assistant 总结之间的完整语义链。\n    [上下文]\n      22 | \n      23 | 但是当前压缩系统仍有几个结构性缺陷：\n      24 | \n>>>   25 | 1. **压缩单位仍偏 message 级别**\n      26 |    很多策略按消息列表裁剪，容易破坏一次用户请求、assistant 工具调用、tool 返回、assistant 总结之间的完整语义链。\n      27 | \n      28 | 2. **tool call pair 只是在最后被清理，而不是从建模阶段就原子化**\n    [上下文]\n      26 |    很多策略按消息列表裁剪，容易破坏一次用户请求、assistant 工具调用、tool 返回、assistant 总结之间的完整语义链。\n      27 | \n      28 | 2. **tool call pair 只是在最后被清理，而不是从建模阶段就原子化**\n>>>   29 |    当前 sanitizer 能止血，但理想系统应该在压缩前就把 `assistant(tool_calls) + tool responses` 视为不可拆分块。\n      30 | \n      31 | 3. **压缩结果偏自然语言 summary，缺少结构化状态迁移**\n      32 |    Coding agent 真正需要保留的是：当前目标、已改文件、失败错误、测试状态、关键决策、未完成事项，而不是完整聊天。\n    [上下文]\n      28 | 2. **tool call pair 只是在最后被清理，而不是从建模阶段就原子化**\n      29 |    当前 sanitizer 能止血，但理想系统应该在压缩前就把 `assistant(tool_calls) + tool responses` 视为不可拆分块。\n      30 | \n>>>   31 | 3. **压缩结果偏自然语言 summary，缺少结构化状态迁移**\n      32 |    Coding agent 真正需要保留的是：当前目标、已改文件、失败错误、测试状态、关键决策、未完成事项，而不是完整聊天。\n      33 | \n      34 | 4. **长期记忆和上下文压缩边界还可以更清晰**\n    [上下文]\n      29 |    当前 sanitizer 能止血，但理想系统应该在压缩前就把 `assistant(tool_call...",
+      "files": [
+        "docs",
+        "architecture_summary.md",
+        "context.py",
+        "context_compression_strategy_architecture.md",
+        "docs/context_compression_strategy_architecture.md",
+        "docs/memory_system_refactor_roadmap.md",
+        "docs/new_long_term_memory_system.md",
+        "tests/test_openai_tool_pairing.py",
+        "tests/test_turn_builder.py",
+        "tests/test_compressed_session_state.py",
+        "tests/test_provider_message_validator.py",
+        "memory_system_refactor_roadmap.md",
+        "memory_layers.py",
+        "memory_models.py",
+        "memory_retrieval.py",
+        "compression_engine.py",
+        "prompts.py",
+        "engine.py",
+        "keyword_indexer.py",
+        "index.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

@@ -1,0 +1,94 @@
+{
+  "id": "mem_19f5a1fb199d43d6a55381d0ff8b8327",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 10143 处匹配，分布在 646 个文件中\n\n================================================================================\n\n[FILE] .gitignore (4 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      23 | sessions/*.json\n      24 | \n>>>   25 | # Memory runtime data (not for distribution)\n      26 | memory/long_term/*.json\n      27 | memory/long_term/index.json\n    [上下文]\n      24 | \n      25 | # Memory runtime data (not for distribution)\n>>>   26 | memory/long_term/*.json\n      27 | memory/long_term/index.json\n      28 | memory/test*/\n    [上下文]\n      25 | # Memory runtime data (not for distribution)\n      26 | memory/long_term/*.json\n>>>   27 | memory/long_term/index.json\n      28 | memory/test*/\n      29 | \n    [上下文]\n      26 | memory/long_term/*.json\n      27 | memory/long_term/index.json\n>>>   28 | memory/test*/\n      29 | \n      30 | # Local secrets / environment files\n\n[FILE] README.md (41 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      56 |                            ▼\n      57 | ┌──────────────────────────────────────────────────────────────┐\n>>>   58 | │                    三层记忆系统 (Memory)                       │\n      59 | │  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐       │\n      60 | │  │  工作记忆    │ → │  情景记忆    │ → │  长期记忆    │      │\n    [上下文]\n      83 | │   ├── session_manager.py     # 会话管理器：跨会话状态持久化\n      84 | │   ├── compression_engine.py  # 智能压缩引擎：4 种自适应策略\n>>>   85 | │   ├── memory_layers.py       # 三层记忆架构管理\n      86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n    [上下文]\n      84 | │   ├── compression_engine.py  # 智能压缩引擎：4 种自适应策略\n      85 | │   ├── memory_layers.py       # 三层记忆架构管理\n>>>   86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n      88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n    [上下文]\n      85 | │   ├── memory_layers.py       # 三层记忆架构管理\n      86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n>>>   87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n      88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n      89 | │   ├── memory_context_builder.py # 记忆 Prompt 注入与 Token Budget 控制\n    [上下文]\n      86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n>>>   88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n      89 | │   ├── memory_context_builder.py # 记忆 Prompt 注入与 Token Budget 控制\n      90 | │   ├── memory_retrieval.py    # 统一检索层：Hybrid Recall / 文件历史 / 错误历史\n    [上下文]\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n      88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n>>>   89 | │   ├── memory_context_builder.py # 记忆 Prompt 注入与 Token Budget 控制\n      90 | │   ├── memory_retrieval.py    # 统一检索层：Hybrid Recall / 文件历史 / 错误历史\n      91 | │   ├── keyword_indexer.py     # 关键词提取：jieba + TF-IDF\n    [上下文]\n      88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n      89 | │   ├── memory_context_builder.py # 记忆 Prompt 注入与 Token Budget 控制\n>>>   90 | │   ├── memory_retrieval.py    # 统一检索层：Hybrid Recall / 文件历史 / 错误历史\n      91 | │   ├── keyword_indexer.py     # 关键词提取：jieba + TF-IDF\n      92 | │   └── bm25_retriever.py      # BM25 全文检索引擎\n    [上下文]\n     103 | │   ├── session_tool.py        # 会话清理\n     104 | │   ├── retrieval_tool.py      # 记忆检索工具\n>>>  105 | │   └── memory_tool.py         # 长期记忆工具：save/recall/file_history/error_history/stats\n     106 | │\n     107 | ├── tests/                     # 🧪 测试套件 (40+ 测试文件)\n    [上下文]\n     109 | │   ├── architecture_summary.md\n     110 | │   ├── shadow_branch_system.md\n>>>  111 | │   ├── memory_system_refactor_roadmap.md\n     112 | │   └── new_long_term_memory_sys...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:04:39.468130",
+  "updated_at": "2026-05-29T13:04:39.468130",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    ".",
+    "memory/long_term/index.json",
+    "README.md",
+    "session_manager.py",
+    "compression_engine.py",
+    "memory_layers.py",
+    "memory_models.py",
+    "memory_items.py",
+    "memory_manager.py",
+    "memory_context_builder.py",
+    "memory_retrieval.py",
+    "keyword_indexer.py",
+    "bm25_retriever.py",
+    "session_tool.py",
+    "retrieval_tool.py",
+    "memory_tool.py",
+    "architecture_summary.md",
+    "shadow_branch_system.md",
+    "memory_system_refactor_roadmap.md",
+    "new_long_term_memory_system.md"
+  ],
+  "source_observation_ids": [
+    "obs_f23a60ee100943b1ac316fdd3d00d72a"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f23a60ee100943b1ac316fdd3d00d72a",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:04:39.468130",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 2,
+        "file_pattern": "*",
+        "path": ".",
+        "pattern": "memory|long_term|recall|MemoryItem|SessionSummary"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 10143 处匹配，分布在 646 个文件中\n\n================================================================================\n\n[FILE] .gitignore (4 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      23 | sessions/*.json\n      24 | \n>>>   25 | # Memory runtime data (not for distribution)\n      26 | memory/long_term/*.json\n      27 | memory/long_term/index.json\n    [上下文]\n      24 | \n      25 | # Memory runtime data (not for distribution)\n>>>   26 | memory/long_term/*.json\n      27 | memory/long_term/index.json\n      28 | memory/test*/\n    [上下文]\n      25 | # Memory runtime data (not for distribution)\n      26 | memory/long_term/*.json\n>>>   27 | memory/long_term/index.json\n      28 | memory/test*/\n      29 | \n    [上下文]\n      26 | memory/long_term/*.json\n      27 | memory/long_term/index.json\n>>>   28 | memory/test*/\n      29 | \n      30 | # Local secrets / environment files\n\n[FILE] README.md (41 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      56 |                            ▼\n      57 | ┌──────────────────────────────────────────────────────────────┐\n>>>   58 | │                    三层记忆系统 (Memory)                       │\n      59 | │  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐       │\n      60 | │  │  工作记忆    │ → │  情景记忆    │ → │  长期记忆    │      │\n    [上下文]\n      83 | │   ├── session_manager.py     # 会话管理器：跨会话状态持久化\n      84 | │   ├── compression_engine.py  # 智能压缩引擎：4 种自适应策略\n>>>   85 | │   ├── memory_layers.py       # 三层记忆架构管理\n      86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n    [上下文]\n      84 | │   ├── compression_engine.py  # 智能压缩引擎：4 种自适应策略\n      85 | │   ├── memory_layers.py       # 三层记忆架构管理\n>>>   86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n      88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n    [上下文]\n      85 | │   ├── memory_layers.py       # 三层记忆架构管理\n      86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n>>>   87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n      88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n      89 | │   ├── memory_context_builder.py # 记忆 Prompt 注入与 Token Budget 控制\n    [上下文]\n      86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n>>>   88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n      89 | │   ├── memory_context_builder.py # 记忆 Prompt 注入与 Token Budget 控制\n      90 | │   ├── memory_retrieval.py    # 统一检索层：Hybrid Recall / 文件历史 / 错误历史\n    [上下文]\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n      88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n>>>   89 | │   ├── memory_context_builder.py # 记忆 Prompt 注入与 Token Budget 控制\n      90 | │   ├── memory_retrieval.py    # 统一检索层：Hybrid Recall / 文件历史 / 错误历史\n      91 | │   ├── keyword_indexer.py     # 关键词提取：jieba + TF-IDF\n    [上下文]\n      88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n      89 | │   ├── memory_context_builder.py # 记忆 Prompt 注入与 Token Budget 控制\n>>>   90 | │   ├── memory_retrieval.py    # 统一检索层：Hybrid Recall / 文件历史 / 错误历史\n      91 | │   ├── keyword_indexer.py     # 关键词提取：jieba + TF-IDF\n      92 | │   └── bm25_retriever.py      # BM25 全文检索引擎\n    [上下文]\n     103 | │   ├── session_tool.py        # 会话清理\n     104 | │   ├── retrieval_tool.py      # 记忆检索工具\n>>>  105 | │   └── memory_tool.py         # 长期记忆工具：save/recall/file_history/error_history/stats\n     106 | │\n     107 | ├── tests/                     # 🧪 测试套件 (40+ 测试文件)\n    [上下文]\n     109 | │   ├── architecture_summary.md\n     110 | │   ├── shadow_branch_system.md\n>>>  111 | │   ├── memory_system_refactor_roadmap.md\n     112 | │   └── new_long_term_memory_sys...",
+      "files": [
+        ".",
+        "memory/long_term/index.json",
+        "README.md",
+        "session_manager.py",
+        "compression_engine.py",
+        "memory_layers.py",
+        "memory_models.py",
+        "memory_items.py",
+        "memory_manager.py",
+        "memory_context_builder.py",
+        "memory_retrieval.py",
+        "keyword_indexer.py",
+        "bm25_retriever.py",
+        "session_tool.py",
+        "retrieval_tool.py",
+        "memory_tool.py",
+        "architecture_summary.md",
+        "shadow_branch_system.md",
+        "memory_system_refactor_roadmap.md",
+        "new_long_term_memory_system.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

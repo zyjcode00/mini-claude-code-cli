@@ -1,0 +1,55 @@
+{
+  "id": "mem_c6d0c642ef1a4661981e3d1c9e3cb215",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "\"\"\"统一长期记忆数据模型。\n\n阶段 2 引入的模型用于把“原始事件”和“长期知识条目”从旧的\nSessionSummary 中拆出来：\n- RawObservation：记录未加工的原始事件来源；\n- MemoryItem：记录可长期复用的知识型记忆；\n- MemoryRecallResult：记录召回结果、分数和来源说明。\n\"\"\"\n\nfrom __future__ import annotations\n\nimport json\nimport uuid\nfrom dataclasses import dataclass, field\nfrom datetime import datetime\nfrom enum import Enum\nfrom typing import Any, Dict, List, Optional\n\n\ndef _now_iso() -> str:\n    return datetime.now().isoformat()\n\n\ndef _new_id(prefix: str) -> str:\n    return f\"{prefix}_{uuid.uuid4().hex}\"\n\n\ndef _as_list(value: Any) -> List[Any]:\n    if value is None:\n        return []\n    if isinstance(value, list):\n        return value\n    if isinstance(value, tuple):\n        return list(value)\n    return [value]\n\n\nclass ObservationType(str, Enum):\n    \"\"\"原始观察事件类型。\"\"\"\n\n    PROMPT_SUBMIT = \"prompt_submit\"\n    ASSISTANT_MESSAGE = \"assistant_message\"\n    PRE_TOOL_USE = \"pre_tool_use\"\n    POST_TOOL_USE = \"post_tool_use\"\n    TOOL_FAILURE = \"tool_failure\"\n    SESSION_START = \"session_start\"\n    SESSION_END = \"session_end\"\n    TEST_RESULT = \"test_result\"\n    FILE_CHANGE = \"file_change\"\n    OTHER = \"other\"\n\n\nclass MemoryKind(str, Enum):\n    \"\"\"长期记忆条目类型。\"\"\"\n\n    FACT = \"fact\"\n    ARCHITECTURE = \"architecture\"\n    PREFERENCE = \"preference\"\n    BUG = \"bug\"\n    WORKFLOW = \"workflow\"\n    DECISION = \"decision\"\n    PROCEDURAL = \"procedural\"\n    TASK = \"task\"\n    SUMMARY = \"summary\"\n    OTHER = \"other\"\n\n\nclass MemoryStatus(str, Enum):\n    \"\"\"MemoryItem 生命周期状态。\"\"\"\n\n    ACTIVE = \"active\"\n    SUPERSEDED = \"superseded\"\n    ARCHIVED = \"archived\"\n\n\n@dataclass\nclass RawObservation:\n    \"\"\"原始事件记录。\n\n    RawObservation 不直接承担“知识”的语义，它保留事件的原貌，方便后续\n    追溯 MemoryItem 来源、排查错误或重新提炼记忆。\n    \"\"\"\n\n    id: str = field(default_factory=lambda: _new_id(\"obs\"))\n    session_id: str = \"\"\n    project: str = \"\"\n    cwd: str = \"\"\n    timestamp: str = field(default_factory=_now_iso)\n    event_type: str = ObservationType.OTHER.value\n    tool_name: Optional[str] = None\n    tool_input: Optional[Dict[str, Any]] = None\n    tool_output: Optional[str] = None\n    user_prompt: Optional[str] = None\n    assistant_message: Optional[str] = None\n    error: Optional[str] = None\n    files: List[str] = field(default_factory=list)\n    metadata: Dict[str, Any] = field(default_factory=dict)\n\n    def __post_init__(self) -> None:\n        self.event_type = _normalize_enum_value(self.event_type, ObservationType, ObservationType.OTHER.value)\n        self.files = [str(item) for item in _as_list(self.files)]\n        self.metadata = dict(self.metadata or {})\n        if self.tool_input is not None:\n            self.tool_input = dict(self.tool_input)\n\n    def to_dict(self) -> Dict[str, Any]:\n        return {\n            \"id\": self.id,\n            \"session_id\": self.session_id,\n            \"project\": self.project,\n            \"cwd\": self.cwd,\n            \"timestamp\": self.timestamp,\n            \"event_type\": self.event_type,\n            \"tool_name\": self.tool_name,\n            \"tool_input\": self.tool_input,\n            \"tool_output\": self.tool_output,\n            \"user_prompt\": self.user_prompt,\n            \"assistant_message\": self.assistant_message,\n            \"error\": self.error,\n            \"files\": list(self.files),\n            \"metadata\": dict(self.metadata),\n        }\n\n    @classmethod\n    def from_dict(cls, data: Dict[str, Any]) -> \"RawObservation\":\n        return cls(\n            id=data.get(\"id\") or _new_id(\"obs\"),\n            session_id=data.get(\"session_id\", \"\"),\n            project=data.get(\"project\", \"\"),\n            cwd=data.get(\"cwd\", \"\"),\n            timestamp=data.get(\"timestamp\") or _now_iso(),\n            event_type=data.get(\"event_type\", ObservationType.OTHER.value),\n            tool_name=data.get(\"tool_name\"),\n            tool_input=data.get(\"tool_input\"),\n            tool_output=data.get(\"tool_output\"),\n            user_prompt=data.get(\"user_prompt\"),\n            assistant_message=data.get(\"assistant_message\"),\n            error=data.get(\"error\"),\n            files=data.get(\"files\"...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T15:59:54.841962",
+  "updated_at": "2026-05-28T15:59:54.841962",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_items.py"
+  ],
+  "source_observation_ids": [
+    "obs_89f2a68531514ecca01529aa184111a7"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_89f2a68531514ecca01529aa184111a7",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T15:59:54.841962",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "path": "core/memory_items.py",
+        "start_line": 1,
+        "end_line": 280,
+        "raw_mode": true
+      },
+      "tool_output": "\"\"\"统一长期记忆数据模型。\n\n阶段 2 引入的模型用于把“原始事件”和“长期知识条目”从旧的\nSessionSummary 中拆出来：\n- RawObservation：记录未加工的原始事件来源；\n- MemoryItem：记录可长期复用的知识型记忆；\n- MemoryRecallResult：记录召回结果、分数和来源说明。\n\"\"\"\n\nfrom __future__ import annotations\n\nimport json\nimport uuid\nfrom dataclasses import dataclass, field\nfrom datetime import datetime\nfrom enum import Enum\nfrom typing import Any, Dict, List, Optional\n\n\ndef _now_iso() -> str:\n    return datetime.now().isoformat()\n\n\ndef _new_id(prefix: str) -> str:\n    return f\"{prefix}_{uuid.uuid4().hex}\"\n\n\ndef _as_list(value: Any) -> List[Any]:\n    if value is None:\n        return []\n    if isinstance(value, list):\n        return value\n    if isinstance(value, tuple):\n        return list(value)\n    return [value]\n\n\nclass ObservationType(str, Enum):\n    \"\"\"原始观察事件类型。\"\"\"\n\n    PROMPT_SUBMIT = \"prompt_submit\"\n    ASSISTANT_MESSAGE = \"assistant_message\"\n    PRE_TOOL_USE = \"pre_tool_use\"\n    POST_TOOL_USE = \"post_tool_use\"\n    TOOL_FAILURE = \"tool_failure\"\n    SESSION_START = \"session_start\"\n    SESSION_END = \"session_end\"\n    TEST_RESULT = \"test_result\"\n    FILE_CHANGE = \"file_change\"\n    OTHER = \"other\"\n\n\nclass MemoryKind(str, Enum):\n    \"\"\"长期记忆条目类型。\"\"\"\n\n    FACT = \"fact\"\n    ARCHITECTURE = \"architecture\"\n    PREFERENCE = \"preference\"\n    BUG = \"bug\"\n    WORKFLOW = \"workflow\"\n    DECISION = \"decision\"\n    PROCEDURAL = \"procedural\"\n    TASK = \"task\"\n    SUMMARY = \"summary\"\n    OTHER = \"other\"\n\n\nclass MemoryStatus(str, Enum):\n    \"\"\"MemoryItem 生命周期状态。\"\"\"\n\n    ACTIVE = \"active\"\n    SUPERSEDED = \"superseded\"\n    ARCHIVED = \"archived\"\n\n\n@dataclass\nclass RawObservation:\n    \"\"\"原始事件记录。\n\n    RawObservation 不直接承担“知识”的语义，它保留事件的原貌，方便后续\n    追溯 MemoryItem 来源、排查错误或重新提炼记忆。\n    \"\"\"\n\n    id: str = field(default_factory=lambda: _new_id(\"obs\"))\n    session_id: str = \"\"\n    project: str = \"\"\n    cwd: str = \"\"\n    timestamp: str = field(default_factory=_now_iso)\n    event_type: str = ObservationType.OTHER.value\n    tool_name: Optional[str] = None\n    tool_input: Optional[Dict[str, Any]] = None\n    tool_output: Optional[str] = None\n    user_prompt: Optional[str] = None\n    assistant_message: Optional[str] = None\n    error: Optional[str] = None\n    files: List[str] = field(default_factory=list)\n    metadata: Dict[str, Any] = field(default_factory=dict)\n\n    def __post_init__(self) -> None:\n        self.event_type = _normalize_enum_value(self.event_type, ObservationType, ObservationType.OTHER.value)\n        self.files = [str(item) for item in _as_list(self.files)]\n        self.metadata = dict(self.metadata or {})\n        if self.tool_input is not None:\n            self.tool_input = dict(self.tool_input)\n\n    def to_dict(self) -> Dict[str, Any]:\n        return {\n            \"id\": self.id,\n            \"session_id\": self.session_id,\n            \"project\": self.project,\n            \"cwd\": self.cwd,\n            \"timestamp\": self.timestamp,\n            \"event_type\": self.event_type,\n            \"tool_name\": self.tool_name,\n            \"tool_input\": self.tool_input,\n            \"tool_output\": self.tool_output,\n            \"user_prompt\": self.user_prompt,\n            \"assistant_message\": self.assistant_message,\n            \"error\": self.error,\n            \"files\": list(self.files),\n            \"metadata\": dict(self.metadata),\n        }\n\n    @classmethod\n    def from_dict(cls, data: Dict[str, Any]) -> \"RawObservation\":\n        return cls(\n            id=data.get(\"id\") or _new_id(\"obs\"),\n            session_id=data.get(\"session_id\", \"\"),\n            project=data.get(\"project\", \"\"),\n            cwd=data.get(\"cwd\", \"\"),\n            timestamp=data.get(\"timestamp\") or _now_iso(),\n            event_type=data.get(\"event_type\", ObservationType.OTHER.value),\n            tool_name=data.get(\"tool_name\"),\n            tool_input=data.get(\"tool_input\"),\n            tool_output=data.get(\"tool_output\"),\n            user_prompt=data.get(\"user_prompt\"),\n            assistant_message=data.get(\"assistant_message\"),\n            error=data.get(\"error\"),\n            files=data.get(\"files\"...",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/memory_items.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "mem_d497a3bdb2004c4689812c111bd057ea",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "--- 文件: D:\\LLM\\memory\\agentmemory\\src\\functions\\observe.ts (第 1 至 260 行，共 327 行) ---\n   1 | import { TriggerAction, type ISdk } from \"iii-sdk\";\n   2 | import type { RawObservation, HookPayload } from \"../types.js\";\n   3 | import { KV, STREAM, generateId } from \"../state/schema.js\";\n   4 | import { StateKV } from \"../state/kv.js\";\n   5 | import { stripPrivateData } from \"./privacy.js\";\n   6 | import { DedupMap } from \"./dedup.js\";\n   7 | import { withKeyedLock } from \"../state/keyed-mutex.js\";\n   8 | import { isAutoCompressEnabled } from \"../config.js\";\n   9 | import { buildSyntheticCompression } from \"./compress-synthetic.js\";\n  10 | import { getSearchIndex, vectorIndexAddGuarded } from \"./search.js\";\n  11 | import { getAgentId } from \"../config.js\";\n  12 | import { logger } from \"../logger.js\";\n  13 | \n  14 | export function extractImage(d: unknown): string | undefined {\n  15 |   if (!d) return undefined;\n  16 |   if (typeof d === \"string\") {\n  17 |     if (d.startsWith(\"data:image/\") || d.startsWith(\"iVBORw0KGgo\") || d.startsWith(\"/9j/\")) {\n  18 |       return d;\n  19 |     }\n  20 |     return undefined;\n  21 |   }\n  22 |   if (typeof d === \"object\" && d !== null) {\n  23 |     const obj = d as Record<string, unknown>;\n  24 |     if (typeof obj[\"image_data\"] === \"string\") return obj[\"image_data\"];\n  25 |     if (typeof obj[\"image_path\"] === \"string\") return obj[\"image_path\"];\n  26 |     if (typeof obj[\"imageBase64\"] === \"string\") return obj[\"imageBase64\"];\n  27 |     if (typeof obj[\"imagePath\"] === \"string\") return obj[\"imagePath\"];\n  28 | \n  29 |     for (const key of Object.keys(obj)) {\n  30 |       const match = extractImage(obj[key]);\n  31 |       if (match) return match;\n  32 |     }\n  33 |   }\n  34 |   return undefined;\n  35 | }\n  36 | \n  37 | export function registerObserveFunction(\n  38 |   sdk: ISdk,\n  39 |   kv: StateKV,\n  40 |   dedupMap?: DedupMap,\n  41 |   maxObservationsPerSession?: number,\n  42 | ): void {\n  43 |   sdk.registerFunction(\"mem::observe\",\n  44 |     async (payload: HookPayload) => {\n  45 | \n  46 |       if (\n  47 |         !payload?.sessionId ||\n  48 |         typeof payload.sessionId !== \"string\" ||\n  49 |         !payload.hookType ||\n  50 |         typeof payload.hookType !== \"string\" ||\n  51 |         !payload.timestamp ||\n  52 |         typeof payload.timestamp !== \"string\"\n  53 |       ) {\n  54 |         return {\n  55 |           success: false,\n  56 |           error:\n  57 |             \"Invalid payload: sessionId, hookType, and timestamp are required\",\n  58 |         };\n  59 |       }\n  60 | \n  61 |       const obsId = generateId(\"obs\");\n  62 | \n  63 |       let dedupHash: string | undefined;\n  64 |       if (dedupMap) {\n  65 |         const d =\n  66 |           typeof payload.data === \"object\" && payload.data !== null\n  67 |             ? (payload.data as Record<string, unknown>)\n  68 |             : {};\n  69 |         const toolName = (d[\"tool_name\"] as string) || payload.hookType;\n  70 |         dedupHash = dedupMap.computeHash(\n  71 |           payload.sessionId,\n  72 |           toolName,\n  73 |           d[\"tool_input\"],\n  74 |         );\n  75 |         if (dedupMap.isDuplicate(dedupHash)) {\n  76 |           return { deduplicated: true, sessionId: payload.sessionId };\n  77 |         }\n  78 |       }\n  79 | \n  80 |       let sanitizedRaw: unknown = payload.data;\n  81 |       try {\n  82 |         const jsonStr = JSON.stringify(payload.data);\n  83 |         const sanitized = stripPrivateData(jsonStr);\n  84 |         sanitizedRaw = JSON.parse(sanitized);\n  85 |       } catch {\n  86 |         sanitizedRaw = stripPrivateData(String(payload.data));\n  87 |       }\n  88 | \n  89 |       const raw: RawObservation = {\n  90 |         id: obsId,\n  91 |         sessionId: payload.sessionId,\n  92 |         timestamp: payload.timestamp,\n  93 |         hookType: payload.hookType,\n  94 |         raw: sanitizedRaw,\n  95 |       };\n  96 | \n  97 |       let extractedImage: string | undefined;\n  98 | \n  99 |...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:02:41.250841",
+  "updated_at": "2026-05-29T14:02:41.250841",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "D:\\LLM\\memory\\agentmemory\\src\\functions\\observe.ts"
+  ],
+  "source_observation_ids": [
+    "obs_f86f19d741774c7cbe702f6728607564"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f86f19d741774c7cbe702f6728607564",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:02:41.250841",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 260,
+        "path": "D:\\LLM\\memory\\agentmemory\\src\\functions\\observe.ts",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": "--- 文件: D:\\LLM\\memory\\agentmemory\\src\\functions\\observe.ts (第 1 至 260 行，共 327 行) ---\n   1 | import { TriggerAction, type ISdk } from \"iii-sdk\";\n   2 | import type { RawObservation, HookPayload } from \"../types.js\";\n   3 | import { KV, STREAM, generateId } from \"../state/schema.js\";\n   4 | import { StateKV } from \"../state/kv.js\";\n   5 | import { stripPrivateData } from \"./privacy.js\";\n   6 | import { DedupMap } from \"./dedup.js\";\n   7 | import { withKeyedLock } from \"../state/keyed-mutex.js\";\n   8 | import { isAutoCompressEnabled } from \"../config.js\";\n   9 | import { buildSyntheticCompression } from \"./compress-synthetic.js\";\n  10 | import { getSearchIndex, vectorIndexAddGuarded } from \"./search.js\";\n  11 | import { getAgentId } from \"../config.js\";\n  12 | import { logger } from \"../logger.js\";\n  13 | \n  14 | export function extractImage(d: unknown): string | undefined {\n  15 |   if (!d) return undefined;\n  16 |   if (typeof d === \"string\") {\n  17 |     if (d.startsWith(\"data:image/\") || d.startsWith(\"iVBORw0KGgo\") || d.startsWith(\"/9j/\")) {\n  18 |       return d;\n  19 |     }\n  20 |     return undefined;\n  21 |   }\n  22 |   if (typeof d === \"object\" && d !== null) {\n  23 |     const obj = d as Record<string, unknown>;\n  24 |     if (typeof obj[\"image_data\"] === \"string\") return obj[\"image_data\"];\n  25 |     if (typeof obj[\"image_path\"] === \"string\") return obj[\"image_path\"];\n  26 |     if (typeof obj[\"imageBase64\"] === \"string\") return obj[\"imageBase64\"];\n  27 |     if (typeof obj[\"imagePath\"] === \"string\") return obj[\"imagePath\"];\n  28 | \n  29 |     for (const key of Object.keys(obj)) {\n  30 |       const match = extractImage(obj[key]);\n  31 |       if (match) return match;\n  32 |     }\n  33 |   }\n  34 |   return undefined;\n  35 | }\n  36 | \n  37 | export function registerObserveFunction(\n  38 |   sdk: ISdk,\n  39 |   kv: StateKV,\n  40 |   dedupMap?: DedupMap,\n  41 |   maxObservationsPerSession?: number,\n  42 | ): void {\n  43 |   sdk.registerFunction(\"mem::observe\",\n  44 |     async (payload: HookPayload) => {\n  45 | \n  46 |       if (\n  47 |         !payload?.sessionId ||\n  48 |         typeof payload.sessionId !== \"string\" ||\n  49 |         !payload.hookType ||\n  50 |         typeof payload.hookType !== \"string\" ||\n  51 |         !payload.timestamp ||\n  52 |         typeof payload.timestamp !== \"string\"\n  53 |       ) {\n  54 |         return {\n  55 |           success: false,\n  56 |           error:\n  57 |             \"Invalid payload: sessionId, hookType, and timestamp are required\",\n  58 |         };\n  59 |       }\n  60 | \n  61 |       const obsId = generateId(\"obs\");\n  62 | \n  63 |       let dedupHash: string | undefined;\n  64 |       if (dedupMap) {\n  65 |         const d =\n  66 |           typeof payload.data === \"object\" && payload.data !== null\n  67 |             ? (payload.data as Record<string, unknown>)\n  68 |             : {};\n  69 |         const toolName = (d[\"tool_name\"] as string) || payload.hookType;\n  70 |         dedupHash = dedupMap.computeHash(\n  71 |           payload.sessionId,\n  72 |           toolName,\n  73 |           d[\"tool_input\"],\n  74 |         );\n  75 |         if (dedupMap.isDuplicate(dedupHash)) {\n  76 |           return { deduplicated: true, sessionId: payload.sessionId };\n  77 |         }\n  78 |       }\n  79 | \n  80 |       let sanitizedRaw: unknown = payload.data;\n  81 |       try {\n  82 |         const jsonStr = JSON.stringify(payload.data);\n  83 |         const sanitized = stripPrivateData(jsonStr);\n  84 |         sanitizedRaw = JSON.parse(sanitized);\n  85 |       } catch {\n  86 |         sanitizedRaw = stripPrivateData(String(payload.data));\n  87 |       }\n  88 | \n  89 |       const raw: RawObservation = {\n  90 |         id: obsId,\n  91 |         sessionId: payload.sessionId,\n  92 |         timestamp: payload.timestamp,\n  93 |         hookType: payload.hookType,\n  94 |         raw: sanitizedRaw,\n  95 |       };\n  96 | \n  97 |       let extractedImage: string | undefined;\n  98 | \n  99 |...",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "D:\\LLM\\memory\\agentmemory\\src\\functions\\observe.ts"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "mem_b79841c8b47b46b19da620e344965acb",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_layers.py (第 241 至 380 行，共 648 行) ---\n 241 |     def _save_index(self):\n 242 |         \"\"\"保存索引到磁盘。\n 243 | \n 244 |         Windows 下 os.replace 在目标文件被杀毒软件、编辑器、同步盘或另一个\n 245 |         Python 进程短暂占用时可能抛 PermissionError(WinError 5)。索引只是缓存，\n 246 |         单次保存失败不应影响启动/工具调用，因此这里采用：\n 247 |         1. 内容未变化时跳过写入，降低启动期无意义 replace；\n 248 |         2. PermissionError 短暂重试；\n 249 |         3. 仍失败时保留一个 fallback 快照并清理临时文件，避免刷屏和 tmp 堆积。\n 250 |         \"\"\"\n 251 |         index_file = self.storage_dir / \"index.json\"\n 252 |         payload = self._serialize_index()\n 253 | \n 254 |         try:\n 255 |             serialized = json.dumps(payload, ensure_ascii=False, indent=2)\n 256 |             if index_file.exists():\n 257 |                 try:\n 258 |                     if index_file.read_text(encoding='utf-8') == serialized:\n 259 |                         return\n 260 |                 except OSError:\n 261 |                     # 读旧索引失败时继续尝试写入；写入失败会走下面的降级逻辑。\n 262 |                     pass\n 263 | \n 264 |             fd, tmp_name = tempfile.mkstemp(\n 265 |                 prefix=\"index.\",\n 266 |                 suffix=\".tmp\",\n 267 |                 dir=str(self.storage_dir),\n 268 |                 text=True,\n 269 |             )\n 270 |             tmp_path = Path(tmp_name)\n 271 |             try:\n 272 |                 with os.fdopen(fd, 'w', encoding='utf-8') as f:\n 273 |                     f.write(serialized)\n 274 |                     f.flush()\n 275 |                     os.fsync(f.fileno())\n 276 | \n 277 |                 last_error = None\n 278 |                 for attempt in range(5):\n 279 |                     try:\n 280 |                         os.replace(tmp_path, index_file)\n 281 |                         return\n 282 |                     except PermissionError as replace_error:\n 283 |                         last_error = replace_error\n 284 |                         time.sleep(0.05 * (attempt + 1))\n 285 | \n 286 |                 # 降级：目标 index.json 暂时不可替换时，保留最新快照，下一次重建/保存仍可继续。\n 287 |                 fallback_file = self.storage_dir / \"index.pending.json\"\n 288 |                 try:\n 289 |                     os.replace(tmp_path, fallback_file)\n 290 |                     print(f\"⚠️ 保存索引失败，已保留待恢复快照 {fallback_file}: {last_error}\")\n 291 |                 except Exception:\n 292 |                     try:\n 293 |                         tmp_path.unlink()\n 294 |                     except OSError:\n 295 |                         pass\n 296 |                     print(f\"⚠️ 保存索引失败: {last_error}\")\n 297 |             except Exception:\n 298 |                 try:\n 299 |                     tmp_path.unlink()\n 300 |                 except OSError:\n 301 |                     pass\n 302 |                 raise\n 303 |         except Exception as e:\n 304 |             print(f\"⚠️ 保存索引失败: {e}\")\n 305 | \n 306 |     def _rebuild_index(self):\n 307 |         \"\"\"重建索引\"\"\"\n 308 |         self.index.clear()\n 309 |         self.item_index.clear()\n 310 |         self.inverted_index.clear()\n 311 |         self.item_inverted_index.clear()\n 312 | \n 313 |         # 遍历所有摘要文件\n 314 |         for summary_file in self.storage_dir.glob(\"summary_*.json\"):\n 315 |             try:\n 316 |                 with open(summary_file, 'r', encoding='utf-8') as f:\n 317 |                     data = json.load(f)\n 318 |                     session_id = data.get(\"session_id\")\n 319 |                     if session_id:\n 320 |                         self.index[session_id] = summary_file\n 321 | \n 322 |                         # 更新倒排索引\n 323 |                         keywords = self._extract_keywords(data)\n 324 |                         for keyword in keywords:\n 325 |                             if keyword not in self.inverted_index:\n 326 |                                 self.inverted_index[keyword] = []\n 327 |                             if session_id not in self.inverted_index[keyword]:\n 328 |                                 self.inverted_index[keyword].append(session_id)\n 329 |     ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:29:55.021354",
+  "updated_at": "2026-05-29T14:29:55.021354",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py",
+    "index.json",
+    "index.pending.json"
+  ],
+  "source_observation_ids": [
+    "obs_8d8fa7f02bc1450b8f9a6c5c22747f18"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_8d8fa7f02bc1450b8f9a6c5c22747f18",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:29:55.021354",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 380,
+        "path": "core/memory_layers.py",
+        "raw_mode": false,
+        "start_line": 241
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_layers.py (第 241 至 380 行，共 648 行) ---\n 241 |     def _save_index(self):\n 242 |         \"\"\"保存索引到磁盘。\n 243 | \n 244 |         Windows 下 os.replace 在目标文件被杀毒软件、编辑器、同步盘或另一个\n 245 |         Python 进程短暂占用时可能抛 PermissionError(WinError 5)。索引只是缓存，\n 246 |         单次保存失败不应影响启动/工具调用，因此这里采用：\n 247 |         1. 内容未变化时跳过写入，降低启动期无意义 replace；\n 248 |         2. PermissionError 短暂重试；\n 249 |         3. 仍失败时保留一个 fallback 快照并清理临时文件，避免刷屏和 tmp 堆积。\n 250 |         \"\"\"\n 251 |         index_file = self.storage_dir / \"index.json\"\n 252 |         payload = self._serialize_index()\n 253 | \n 254 |         try:\n 255 |             serialized = json.dumps(payload, ensure_ascii=False, indent=2)\n 256 |             if index_file.exists():\n 257 |                 try:\n 258 |                     if index_file.read_text(encoding='utf-8') == serialized:\n 259 |                         return\n 260 |                 except OSError:\n 261 |                     # 读旧索引失败时继续尝试写入；写入失败会走下面的降级逻辑。\n 262 |                     pass\n 263 | \n 264 |             fd, tmp_name = tempfile.mkstemp(\n 265 |                 prefix=\"index.\",\n 266 |                 suffix=\".tmp\",\n 267 |                 dir=str(self.storage_dir),\n 268 |                 text=True,\n 269 |             )\n 270 |             tmp_path = Path(tmp_name)\n 271 |             try:\n 272 |                 with os.fdopen(fd, 'w', encoding='utf-8') as f:\n 273 |                     f.write(serialized)\n 274 |                     f.flush()\n 275 |                     os.fsync(f.fileno())\n 276 | \n 277 |                 last_error = None\n 278 |                 for attempt in range(5):\n 279 |                     try:\n 280 |                         os.replace(tmp_path, index_file)\n 281 |                         return\n 282 |                     except PermissionError as replace_error:\n 283 |                         last_error = replace_error\n 284 |                         time.sleep(0.05 * (attempt + 1))\n 285 | \n 286 |                 # 降级：目标 index.json 暂时不可替换时，保留最新快照，下一次重建/保存仍可继续。\n 287 |                 fallback_file = self.storage_dir / \"index.pending.json\"\n 288 |                 try:\n 289 |                     os.replace(tmp_path, fallback_file)\n 290 |                     print(f\"⚠️ 保存索引失败，已保留待恢复快照 {fallback_file}: {last_error}\")\n 291 |                 except Exception:\n 292 |                     try:\n 293 |                         tmp_path.unlink()\n 294 |                     except OSError:\n 295 |                         pass\n 296 |                     print(f\"⚠️ 保存索引失败: {last_error}\")\n 297 |             except Exception:\n 298 |                 try:\n 299 |                     tmp_path.unlink()\n 300 |                 except OSError:\n 301 |                     pass\n 302 |                 raise\n 303 |         except Exception as e:\n 304 |             print(f\"⚠️ 保存索引失败: {e}\")\n 305 | \n 306 |     def _rebuild_index(self):\n 307 |         \"\"\"重建索引\"\"\"\n 308 |         self.index.clear()\n 309 |         self.item_index.clear()\n 310 |         self.inverted_index.clear()\n 311 |         self.item_inverted_index.clear()\n 312 | \n 313 |         # 遍历所有摘要文件\n 314 |         for summary_file in self.storage_dir.glob(\"summary_*.json\"):\n 315 |             try:\n 316 |                 with open(summary_file, 'r', encoding='utf-8') as f:\n 317 |                     data = json.load(f)\n 318 |                     session_id = data.get(\"session_id\")\n 319 |                     if session_id:\n 320 |                         self.index[session_id] = summary_file\n 321 | \n 322 |                         # 更新倒排索引\n 323 |                         keywords = self._extract_keywords(data)\n 324 |                         for keyword in keywords:\n 325 |                             if keyword not in self.inverted_index:\n 326 |                                 self.inverted_index[keyword] = []\n 327 |                             if session_id not in self.inverted_index[keyword]:\n 328 |                                 self.inverted_index[keyword].append(session_id)\n 329 |     ...",
+      "files": [
+        "core/memory_layers.py",
+        "index.json",
+        "index.pending.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

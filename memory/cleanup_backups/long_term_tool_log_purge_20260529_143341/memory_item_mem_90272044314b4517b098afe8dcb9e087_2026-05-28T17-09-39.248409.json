@@ -1,0 +1,53 @@
+{
+  "id": "mem_90272044314b4517b098afe8dcb9e087",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: memory_file_history",
+  "content": "未找到文件 'core/engine.py' 的历史记忆",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T17:09:39.248409",
+  "updated_at": "2026-05-28T17:09:39.248409",
+  "concepts": [
+    "post_tool_use",
+    "memory_file_history"
+  ],
+  "files": [
+    "core/engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_e544187ebaae4a6c85731fdeadf02efb"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_e544187ebaae4a6c85731fdeadf02efb",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T17:09:39.248409",
+      "event_type": "post_tool_use",
+      "tool_name": "memory_file_history",
+      "tool_input": {
+        "path": "core/engine.py",
+        "top_k": 5
+      },
+      "tool_output": "未找到文件 'core/engine.py' 的历史记忆",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

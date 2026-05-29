@@ -1,0 +1,61 @@
+{
+  "id": "mem_8be5dff17a2f4c64922a59da65e72acd",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "\"\"\"\n统一记忆管理器\n\nMemoryManager 是阶段 1 重构新增的记忆编排入口，负责统一持有并协调：\n- WorkingMemory：当前工作记忆\n- EpisodicMemory：会话内结构化摘要\n- LongTermMemory：跨会话持久化摘要\n- MemoryRetriever：多层检索器\n- CompressionEngine：上下文压缩引擎\n\n底层 memory_layers 仍保持轻量数据结构职责；ContextManager/AgentEngine 应逐步只通过\nMemoryManager 访问记忆能力，减少分散编排逻辑。\n\"\"\"\n\nfrom __future__ import annotations\n\nimport json\nfrom pathlib import Path\nfrom typing import Any, Dict, List, Optional, Tuple\n\nfrom core.compression_engine import CompressionEngine, CompressionStrategy, CompressionResult\nfrom core.memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory\nfrom core.memory_items import MemoryItem, MemoryKind, MemoryRecallResult, RawObservation\nfrom core.memory_models import SessionSummary\nfrom core.memory_retrieval import MemoryRetriever\nfrom core.memory_context_builder import MemoryContextBuilder\n\n\nclass MemoryManager:\n    \"\"\"\n    统一记忆编排入口。\n\n    该类不替代底层三层记忆的数据结构，而是提供稳定的高层 API：\n    - add_message / save_summary\n    - compress_messages\n    - search / retrieve_by_file_path / retrieve_by_error_type\n    - export_memories / import_memories\n    - get_statistics / clear\n    \"\"\"\n\n    def __init__(\n        self,\n        working_max_size: int = 20,\n        episodic_max_size: int = 50,\n        long_term_storage_dir: str = \"memory/long_term\",\n        plan_manager: Any = None,\n        enabled: bool = True,\n        working_memory: Optional[WorkingMemory] = None,\n        episodic_memory: Optional[EpisodicMemory] = None,\n        long_term_memory: Optional[LongTermMemory] = None,\n        compression_engine: Optional[CompressionEngine] = None,\n    ):\n        self.enabled = enabled\n        self.working_memory = working_memory or WorkingMemory(max_size=working_max_size)\n        self.episodic_memory = episodic_memory or EpisodicMemory(max_size=episodic_max_size)\n        self.long_term_memory = long_term_memory or LongTermMemory(storage_dir=long_term_storage_dir)\n        self.compression_engine = compression_engine or CompressionEngine(plan_manager=plan_manager)\n        self.retriever = MemoryRetriever(\n            self.working_memory,\n            self.episodic_memory,\n            self.long_term_memory,\n        )\n        self.context_builder = MemoryContextBuilder()\n\n    def add_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:\n        \"\"\"添加消息到工作记忆，返回被 FIFO 淘汰的消息。\"\"\"\n        if not self.enabled:\n            return None\n        return self.working_memory.add(message)\n\n    def reset_working_memory(self, messages: List[Dict[str, Any]]) -> None:\n        \"\"\"用给定消息重建工作记忆。\"\"\"\n        if not self.enabled:\n            return\n        self.working_memory.clear()\n        for msg in messages:\n            self.working_memory.add(msg)\n\n    def save_summary(self, summary: SessionSummary) -> Optional[SessionSummary]:\n        \"\"\"\n        保存摘要到情景记忆。\n\n        如果情景记忆因容量限制淘汰旧摘要，则自动归档淘汰摘要到长期记忆。\n        返回被归档的摘要；没有淘汰则返回 None。\n        \"\"\"\n        if not self.enabled:\n            return None\n\n        evicted_summary = self.episodic_memory.add(summary)\n        if evicted_summary:\n            self.long_term_memory.store(evicted_summary)\n        return evicted_summary\n\n    def save_memory_item(self, item: MemoryItem) -> str:\n        \"\"\"保存标准 MemoryItem 到长期记忆。\"\"\"\n        if not self.enabled:\n            return \"\"\n        return self.long_term_memory.store_item(item)\n\n    def save_observation(\n        self,\n        observation: RawObservation,\n        promote: bool = False,\n        kind: str = MemoryKind.FACT.value,\n        title: Optional[str] = None,\n        importance: float = 0.5,\n        confidence: float = 0.8,\n    ) -> Optional[MemoryItem]:\n        \"\"\"\n        记录 RawObservation，并可选择立即提升为 MemoryItem。\n\n        第一版暂不单独落盘 Observation Store，而是把 observation 作为来源元数据写入\n        MemoryItem，保证写入管线和来源追溯先打通。\n        \"\"\"\n        if not self.enabled or not promote:\n            return None\n\n        content = (\n            observation.user_prompt\n            or observation.assistant_message\n            or observation.tool_output\n            or observation.e...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T15:59:54.883811",
+  "updated_at": "2026-05-28T15:59:54.883811",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_manager.py",
+    "episodic_memory.json",
+    "memory_items.json",
+    "memory_statistics.json"
+  ],
+  "source_observation_ids": [
+    "obs_99f835f7549c412b8eb650d0631c9115"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_99f835f7549c412b8eb650d0631c9115",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T15:59:54.882885",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "path": "core/memory_manager.py",
+        "start_line": 1,
+        "end_line": 440,
+        "raw_mode": true
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "\"\"\"\n统一记忆管理器\n\nMemoryManager 是阶段 1 重构新增的记忆编排入口，负责统一持有并协调：\n- WorkingMemory：当前工作记忆\n- EpisodicMemory：会话内结构化摘要\n- LongTermMemory：跨会话持久化摘要\n- MemoryRetriever：多层检索器\n- CompressionEngine：上下文压缩引擎\n\n底层 memory_layers 仍保持轻量数据结构职责；ContextManager/AgentEngine 应逐步只通过\nMemoryManager 访问记忆能力，减少分散编排逻辑。\n\"\"\"\n\nfrom __future__ import annotations\n\nimport json\nfrom pathlib import Path\nfrom typing import Any, Dict, List, Optional, Tuple\n\nfrom core.compression_engine import CompressionEngine, CompressionStrategy, CompressionResult\nfrom core.memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory\nfrom core.memory_items import MemoryItem, MemoryKind, MemoryRecallResult, RawObservation\nfrom core.memory_models import SessionSummary\nfrom core.memory_retrieval import MemoryRetriever\nfrom core.memory_context_builder import MemoryContextBuilder\n\n\nclass MemoryManager:\n    \"\"\"\n    统一记忆编排入口。\n\n    该类不替代底层三层记忆的数据结构，而是提供稳定的高层 API：\n    - add_message / save_summary\n    - compress_messages\n    - search / retrieve_by_file_path / retrieve_by_error_type\n    - export_memories / import_memories\n    - get_statistics / clear\n    \"\"\"\n\n    def __init__(\n        self,\n        working_max_size: int = 20,\n        episodic_max_size: int = 50,\n        long_term_storage_dir: str = \"memory/long_term\",\n        plan_manager: Any = None,\n        enabled: bool = True,\n        working_memory: Optional[WorkingMemory] = None,\n        episodic_memory: Optional[EpisodicMemory] = None,\n        long_term_memory: Optional[LongTermMemory] = None,\n        compression_engine: Optional[CompressionEngine] = None,\n    ):\n        self.enabled = enabled\n        self.working_memory = working_memory or WorkingMemory(max_size=working_max_size)\n        self.episodic_memory = episodic_memory or EpisodicMemory(max_size=episodic_max_size)\n        self.long_term_memory = long_term_memory or LongTermMemory(storage_dir=long_term_storage_dir)\n        self.compression_engine = compression_engine or CompressionEngine(plan_manager=plan_manager)\n        self.retriever = MemoryRetriever(\n            self.working_memory,\n            self.episodic_memory,\n            self.long_term_memory,\n        )\n        self.context_builder = MemoryContextBuilder()\n\n    def add_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:\n        \"\"\"添加消息到工作记忆，返回被 FIFO 淘汰的消息。\"\"\"\n        if not self.enabled:\n            return None\n        return self.working_memory.add(message)\n\n    def reset_working_memory(self, messages: List[Dict[str, Any]]) -> None:\n        \"\"\"用给定消息重建工作记忆。\"\"\"\n        if not self.enabled:\n            return\n        self.working_memory.clear()\n        for msg in messages:\n            self.working_memory.add(msg)\n\n    def save_summary(self, summary: SessionSummary) -> Optional[SessionSummary]:\n        \"\"\"\n        保存摘要到情景记忆。\n\n        如果情景记忆因容量限制淘汰旧摘要，则自动归档淘汰摘要到长期记忆。\n        返回被归档的摘要；没有淘汰则返回 None。\n        \"\"\"\n        if not self.enabled:\n            return None\n\n        evicted_summary = self.episodic_memory.add(summary)\n        if evicted_summary:\n            self.long_term_memory.store(evicted_summary)\n        return evicted_summary\n\n    def save_memory_item(self, item: MemoryItem) -> str:\n        \"\"\"保存标准 MemoryItem 到长期记忆。\"\"\"\n        if not self.enabled:\n            return \"\"\n        return self.long_term_memory.store_item(item)\n\n    def save_observation(\n        self,\n        observation: RawObservation,\n        promote: bool = False,\n        kind: str = MemoryKind.FACT.value,\n        title: Optional[str] = None,\n        importance: float = 0.5,\n        confidence: float = 0.8,\n    ) -> Optional[MemoryItem]:\n        \"\"\"\n        记录 RawObservation，并可选择立即提升为 MemoryItem。\n\n        第一版暂不单独落盘 Observation Store，而是把 observation 作为来源元数据写入\n        MemoryItem，保证写入管线和来源追溯先打通。\n        \"\"\"\n        if not self.enabled or not promote:\n            return None\n\n        content = (\n            observation.user_prompt\n            or observation.assistant_message\n            or observation.tool_output\n            or observation.e...",
+      "files": [
+        "core/memory_manager.py",
+        "episodic_memory.json",
+        "memory_items.json",
+        "memory_statistics.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

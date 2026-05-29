@@ -1,0 +1,54 @@
+{
+  "id": "mem_a91ac7f1ae5a4b7b8a7295decb6c3f6f",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 tests/test_memory_phase5.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T18:56:16.644377",
+  "updated_at": "2026-05-28T18:56:16.644377",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "tests/test_memory_phase5.py"
+  ],
+  "source_observation_ids": [
+    "obs_2d6d16b16e61445993e30657c562368a"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_2d6d16b16e61445993e30657c562368a",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T18:56:16.644377",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "def test_agent_engine_uses_memory_manager_recall_without_local_bm25_index(tmp_path):\n    engine = AgentEngine(tools=[_DummyTool()], model=\"fake-model\", plan_manager=_FakePlanManager(), base_url=\"http://example.invalid\", api_key=\"x\")\n    engine.context.memory_manager = MemoryManager(long_term_storage_dir=str(tmp_path / \"long_term\"))\n    engine.context._enable_memory_layers = True\n    engine.context.memory_manager.save_memory_item(MemoryItem(\n        kind=MemoryKind.ARCHITECTURE.value,\n        title=\"统一召回入口\",\n        content=\"AgentEngine 主动记忆注入必须通过 MemoryManager.hybrid_recall，而不是维护独立 BM25 索引。\",\n        concepts=[\"AgentEngine\", \"hybrid_recall\"],\n    ))\n\n    relevant_history = engine._build_relevant_memory_context(\"AgentEngine hybrid_recall\", top_k=3)\n\n    assert \"[相关长期记忆]\" in relevant_history\n    assert \"统一召回入口\" in relevant_history\n    assert not hasattr(engine, \"keyword_indexer\")\n    assert not hasattr(engine, \"bm25_retriever\")\n    assert not hasattr(engine, \"retrieval_enabled\")\n\n\ndef test_memory_recall_tool_uses_memory_manager_hybrid_recall(tmp_path, monkeypatch):\n    manager = MemoryManager(long_term_storage_dir=str(tmp_path / \"long_term\"))\n    manager.save_memory_item(MemoryItem(\n        kind=MemoryKind.WORKFLOW.value,\n        title=\"Hybrid Recall 回归\",\n        content=\"memory_recall 工具应继续委托 MemoryManager.recall/hybrid_recall 返回结果。\",\n        concepts=[\"memory_recall\", \"hybrid_recall\"],\n    ))\n    calls = []\n    original_hybrid_recall = manager.hybrid_recall\n\n    def spy_hybrid_recall(*args, **kwargs):\n        calls.append((args, kwargs))\n        return original_hybrid_recall(*args, **kwargs)\n\n    monkeypatch.setattr(manager, \"hybrid_recall\", spy_hybrid_recall)\n\n    output = MemoryRecallTool(memory_manager=manager).run(query=\"memory_recall hybrid_recall\", top_k=3)\n\n    assert \"Hybrid Recall 回归\" in output\n    assert calls\n    assert calls[0][1][\"query\"] == \"memory_recall hybrid_recall\"\n\n\ndef test_agent_engine_initializes_current_plan_branch_and_starts_plan_branch(tmp_path, monkeypatch):",
+        "old_str": "def test_agent_engine_initializes_current_plan_branch_and_starts_plan_branch(tmp_path, monkeypatch):",
+        "path": "tests/test_memory_phase5.py"
+      },
+      "tool_output": "成功: 已更新 tests/test_memory_phase5.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_memory_phase5.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "mem_30d9f65985ca42afa65aac0f1e89689e",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: list_all_symbols",
+  "content": "📊 项目符号索引 (共 45 个定义)\n\n================================================================================\n\n\n📁 examples\\python\\observe_and_recall.py\n--------------------------------------------------------------------------------\n⚡   now_iso (L22-L23)\n⚡   main (L26-L63)\n\n📁 examples\\python\\quickstart.py\n--------------------------------------------------------------------------------\n⚡   main (L14-L42)\n\n📁 integrations\\hermes\\__init__.py\n--------------------------------------------------------------------------------\n📦   MemoryProvider (L28-L49)\n⚡   MemoryProvider.name (L31-L31)\n⚡   MemoryProvider.is_available (L33-L33)\n⚡   MemoryProvider.initialize (L35-L35)\n⚡   MemoryProvider.get_tool_schemas (L37-L37)\n⚡   MemoryProvider.handle_tool_call (L39-L39)\n⚡   MemoryProvider.get_config_schema (L40-L40)\n⚡   MemoryProvider.save_config (L41-L41)\n⚡   MemoryProvider.system_prompt_block (L42-L42)\n⚡   MemoryProvider.prefetch (L43-L43)\n⚡   MemoryProvider.queue_prefetch (L44-L44)\n⚡   MemoryProvider.sync_turn (L45-L45)\n⚡   MemoryProvider.on_session_end (L46-L46)\n⚡   MemoryProvider.on_pre_compress (L47-L47)\n⚡   MemoryProvider.on_memory_write (L48-L48)\n⚡   MemoryProvider.shutdown (L49-L49)\n⚡   _preload_agentmemory_dotenv (L70-L97)\n⚡   _validate_url (L103-L114)\n⚡   _uses_plaintext_bearer_auth (L117-L121)\n⚡   _plaintext_bearer_auth_message (L124-L125)\n⚡   _warn_plaintext_bearer_auth (L128-L129)\n⚡   _check_plaintext_bearer_guard (L132-L145)\n⚡   _reset_plaintext_bearer_guard_for_tests (L148-L150)\n⚡   _api (L153-L169)\n⚡   _api_bg (L172-L174)\n📦   AgentMemoryProvider (L177-L384)\n⚡   AgentMemoryProvider.name (L180-L181)\n⚡   AgentMemoryProvider.is_available (L183-L186)\n⚡   AgentMemoryProvider.initialize (L188-L199)\n⚡   AgentMemoryProvider.get_config_schema (L201-L216)\n⚡   AgentMemoryProvider.save_config (L218-L220)\n⚡   AgentMemoryProvider.system_prompt_block (L222-L229)\n⚡   AgentMemoryProvider.prefetch (L231-L246)\n⚡   AgentMemoryProvider.queue_prefetch (L248-L249)\n⚡   AgentMemoryProvider.get_tool_schemas (L251-L293)\n⚡   AgentMemoryProvider.handle_tool_call (L295-L344)\n⚡   AgentMemoryProvider.sync_turn (L346-L358)\n⚡   AgentMemoryProvider.on_session_end (L360-L363)\n⚡   AgentMemoryProvider.on_pre_compress (L365-L374)\n⚡   AgentMemoryProvider.on_memory_write (L376-L381)\n⚡   AgentMemoryProvider.shutdown (L383-L384)\n⚡   register (L387-L388)",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:02:11.343808",
+  "updated_at": "2026-05-29T14:02:11.343808",
+  "concepts": [
+    "post_tool_use",
+    "list_all_symbols"
+  ],
+  "files": [
+    "D:\\LLM\\memory\\agentmemory",
+    "examples\\python\\observe_and_recall.py",
+    "examples\\python\\quickstart.py",
+    "integrations\\hermes\\__init__.py"
+  ],
+  "source_observation_ids": [
+    "obs_0504eaf324d74eb985d579c443795540"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_0504eaf324d74eb985d579c443795540",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:02:11.343808",
+      "event_type": "post_tool_use",
+      "tool_name": "list_all_symbols",
+      "tool_input": {
+        "path": "D:\\LLM\\memory\\agentmemory",
+        "symbol_type": "all"
+      },
+      "tool_output": "📊 项目符号索引 (共 45 个定义)\n\n================================================================================\n\n\n📁 examples\\python\\observe_and_recall.py\n--------------------------------------------------------------------------------\n⚡   now_iso (L22-L23)\n⚡   main (L26-L63)\n\n📁 examples\\python\\quickstart.py\n--------------------------------------------------------------------------------\n⚡   main (L14-L42)\n\n📁 integrations\\hermes\\__init__.py\n--------------------------------------------------------------------------------\n📦   MemoryProvider (L28-L49)\n⚡   MemoryProvider.name (L31-L31)\n⚡   MemoryProvider.is_available (L33-L33)\n⚡   MemoryProvider.initialize (L35-L35)\n⚡   MemoryProvider.get_tool_schemas (L37-L37)\n⚡   MemoryProvider.handle_tool_call (L39-L39)\n⚡   MemoryProvider.get_config_schema (L40-L40)\n⚡   MemoryProvider.save_config (L41-L41)\n⚡   MemoryProvider.system_prompt_block (L42-L42)\n⚡   MemoryProvider.prefetch (L43-L43)\n⚡   MemoryProvider.queue_prefetch (L44-L44)\n⚡   MemoryProvider.sync_turn (L45-L45)\n⚡   MemoryProvider.on_session_end (L46-L46)\n⚡   MemoryProvider.on_pre_compress (L47-L47)\n⚡   MemoryProvider.on_memory_write (L48-L48)\n⚡   MemoryProvider.shutdown (L49-L49)\n⚡   _preload_agentmemory_dotenv (L70-L97)\n⚡   _validate_url (L103-L114)\n⚡   _uses_plaintext_bearer_auth (L117-L121)\n⚡   _plaintext_bearer_auth_message (L124-L125)\n⚡   _warn_plaintext_bearer_auth (L128-L129)\n⚡   _check_plaintext_bearer_guard (L132-L145)\n⚡   _reset_plaintext_bearer_guard_for_tests (L148-L150)\n⚡   _api (L153-L169)\n⚡   _api_bg (L172-L174)\n📦   AgentMemoryProvider (L177-L384)\n⚡   AgentMemoryProvider.name (L180-L181)\n⚡   AgentMemoryProvider.is_available (L183-L186)\n⚡   AgentMemoryProvider.initialize (L188-L199)\n⚡   AgentMemoryProvider.get_config_schema (L201-L216)\n⚡   AgentMemoryProvider.save_config (L218-L220)\n⚡   AgentMemoryProvider.system_prompt_block (L222-L229)\n⚡   AgentMemoryProvider.prefetch (L231-L246)\n⚡   AgentMemoryProvider.queue_prefetch (L248-L249)\n⚡   AgentMemoryProvider.get_tool_schemas (L251-L293)\n⚡   AgentMemoryProvider.handle_tool_call (L295-L344)\n⚡   AgentMemoryProvider.sync_turn (L346-L358)\n⚡   AgentMemoryProvider.on_session_end (L360-L363)\n⚡   AgentMemoryProvider.on_pre_compress (L365-L374)\n⚡   AgentMemoryProvider.on_memory_write (L376-L381)\n⚡   AgentMemoryProvider.shutdown (L383-L384)\n⚡   register (L387-L388)",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "D:\\LLM\\memory\\agentmemory",
+        "examples\\python\\observe_and_recall.py",
+        "examples\\python\\quickstart.py",
+        "integrations\\hermes\\__init__.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

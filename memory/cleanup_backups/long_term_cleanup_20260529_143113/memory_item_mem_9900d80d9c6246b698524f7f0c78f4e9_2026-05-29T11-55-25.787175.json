@@ -1,0 +1,61 @@
+{
+  "id": "mem_9900d80d9c6246b698524f7f0c78f4e9",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: docs/context_compression_strategy_architecture.md (第 1 至 220 行，共 752 行) ---\n   1 | # Mini Claude Code CLI 上下文压缩策略优化架构规划\n   2 | \n   3 | > 项目路径：`D:\\LLM\\mini-claude-code-cli`\n   4 | > 文档位置：`docs/context_compression_strategy_architecture.md`\n   5 | > 关联文档：\n   6 | > - `docs/architecture_summary.md`\n   7 | > - `docs/memory_system_refactor_roadmap.md`\n   8 | > - `docs/new_long_term_memory_system.md`\n   9 | >\n  10 | > 核心结论：下一步压缩策略不应继续停留在“按消息裁剪 + 出错后清理”的层面，而应升级为 **按 turn 原子化建模、分层压缩、结构化状态迁移、长期记忆联动、发送前协议校验** 的上下文管理系统。\n  11 | \n  12 | ---\n  13 | \n  14 | ## 1. 背景与当前问题\n  15 | \n  16 | 当前项目已经具备：\n  17 | \n  18 | - `CompressionEngine` 多策略压缩：`LLM_SUMMARY` / `KEYFRAME` / `SLIDING_WINDOW` / `IMPORTANCE_FILTER`；\n  19 | - `ContextManager` 负责消息管理、压缩触发、摘要写入；\n  20 | - `MemoryManager` / `MemoryItem` / `MemoryContextBuilder` 负责长期记忆、召回和 Prompt 预算注入；\n  21 | - OpenAI-compatible tool pair sanitizer，用于避免 `assistant.tool_calls` 缺失对应 `tool` 响应导致 400。\n  22 | \n  23 | 但是当前压缩系统仍有几个结构性缺陷：\n  24 | \n  25 | 1. **压缩单位仍偏 message 级别**\n  26 |    很多策略按消息列表裁剪，容易破坏一次用户请求、assistant 工具调用、tool 返回、assistant 总结之间的完整语义链。\n  27 | \n  28 | 2. **tool call pair 只是在最后被清理，而不是从建模阶段就原子化**\n  29 |    当前 sanitizer 能止血，但理想系统应该在压缩前就把 `assistant(tool_calls) + tool responses` 视为不可拆分块。\n  30 | \n  31 | 3. **压缩结果偏自然语言 summary，缺少结构化状态迁移**\n  32 |    Coding agent 真正需要保留的是：当前目标、已改文件、失败错误、测试状态、关键决策、未完成事项，而不是完整聊天。\n  33 | \n  34 | 4. **长期记忆和上下文压缩边界还可以更清晰**\n  35 |    压缩应负责“当前会话继续执行所需状态”；长期记忆应负责“跨会话可复用经验”。两者应协同，但不能互相替代。\n  36 | \n  37 | 5. **缺少压缩质量可观测性**\n  38 |    目前很难知道一次压缩删除了什么、摘要保留了什么、是否丢失关键状态、是否发生 sanitizer 兜底。\n  39 | \n  40 | ---\n  41 | \n  42 | ## 2. 优化目标\n  43 | \n  44 | 下一阶段上下文压缩策略的目标不是简单降低 token，而是：\n  45 | \n  46 | ```text\n  47 | 在不破坏模型消息协议的前提下，把长对话迁移成可继续执行任务的 compact state。\n  48 | ```\n  49 | \n  50 | 具体目标：\n  51 | \n  52 | 1. **协议安全**\n  53 |    - OpenAI-compatible：永远不发送孤立 `assistant.tool_calls` 或孤立 `tool` 消息；\n  54 |    - Anthropic-compatible：保持 `tool_use` / `tool_result` 成对语义；\n  55 |    - 记忆注入不得插入 assistant/tool pair 中间。\n  56 | \n  57 | 2. **任务连续性**\n  58 |    - 保留当前用户目标；\n  59 |    - 保留当前 plan；\n  60 |    - 保留未完成步骤；\n  61 |    - 保留最近失败 traceback；\n  62 |    - 保留最近文件修改与测试结果。\n  63 | \n  64 | 3. **信息保真**\n  65 |    - 大工具输出不长期保留全文，但必须摘要关键结果；\n  66 |    - 失败尝试不能完全丢弃，应转成“已尝试但失败”的经验；\n  67 |    - 文件全文应尽量不进 summary，需要时重新 `read_file`。\n  68 | \n  69 | 4. **分层预算控制**\n  70 |    - System prompt；\n  71 |    - 当前 plan；\n  72 |    - 相关长期记忆；\n  73 |    - 压缩历史摘要；\n  74 |    - 最近完整 turns；\n  75 |    - 当前用户请求。\n  76 | \n  77 | 5. **可测试、可观测、可回退**\n  78 |    - 每个压缩阶段都有测试；\n  79 |    - 每次压缩输出统计信息；\n  80 |    - LLM summary 超时或失败时有确定性 fallback；\n  81 |    - 发送前永远做最终 validator。\n  82 | \n  83 | ---\n  84 | \n  85 | ## 3. 目标架构总览\n  86 | \n  87 | 建议引入一个明确的压缩流水线：\n  88 | \n  89 | ```text\n  90 | Raw messages\n  91 |   ↓\n  92 | MessageNormalizer\n  93 |   ↓\n  94 | TurnBuilder\n  95 |   ↓\n  96 | CompressionPlanner\n  97 |   ↓\n  98 | TurnCompressor\n  99 |   ↓\n 100 | StateExtractor\n 101 |   ↓\n 102 | MemoryPromoter\n 103 |   ↓\n 104 | ContextAssembler\n 105 |   ↓\n 106 | ProviderMessageValidator\n 107 |   ↓\n 108 | LLM API request\n 109 | ```\n 110 | \n 111 | 对应职责：\n 112 | \n 113 | | 模块 | 职责 |\n 114 | |---|---|\n 115 | | `MessageNormalizer` | 清理空消息、兼容字段、reasoning_content、provider 差异 |\n 116 | | `TurnBuilder` | 把 message list 切成用户轮次、assistant 轮次、tool 轮次，保证 tool pair 原子化 |\n 117 | | `CompressionPlanner` | 根据 token 预算决定哪些 turn 原样保留、摘要、丢弃或晋升长期记忆 |\n 118 | | `TurnCompressor` | 对旧 turn 做结构化摘要，避免保留大 stdout / 文件全文 |\n 119 | | `StateExtractor` | 从旧上下文提取任务状态、文件变化、错误、测试、决策 |\n 120 | | `MemoryPromoter` | 把跨会话有价值的信息保存为 `MemoryItem` |\n 121 | | `ContextAssembler` | 按预算组装 system + memory + summary + recent turns |\n 122 | | `ProviderMessageValidator` | 发送前做 OpenAI/Anthropic 协议校验和兜底修复 |\n 123 | \n 124 | ---\n 125 | \n 126 | ## 4. 核心设计：从 message 级压缩升级为 turn 级压缩\n 127 | \n 128 | ### 4.1 Turn 的定义\n 129 | \n 130 | 建议定义内部结构 `ConversationTurn`：\n 131 | \n 132 | ```python\n 133 | @dataclass\n 134 | class ConversationTurn:\n 135 |     id: str\n 136 |     start_index: int\n 137 |     end_index: int\n 138 |     user_message: dict | Non...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T11:55:25.787175",
+  "updated_at": "2026-05-29T11:55:25.787175",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "docs/context_compression_strategy_architecture.md",
+    "docs/architecture_summary.md",
+    "docs/memory_system_refactor_roadmap.md",
+    "docs/new_long_term_memory_system.md"
+  ],
+  "source_observation_ids": [
+    "obs_214f0b6004aa4e1787b0b98bbb85f983"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_214f0b6004aa4e1787b0b98bbb85f983",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T11:55:25.787175",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 220,
+        "path": "docs/context_compression_strategy_architecture.md",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: docs/context_compression_strategy_architecture.md (第 1 至 220 行，共 752 行) ---\n   1 | # Mini Claude Code CLI 上下文压缩策略优化架构规划\n   2 | \n   3 | > 项目路径：`D:\\LLM\\mini-claude-code-cli`\n   4 | > 文档位置：`docs/context_compression_strategy_architecture.md`\n   5 | > 关联文档：\n   6 | > - `docs/architecture_summary.md`\n   7 | > - `docs/memory_system_refactor_roadmap.md`\n   8 | > - `docs/new_long_term_memory_system.md`\n   9 | >\n  10 | > 核心结论：下一步压缩策略不应继续停留在“按消息裁剪 + 出错后清理”的层面，而应升级为 **按 turn 原子化建模、分层压缩、结构化状态迁移、长期记忆联动、发送前协议校验** 的上下文管理系统。\n  11 | \n  12 | ---\n  13 | \n  14 | ## 1. 背景与当前问题\n  15 | \n  16 | 当前项目已经具备：\n  17 | \n  18 | - `CompressionEngine` 多策略压缩：`LLM_SUMMARY` / `KEYFRAME` / `SLIDING_WINDOW` / `IMPORTANCE_FILTER`；\n  19 | - `ContextManager` 负责消息管理、压缩触发、摘要写入；\n  20 | - `MemoryManager` / `MemoryItem` / `MemoryContextBuilder` 负责长期记忆、召回和 Prompt 预算注入；\n  21 | - OpenAI-compatible tool pair sanitizer，用于避免 `assistant.tool_calls` 缺失对应 `tool` 响应导致 400。\n  22 | \n  23 | 但是当前压缩系统仍有几个结构性缺陷：\n  24 | \n  25 | 1. **压缩单位仍偏 message 级别**\n  26 |    很多策略按消息列表裁剪，容易破坏一次用户请求、assistant 工具调用、tool 返回、assistant 总结之间的完整语义链。\n  27 | \n  28 | 2. **tool call pair 只是在最后被清理，而不是从建模阶段就原子化**\n  29 |    当前 sanitizer 能止血，但理想系统应该在压缩前就把 `assistant(tool_calls) + tool responses` 视为不可拆分块。\n  30 | \n  31 | 3. **压缩结果偏自然语言 summary，缺少结构化状态迁移**\n  32 |    Coding agent 真正需要保留的是：当前目标、已改文件、失败错误、测试状态、关键决策、未完成事项，而不是完整聊天。\n  33 | \n  34 | 4. **长期记忆和上下文压缩边界还可以更清晰**\n  35 |    压缩应负责“当前会话继续执行所需状态”；长期记忆应负责“跨会话可复用经验”。两者应协同，但不能互相替代。\n  36 | \n  37 | 5. **缺少压缩质量可观测性**\n  38 |    目前很难知道一次压缩删除了什么、摘要保留了什么、是否丢失关键状态、是否发生 sanitizer 兜底。\n  39 | \n  40 | ---\n  41 | \n  42 | ## 2. 优化目标\n  43 | \n  44 | 下一阶段上下文压缩策略的目标不是简单降低 token，而是：\n  45 | \n  46 | ```text\n  47 | 在不破坏模型消息协议的前提下，把长对话迁移成可继续执行任务的 compact state。\n  48 | ```\n  49 | \n  50 | 具体目标：\n  51 | \n  52 | 1. **协议安全**\n  53 |    - OpenAI-compatible：永远不发送孤立 `assistant.tool_calls` 或孤立 `tool` 消息；\n  54 |    - Anthropic-compatible：保持 `tool_use` / `tool_result` 成对语义；\n  55 |    - 记忆注入不得插入 assistant/tool pair 中间。\n  56 | \n  57 | 2. **任务连续性**\n  58 |    - 保留当前用户目标；\n  59 |    - 保留当前 plan；\n  60 |    - 保留未完成步骤；\n  61 |    - 保留最近失败 traceback；\n  62 |    - 保留最近文件修改与测试结果。\n  63 | \n  64 | 3. **信息保真**\n  65 |    - 大工具输出不长期保留全文，但必须摘要关键结果；\n  66 |    - 失败尝试不能完全丢弃，应转成“已尝试但失败”的经验；\n  67 |    - 文件全文应尽量不进 summary，需要时重新 `read_file`。\n  68 | \n  69 | 4. **分层预算控制**\n  70 |    - System prompt；\n  71 |    - 当前 plan；\n  72 |    - 相关长期记忆；\n  73 |    - 压缩历史摘要；\n  74 |    - 最近完整 turns；\n  75 |    - 当前用户请求。\n  76 | \n  77 | 5. **可测试、可观测、可回退**\n  78 |    - 每个压缩阶段都有测试；\n  79 |    - 每次压缩输出统计信息；\n  80 |    - LLM summary 超时或失败时有确定性 fallback；\n  81 |    - 发送前永远做最终 validator。\n  82 | \n  83 | ---\n  84 | \n  85 | ## 3. 目标架构总览\n  86 | \n  87 | 建议引入一个明确的压缩流水线：\n  88 | \n  89 | ```text\n  90 | Raw messages\n  91 |   ↓\n  92 | MessageNormalizer\n  93 |   ↓\n  94 | TurnBuilder\n  95 |   ↓\n  96 | CompressionPlanner\n  97 |   ↓\n  98 | TurnCompressor\n  99 |   ↓\n 100 | StateExtractor\n 101 |   ↓\n 102 | MemoryPromoter\n 103 |   ↓\n 104 | ContextAssembler\n 105 |   ↓\n 106 | ProviderMessageValidator\n 107 |   ↓\n 108 | LLM API request\n 109 | ```\n 110 | \n 111 | 对应职责：\n 112 | \n 113 | | 模块 | 职责 |\n 114 | |---|---|\n 115 | | `MessageNormalizer` | 清理空消息、兼容字段、reasoning_content、provider 差异 |\n 116 | | `TurnBuilder` | 把 message list 切成用户轮次、assistant 轮次、tool 轮次，保证 tool pair 原子化 |\n 117 | | `CompressionPlanner` | 根据 token 预算决定哪些 turn 原样保留、摘要、丢弃或晋升长期记忆 |\n 118 | | `TurnCompressor` | 对旧 turn 做结构化摘要，避免保留大 stdout / 文件全文 |\n 119 | | `StateExtractor` | 从旧上下文提取任务状态、文件变化、错误、测试、决策 |\n 120 | | `MemoryPromoter` | 把跨会话有价值的信息保存为 `MemoryItem` |\n 121 | | `ContextAssembler` | 按预算组装 system + memory + summary + recent turns |\n 122 | | `ProviderMessageValidator` | 发送前做 OpenAI/Anthropic 协议校验和兜底修复 |\n 123 | \n 124 | ---\n 125 | \n 126 | ## 4. 核心设计：从 message 级压缩升级为 turn 级压缩\n 127 | \n 128 | ### 4.1 Turn 的定义\n 129 | \n 130 | 建议定义内部结构 `ConversationTurn`：\n 131 | \n 132 | ```python\n 133 | @dataclass\n 134 | class ConversationTurn:\n 135 |     id: str\n 136 |     start_index: int\n 137 |     end_index: int\n 138 |     user_message: dict | Non...",
+      "files": [
+        "docs/context_compression_strategy_architecture.md",
+        "docs/architecture_summary.md",
+        "docs/memory_system_refactor_roadmap.md",
+        "docs/new_long_term_memory_system.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

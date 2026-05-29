@@ -1,0 +1,55 @@
+{
+  "id": "mem_c2972bfc6c984873bb5042ab604a5c86",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "# core/turn_builder.py\n\"\"\"Conversation turn builder for provider-safe context compression.\n\nThis module converts a flat provider message list into semantic turns.  The\nimportant invariant is that OpenAI-style ``assistant.tool_calls`` plus their\nimmediately following ``tool`` responses are represented as one atomic turn so\ncompression strategies can avoid cutting the pair in half.\n\"\"\"\n\nfrom __future__ import annotations\n\nfrom dataclasses import dataclass, field\nimport re\nfrom typing import Any, Dict, Iterable, List, Optional, Set\n\n\n@dataclass\nclass ConversationTurn:\n    \"\"\"A semantic, provider-safe unit of conversation history.\"\"\"\n\n    id: str\n    start_index: int\n    end_index: int\n    messages: List[Dict[str, Any]] = field(default_factory=list)\n    user_message: Optional[Dict[str, Any]] = None\n    assistant_messages: List[Dict[str, Any]] = field(default_factory=list)\n    tool_messages: List[Dict[str, Any]] = field(default_factory=list)\n    has_tool_calls: bool = False\n    is_tool_pair_complete: bool = True\n    missing_tool_call_ids: List[str] = field(default_factory=list)\n    orphan_tool_call_ids: List[str] = field(default_factory=list)\n    token_estimate: int = 0\n    importance: float = 0.0\n    categories: List[str] = field(default_factory=list)\n    files_touched: List[str] = field(default_factory=list)\n    errors: List[str] = field(default_factory=list)\n    tests: List[str] = field(default_factory=list)\n\n    @property\n    def is_valid_openai_tool_turn(self) -> bool:\n        \"\"\"Whether this turn can be sent to OpenAI-compatible APIs as-is.\"\"\"\n        return self.is_tool_pair_complete and not self.orphan_tool_call_ids\n\n\nclass TurnBuilder:\n    \"\"\"Build complete conversation turns from a flat message list.\n\n    Rules implemented for OpenAI-compatible tool calls:\n    - an ``assistant`` message with ``tool_calls`` starts an atomic tool turn;\n    - only immediately following contiguous ``tool`` messages can satisfy that\n      assistant's tool calls;\n    - missing tool responses mark the turn incomplete;\n    - ``tool`` messages without an immediately preceding assistant tool-call\n      turn are emitted as orphan/incomplete turns instead of being attached to\n      unrelated context.\n    \"\"\"\n\n    ERROR_KEYWORDS = (\"error\", \"exception\", \"traceback\", \"失败\", \"错误\", \"报错\")\n    TEST_KEYWORDS = (\"pytest\", \"test\", \"测试\", \"passed\", \"failed\", \"assertionerror\")\n    PLAN_KEYWORDS = (\"plan\", \"任务\", \"步骤\", \"继续\", \"完成\")\n\n    def build(self, messages: List[Dict[str, Any]]) -> List[ConversationTurn]:\n        \"\"\"Return semantic turns while preserving original message order.\"\"\"\n        turns: List[ConversationTurn] = []\n        i = 0\n        while i < len(messages):\n            msg = messages[i]\n            if not isinstance(msg, dict):\n                i += 1\n                continue\n\n            role = msg.get(\"role\")\n\n            if role == \"assistant\" and msg.get(\"tool_calls\"):\n                turn, next_index = self._build_tool_call_turn(messages, i)\n                turns.append(turn)\n                i = next_index\n                continue\n\n            if role == \"tool\":\n                turn, next_index = self._build_orphan_tool_turn(messages, i)\n                turns.append(turn)\n                i = next_index\n                continue\n\n            turn = self._new_turn(\n                turn_index=len(turns),\n                start_index=i,\n                end_index=i,\n                messages=[msg],\n            )\n            turns.append(turn)\n            i += 1\n\n        return turns\n\n    def flatten(self, turns: Iterable[ConversationTurn]) -> List[Dict[str, Any]]:\n        \"\"\"Flatten turns back to a message list.\"\"\"\n        flattened: List[Dict[str, Any]] = []\n        for turn in turns:\n            flattened.extend(turn.messages)\n        return flattened\n\n    def complete_turns_only(self, turns: Iterable[ConversationTurn]) -> List[ConversationTurn]:\n        \"\"\"Filter out turns that contain incomplete OpenAI tool-call pairs.\"\"\"\n        return [turn for tu...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:04:42.931350",
+  "updated_at": "2026-05-29T12:04:42.931350",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_77f9abfe8b9b41b682b028f8e6398489"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_77f9abfe8b9b41b682b028f8e6398489",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:04:42.931350",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 271,
+        "path": "core/turn_builder.py",
+        "raw_mode": true,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "# core/turn_builder.py\n\"\"\"Conversation turn builder for provider-safe context compression.\n\nThis module converts a flat provider message list into semantic turns.  The\nimportant invariant is that OpenAI-style ``assistant.tool_calls`` plus their\nimmediately following ``tool`` responses are represented as one atomic turn so\ncompression strategies can avoid cutting the pair in half.\n\"\"\"\n\nfrom __future__ import annotations\n\nfrom dataclasses import dataclass, field\nimport re\nfrom typing import Any, Dict, Iterable, List, Optional, Set\n\n\n@dataclass\nclass ConversationTurn:\n    \"\"\"A semantic, provider-safe unit of conversation history.\"\"\"\n\n    id: str\n    start_index: int\n    end_index: int\n    messages: List[Dict[str, Any]] = field(default_factory=list)\n    user_message: Optional[Dict[str, Any]] = None\n    assistant_messages: List[Dict[str, Any]] = field(default_factory=list)\n    tool_messages: List[Dict[str, Any]] = field(default_factory=list)\n    has_tool_calls: bool = False\n    is_tool_pair_complete: bool = True\n    missing_tool_call_ids: List[str] = field(default_factory=list)\n    orphan_tool_call_ids: List[str] = field(default_factory=list)\n    token_estimate: int = 0\n    importance: float = 0.0\n    categories: List[str] = field(default_factory=list)\n    files_touched: List[str] = field(default_factory=list)\n    errors: List[str] = field(default_factory=list)\n    tests: List[str] = field(default_factory=list)\n\n    @property\n    def is_valid_openai_tool_turn(self) -> bool:\n        \"\"\"Whether this turn can be sent to OpenAI-compatible APIs as-is.\"\"\"\n        return self.is_tool_pair_complete and not self.orphan_tool_call_ids\n\n\nclass TurnBuilder:\n    \"\"\"Build complete conversation turns from a flat message list.\n\n    Rules implemented for OpenAI-compatible tool calls:\n    - an ``assistant`` message with ``tool_calls`` starts an atomic tool turn;\n    - only immediately following contiguous ``tool`` messages can satisfy that\n      assistant's tool calls;\n    - missing tool responses mark the turn incomplete;\n    - ``tool`` messages without an immediately preceding assistant tool-call\n      turn are emitted as orphan/incomplete turns instead of being attached to\n      unrelated context.\n    \"\"\"\n\n    ERROR_KEYWORDS = (\"error\", \"exception\", \"traceback\", \"失败\", \"错误\", \"报错\")\n    TEST_KEYWORDS = (\"pytest\", \"test\", \"测试\", \"passed\", \"failed\", \"assertionerror\")\n    PLAN_KEYWORDS = (\"plan\", \"任务\", \"步骤\", \"继续\", \"完成\")\n\n    def build(self, messages: List[Dict[str, Any]]) -> List[ConversationTurn]:\n        \"\"\"Return semantic turns while preserving original message order.\"\"\"\n        turns: List[ConversationTurn] = []\n        i = 0\n        while i < len(messages):\n            msg = messages[i]\n            if not isinstance(msg, dict):\n                i += 1\n                continue\n\n            role = msg.get(\"role\")\n\n            if role == \"assistant\" and msg.get(\"tool_calls\"):\n                turn, next_index = self._build_tool_call_turn(messages, i)\n                turns.append(turn)\n                i = next_index\n                continue\n\n            if role == \"tool\":\n                turn, next_index = self._build_orphan_tool_turn(messages, i)\n                turns.append(turn)\n                i = next_index\n                continue\n\n            turn = self._new_turn(\n                turn_index=len(turns),\n                start_index=i,\n                end_index=i,\n                messages=[msg],\n            )\n            turns.append(turn)\n            i += 1\n\n        return turns\n\n    def flatten(self, turns: Iterable[ConversationTurn]) -> List[Dict[str, Any]]:\n        \"\"\"Flatten turns back to a message list.\"\"\"\n        flattened: List[Dict[str, Any]] = []\n        for turn in turns:\n            flattened.extend(turn.messages)\n        return flattened\n\n    def complete_turns_only(self, turns: Iterable[ConversationTurn]) -> List[ConversationTurn]:\n        \"\"\"Filter out turns that contain incomplete OpenAI tool-call pairs.\"\"\"\n        return [turn for tu...",
+      "files": [
+        "core/turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

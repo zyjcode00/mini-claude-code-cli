@@ -1,0 +1,90 @@
+{
+  "id": "mem_964e27eef3514d3fba36ad3f728e5251",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 82 处匹配，分布在 14 个文件中\n\n================================================================================\n\n[FILE] core\\context.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     188 |         Returns:\n     189 |             SessionSummary 实例，失败则返回 None\n     190 |         \"\"\"\n>>>  191 |         # 生成提示词\n     192 |         prompt = SUMMARY_PROMPT_TEMPLATE_V2.format(\n     193 |             existing_summary=self.history_summary or \"无\",\n     194 |             messages_to_summarize=str(messages)\n\n[FILE] core\\context_assembler.py (13 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      38 | class AssembledContext:\n      39 |     \"\"\"Result returned by :class:`ContextAssembler`.\"\"\"\n      40 | \n>>>   41 |     system_prompt: str\n      42 |     messages: List[Dict[str, Any]]\n      43 |     token_estimate: int\n      44 |     dropped_turn_count: int = 0\n    [上下文]\n      48 |     @property\n      49 |     def openai_messages(self) -> List[Dict[str, Any]]:\n      50 |         \"\"\"Return a complete OpenAI-compatible message list.\"\"\"\n>>>   51 |         return [{\"role\": \"system\", \"content\": self.system_prompt}] + self.messages\n      52 | \n      53 | \n      54 | class ContextAssembler:\n    [上下文]\n      68 |     def assemble(\n      69 |         self,\n      70 |         *,\n>>>   71 |         base_system_prompt: str,\n      72 |         plan_context: str = \"\",\n      73 |         memory_context: str = \"\",\n      74 |         compressed_state: str = \"\",\n    [上下文]\n      80 |         \"\"\"Build final prompt and recent messages.\n      81 | \n      82 |         Args:\n>>>   83 |             base_system_prompt: Already-rendered base system prompt.\n      84 |             plan_context: Optional explicit plan section if not already included\n      85 |                 in ``base_system_prompt``.\n      86 |             memory_context: Relevant long-term memory section.\n    [上下文]\n      82 |         Args:\n      83 |             base_system_prompt: Already-rendered base system prompt.\n      84 |             plan_context: Optional explicit plan section if not already included\n>>>   85 |                 in ``base_system_prompt``.\n      86 |             memory_context: Relevant long-term memory section.\n      87 |             compressed_state: Current session compressed state/summary section.\n      88 |             messages: Conversation history snapshot.\n    [上下文]\n      98 |         current_user = self._resolve_current_user_message(source_messages, current_user_message)\n      99 |         history_messages = self._remove_current_user_from_history(source_messages, current_user)\n     100 | \n>>>  101 |         system_prompt = self._assemble_system_prompt(\n     102 |             base_system_prompt=base_system_prompt,\n     103 |             plan_context=plan_context,\n     104 |             memory_context=memory_context,\n    [上下文]\n      99 |         history_messages = self._remove_current_user_from_history(source_messages, current_user)\n     100 | \n     101 |         system_prompt = self._assemble_system_prompt(\n>>>  102 |             base_system_prompt=base_system_prompt,\n     103 |             plan_context=plan_context,\n     104 |             memory_context=memory_context,\n     105 |             compressed_state=compressed_state,\n    [上下文]\n     122 |             final_messages = recent_messages\n     123 | \n     124 |         final_messages = self._validate_provider_messages(final_messages)\n>>>  125 |         token_estimate = self._estimate_text_tokens(system_prompt) + self._estimate_messages_tokens(final_messages)\n     126 |         dropped_turn_count = max(0, len(complete_turns) - kept_turns)\n     127 |         dropped_message_count = max(0, len(history_messages) - len(recent_messages))\n     128 | \n    [上下文]\n     127 |         dropped_message_count = max(0, len(history_messages) - len(recent_messages))\n     128 | \n     129 |         return AssembledContext(\n>>>  130...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:56:19.002497",
+  "updated_at": "2026-05-29T12:56:19.002497",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    ".",
+    "core\\context.py",
+    "core\\context_assembler.py",
+    "core\\engine.py",
+    "core\\memory_context_builder.py",
+    "core\\memory_manager.py",
+    "core\\memory_retrieval.py",
+    "core\\prompts.py",
+    "CLAUDE.md",
+    "tests\\test_context_assembly_budget.py",
+    "tests\\test_memory_items.py",
+    "tests\\test_memory_phase3.py",
+    "core/engine.py",
+    "tests\\test_memory_phase4.py",
+    "tests\\test_memory_phase5.py",
+    "core/a.py",
+    "tools\\memory_tool.py",
+    "tools\\__init__.py"
+  ],
+  "source_observation_ids": [
+    "obs_22fe163a8efa4e149a6fba63c2d1ca39"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_22fe163a8efa4e149a6fba63c2d1ca39",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:56:19.002497",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 3,
+        "file_pattern": "*.py",
+        "path": ".",
+        "pattern": "MemoryContextBuilder|build_memory_context|相关长期记忆|memory_recall|hybrid_recall|system_prompt|SYSTEM_PROMPT|提示词"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 82 处匹配，分布在 14 个文件中\n\n================================================================================\n\n[FILE] core\\context.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     188 |         Returns:\n     189 |             SessionSummary 实例，失败则返回 None\n     190 |         \"\"\"\n>>>  191 |         # 生成提示词\n     192 |         prompt = SUMMARY_PROMPT_TEMPLATE_V2.format(\n     193 |             existing_summary=self.history_summary or \"无\",\n     194 |             messages_to_summarize=str(messages)\n\n[FILE] core\\context_assembler.py (13 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      38 | class AssembledContext:\n      39 |     \"\"\"Result returned by :class:`ContextAssembler`.\"\"\"\n      40 | \n>>>   41 |     system_prompt: str\n      42 |     messages: List[Dict[str, Any]]\n      43 |     token_estimate: int\n      44 |     dropped_turn_count: int = 0\n    [上下文]\n      48 |     @property\n      49 |     def openai_messages(self) -> List[Dict[str, Any]]:\n      50 |         \"\"\"Return a complete OpenAI-compatible message list.\"\"\"\n>>>   51 |         return [{\"role\": \"system\", \"content\": self.system_prompt}] + self.messages\n      52 | \n      53 | \n      54 | class ContextAssembler:\n    [上下文]\n      68 |     def assemble(\n      69 |         self,\n      70 |         *,\n>>>   71 |         base_system_prompt: str,\n      72 |         plan_context: str = \"\",\n      73 |         memory_context: str = \"\",\n      74 |         compressed_state: str = \"\",\n    [上下文]\n      80 |         \"\"\"Build final prompt and recent messages.\n      81 | \n      82 |         Args:\n>>>   83 |             base_system_prompt: Already-rendered base system prompt.\n      84 |             plan_context: Optional explicit plan section if not already included\n      85 |                 in ``base_system_prompt``.\n      86 |             memory_context: Relevant long-term memory section.\n    [上下文]\n      82 |         Args:\n      83 |             base_system_prompt: Already-rendered base system prompt.\n      84 |             plan_context: Optional explicit plan section if not already included\n>>>   85 |                 in ``base_system_prompt``.\n      86 |             memory_context: Relevant long-term memory section.\n      87 |             compressed_state: Current session compressed state/summary section.\n      88 |             messages: Conversation history snapshot.\n    [上下文]\n      98 |         current_user = self._resolve_current_user_message(source_messages, current_user_message)\n      99 |         history_messages = self._remove_current_user_from_history(source_messages, current_user)\n     100 | \n>>>  101 |         system_prompt = self._assemble_system_prompt(\n     102 |             base_system_prompt=base_system_prompt,\n     103 |             plan_context=plan_context,\n     104 |             memory_context=memory_context,\n    [上下文]\n      99 |         history_messages = self._remove_current_user_from_history(source_messages, current_user)\n     100 | \n     101 |         system_prompt = self._assemble_system_prompt(\n>>>  102 |             base_system_prompt=base_system_prompt,\n     103 |             plan_context=plan_context,\n     104 |             memory_context=memory_context,\n     105 |             compressed_state=compressed_state,\n    [上下文]\n     122 |             final_messages = recent_messages\n     123 | \n     124 |         final_messages = self._validate_provider_messages(final_messages)\n>>>  125 |         token_estimate = self._estimate_text_tokens(system_prompt) + self._estimate_messages_tokens(final_messages)\n     126 |         dropped_turn_count = max(0, len(complete_turns) - kept_turns)\n     127 |         dropped_message_count = max(0, len(history_messages) - len(recent_messages))\n     128 | \n    [上下文]\n     127 |         dropped_message_count = max(0, len(history_messages) - len(recent_messages))\n     128 | \n     129 |         return AssembledContext(\n>>>  130...",
+      "files": [
+        ".",
+        "core\\context.py",
+        "core\\context_assembler.py",
+        "core\\engine.py",
+        "core\\memory_context_builder.py",
+        "core\\memory_manager.py",
+        "core\\memory_retrieval.py",
+        "core\\prompts.py",
+        "CLAUDE.md",
+        "tests\\test_context_assembly_budget.py",
+        "tests\\test_memory_items.py",
+        "tests\\test_memory_phase3.py",
+        "core/engine.py",
+        "tests\\test_memory_phase4.py",
+        "tests\\test_memory_phase5.py",
+        "core/a.py",
+        "tools\\memory_tool.py",
+        "tools\\__init__.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

@@ -1,0 +1,88 @@
+{
+  "id": "mem_5c30841cbaf2400580a0c86893d2c0b8",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nrm 'memory/long_term/index.35f3word.tmp'\nrm 'memory/long_term/index.64odgtd9.tmp'\nrm 'memory/long_term/index.di_bk5se.tmp'\nrm 'memory/long_term/index.xzm211au.tmp'\n## agent/plan-82116ad9\nM  README.md\nM  core/compression_engine.py\nM  core/context.py\nA  core/context_assembler.py\nM  core/engine.py\nM  core/memory_layers.py\nM  core/memory_manager.py\nA  core/turn_builder.py\nM  docs/context_compression_strategy_architecture.md\nA  docs/memory_system_next_architecture.md\nM  docs/memory_system_refactor_roadmap.md\nM  main.py\nA  tests/test_compressed_session_state.py\nA  tests/test_context_assembly_budget.py\nM  tests/test_memory_layers.py\nM  tests/test_memory_manager.py\nA  tests/test_memory_phase4_promotion.py\nA  tests/test_shared_memory_manager.py\nA  tests/test_turn_builder.py\nM\tREADME.md\nM\tcore/compression_engine.py\nM\tcore/context.py\nA\tcore/context_assembler.py\nM\tcore/engine.py\nM\tcore/memory_layers.py\nM\tcore/memory_manager.py\nA\tcore/turn_builder.py\nM\tdocs/context_compression_strategy_architecture.md\nA\tdocs/memory_system_next_architecture.md\nM\tdocs/memory_system_refactor_roadmap.md\nM\tmain.py\nA\ttests/test_compressed_session_state.py\nA\ttests/test_context_assembly_budget.py\nM\ttests/test_memory_layers.py\nM\ttests/test_memory_manager.py\nA\ttests/test_memory_phase4_promotion.py\nA\ttests/test_shared_memory_manager.py\nA\ttests/test_turn_builder.py\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:20:23.619717",
+  "updated_at": "2026-05-29T14:20:23.619717",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [
+    "README.md",
+    "core/compression_engine.py",
+    "core/context.py",
+    "core/context_assembler.py",
+    "core/engine.py",
+    "core/memory_layers.py",
+    "core/memory_manager.py",
+    "core/turn_builder.py",
+    "docs/context_compression_strategy_architecture.md",
+    "docs/memory_system_next_architecture.md",
+    "docs/memory_system_refactor_roadmap.md",
+    "main.py",
+    "tests/test_compressed_session_state.py",
+    "tests/test_context_assembly_budget.py",
+    "tests/test_memory_layers.py",
+    "tests/test_memory_manager.py",
+    "tests/test_memory_phase4_promotion.py",
+    "tests/test_shared_memory_manager.py",
+    "tests/test_turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_f6bc0648e3f34a0483ff9e504c5a4c23"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f6bc0648e3f34a0483ff9e504c5a4c23",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:20:23.619717",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "cd /d D:\\LLM\\mini-claude-code-cli && git reset --soft origin/main && git rm --cached -f memory/long_term/index.*.tmp && del /Q memory\\long_term\\index.*.tmp 2>NUL & git status --short --branch && git diff --cached --name-status"
+      },
+      "tool_output": "STDOUT:\nrm 'memory/long_term/index.35f3word.tmp'\nrm 'memory/long_term/index.64odgtd9.tmp'\nrm 'memory/long_term/index.di_bk5se.tmp'\nrm 'memory/long_term/index.xzm211au.tmp'\n## agent/plan-82116ad9\nM  README.md\nM  core/compression_engine.py\nM  core/context.py\nA  core/context_assembler.py\nM  core/engine.py\nM  core/memory_layers.py\nM  core/memory_manager.py\nA  core/turn_builder.py\nM  docs/context_compression_strategy_architecture.md\nA  docs/memory_system_next_architecture.md\nM  docs/memory_system_refactor_roadmap.md\nM  main.py\nA  tests/test_compressed_session_state.py\nA  tests/test_context_assembly_budget.py\nM  tests/test_memory_layers.py\nM  tests/test_memory_manager.py\nA  tests/test_memory_phase4_promotion.py\nA  tests/test_shared_memory_manager.py\nA  tests/test_turn_builder.py\nM\tREADME.md\nM\tcore/compression_engine.py\nM\tcore/context.py\nA\tcore/context_assembler.py\nM\tcore/engine.py\nM\tcore/memory_layers.py\nM\tcore/memory_manager.py\nA\tcore/turn_builder.py\nM\tdocs/context_compression_strategy_architecture.md\nA\tdocs/memory_system_next_architecture.md\nM\tdocs/memory_system_refactor_roadmap.md\nM\tmain.py\nA\ttests/test_compressed_session_state.py\nA\ttests/test_context_assembly_budget.py\nM\ttests/test_memory_layers.py\nM\ttests/test_memory_manager.py\nA\ttests/test_memory_phase4_promotion.py\nA\ttests/test_shared_memory_manager.py\nA\ttests/test_turn_builder.py\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "README.md",
+        "core/compression_engine.py",
+        "core/context.py",
+        "core/context_assembler.py",
+        "core/engine.py",
+        "core/memory_layers.py",
+        "core/memory_manager.py",
+        "core/turn_builder.py",
+        "docs/context_compression_strategy_architecture.md",
+        "docs/memory_system_next_architecture.md",
+        "docs/memory_system_refactor_roadmap.md",
+        "main.py",
+        "tests/test_compressed_session_state.py",
+        "tests/test_context_assembly_budget.py",
+        "tests/test_memory_layers.py",
+        "tests/test_memory_manager.py",
+        "tests/test_memory_phase4_promotion.py",
+        "tests/test_shared_memory_manager.py",
+        "tests/test_turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

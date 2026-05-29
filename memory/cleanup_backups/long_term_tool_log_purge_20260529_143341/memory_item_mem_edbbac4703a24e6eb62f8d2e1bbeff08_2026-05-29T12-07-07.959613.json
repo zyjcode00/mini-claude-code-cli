@@ -1,0 +1,55 @@
+{
+  "id": "mem_edbbac4703a24e6eb62f8d2e1bbeff08",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "\n                expected_ids = {tc.get(\"id\") for tc in prev_msg.get(\"tool_calls\", []) if tc.get(\"id\")}\n                if tool_call_id not in expected_ids:\n                    print(f\"   ❌ 错误: Tool 消息 [{i}] (tool_call_id={tool_call_id}) 没有对应的相邻 assistant with tool_calls\")\n                    return False\n\n            # 🔥🔥🔥 检查 2: assistant with tool_calls 是否有对应的 tool 消息（向后查找）\n            # 这是 GPT-5.5 严格要求的关键检查！\n            if msg.get(\"role\") == \"assistant\" and \"tool_calls\" in msg:\n                tool_calls = msg.get(\"tool_calls\", [])\n\n                for tc in tool_calls:\n                    tool_call_id = tc.get(\"id\")\n                    if not tool_call_id:\n                        continue\n\n                    # 向后检查紧邻的连续 tool 响应块，不能跨过 user/assistant/system 等其它消息查找。\n                    expected_ids = {tc.get(\"id\") for tc in tool_calls if tc.get(\"id\")}\n                    contiguous_tool_ids = set()\n                    j = i + 1\n                    while j < len(messages) and messages[j].get(\"role\") == \"tool\":\n                        contiguous_tool_ids.add(messages[j].get(\"tool_call_id\"))\n                        j += 1\n                    found_tool = tool_call_id in contiguous_tool_ids\n\n                    # 🔥🔥🔥 GPT-5.5 严格要求：每个 tool_call_id 都必须有对应的 tool 消息\n                    if not found_tool:\n                        print(f\"   ❌ 错误: Assistant 消息 [{i}] 的 tool_call_id={tool_call_id} 没有对应的 tool 消息\")\n                        print(f\"   💡 这是 GPT-5.5 严格要求：每个 tool_calls 都必须有对应的 tool 消息响应\")\n                        return False\n\n        return True\n\n    def _sanitize_openai_tool_pairs(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:\n        \"\"\"\n        删除 OpenAI strict tools 不接受的半截工具调用消息。\n\n        OpenAI 兼容接口要求 assistant(tool_calls) 与后续 tool 响应必须成对出现。\n        压缩、LLM 摘要超时回退、滑动窗口补齐等路径都可能只保留 pair 的一半，\n        因此发送前/压缩后统一做一次安全清理：\n        - tool 消息若找不到前置 assistant(tool_calls)，删除该 tool；\n        - assistant(tool_calls) 若任一 tool_call_id 找不到后续 tool，删除该 assistant。\n        \"\"\"\n        sanitized = [dict(msg) if isinstance(msg, dict) else msg for msg in messages]\n        turns = TurnBuilder().build(sanitized)\n        complete_messages = TurnBuilder().build_complete_messages(sanitized)\n        if len(complete_messages) != len(sanitized):\n            removed = len(sanitized) - len(complete_messages)\n            incomplete_turns = [turn for turn in turns if not turn.is_valid_openai_tool_turn]\n            print(f\"   [工具调用清理] 删除 {removed} 条半截 tool pair 消息，涉及 {len(incomplete_turns)} 个不完整 turn\")\n        return complete_messages\n\n    def _select_recent_complete_turn_messages(self, messages: List[Dict[str, Any]], target_count: int) -> List[Dict[str, Any]]:\n        \"\"\"Select recent complete turns without splitting OpenAI tool pairs.\"\"\"\n        builder = TurnBuilder()\n        complete_turns = builder.complete_turns_only(builder.build(messages))\n        selected = []\n        selected_count = 0\n\n        for turn in reversed(complete_turns):\n            turn_size = len(turn.messages)\n            if selected and selected_count >= target_count:\n                break\n            selected.append(turn)\n            selected_count += turn_size\n\n        selected.reverse()\n        return builder.flatten(selected)\n\n    def _parse_structured_summary(\n        self,\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:07:07.959613",
+  "updated_at": "2026-05-29T12:07:07.959613",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_f3dfc716d21247269a25052c35863904"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f3dfc716d21247269a25052c35863904",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:07:07.959613",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 790,
+        "path": "core/compression_engine.py",
+        "raw_mode": true,
+        "start_line": 720
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "\n                expected_ids = {tc.get(\"id\") for tc in prev_msg.get(\"tool_calls\", []) if tc.get(\"id\")}\n                if tool_call_id not in expected_ids:\n                    print(f\"   ❌ 错误: Tool 消息 [{i}] (tool_call_id={tool_call_id}) 没有对应的相邻 assistant with tool_calls\")\n                    return False\n\n            # 🔥🔥🔥 检查 2: assistant with tool_calls 是否有对应的 tool 消息（向后查找）\n            # 这是 GPT-5.5 严格要求的关键检查！\n            if msg.get(\"role\") == \"assistant\" and \"tool_calls\" in msg:\n                tool_calls = msg.get(\"tool_calls\", [])\n\n                for tc in tool_calls:\n                    tool_call_id = tc.get(\"id\")\n                    if not tool_call_id:\n                        continue\n\n                    # 向后检查紧邻的连续 tool 响应块，不能跨过 user/assistant/system 等其它消息查找。\n                    expected_ids = {tc.get(\"id\") for tc in tool_calls if tc.get(\"id\")}\n                    contiguous_tool_ids = set()\n                    j = i + 1\n                    while j < len(messages) and messages[j].get(\"role\") == \"tool\":\n                        contiguous_tool_ids.add(messages[j].get(\"tool_call_id\"))\n                        j += 1\n                    found_tool = tool_call_id in contiguous_tool_ids\n\n                    # 🔥🔥🔥 GPT-5.5 严格要求：每个 tool_call_id 都必须有对应的 tool 消息\n                    if not found_tool:\n                        print(f\"   ❌ 错误: Assistant 消息 [{i}] 的 tool_call_id={tool_call_id} 没有对应的 tool 消息\")\n                        print(f\"   💡 这是 GPT-5.5 严格要求：每个 tool_calls 都必须有对应的 tool 消息响应\")\n                        return False\n\n        return True\n\n    def _sanitize_openai_tool_pairs(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:\n        \"\"\"\n        删除 OpenAI strict tools 不接受的半截工具调用消息。\n\n        OpenAI 兼容接口要求 assistant(tool_calls) 与后续 tool 响应必须成对出现。\n        压缩、LLM 摘要超时回退、滑动窗口补齐等路径都可能只保留 pair 的一半，\n        因此发送前/压缩后统一做一次安全清理：\n        - tool 消息若找不到前置 assistant(tool_calls)，删除该 tool；\n        - assistant(tool_calls) 若任一 tool_call_id 找不到后续 tool，删除该 assistant。\n        \"\"\"\n        sanitized = [dict(msg) if isinstance(msg, dict) else msg for msg in messages]\n        turns = TurnBuilder().build(sanitized)\n        complete_messages = TurnBuilder().build_complete_messages(sanitized)\n        if len(complete_messages) != len(sanitized):\n            removed = len(sanitized) - len(complete_messages)\n            incomplete_turns = [turn for turn in turns if not turn.is_valid_openai_tool_turn]\n            print(f\"   [工具调用清理] 删除 {removed} 条半截 tool pair 消息，涉及 {len(incomplete_turns)} 个不完整 turn\")\n        return complete_messages\n\n    def _select_recent_complete_turn_messages(self, messages: List[Dict[str, Any]], target_count: int) -> List[Dict[str, Any]]:\n        \"\"\"Select recent complete turns without splitting OpenAI tool pairs.\"\"\"\n        builder = TurnBuilder()\n        complete_turns = builder.complete_turns_only(builder.build(messages))\n        selected = []\n        selected_count = 0\n\n        for turn in reversed(complete_turns):\n            turn_size = len(turn.messages)\n            if selected and selected_count >= target_count:\n                break\n            selected.append(turn)\n            selected_count += turn_size\n\n        selected.reverse()\n        return builder.flatten(selected)\n\n    def _parse_structured_summary(\n        self,\n",
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

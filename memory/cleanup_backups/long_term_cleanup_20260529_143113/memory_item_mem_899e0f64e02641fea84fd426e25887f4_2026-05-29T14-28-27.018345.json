@@ -1,0 +1,55 @@
+{
+  "id": "mem_899e0f64e02641fea84fd426e25887f4",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_items.py (第 261 至 297 行，共 297 行) ---\n 261 |         self.score = float(self.score or 0.0)\n 262 | \n 263 |     def to_dict(self) -> Dict[str, Any]:\n 264 |         return {\n 265 |             \"item\": self.item.to_dict(),\n 266 |             \"score\": self.score,\n 267 |             \"source\": self.source,\n 268 |             \"reason\": self.reason,\n 269 |         }\n 270 | \n 271 |     @classmethod\n 272 |     def from_dict(cls, data: Dict[str, Any]) -> \"MemoryRecallResult\":\n 273 |         return cls(\n 274 |             item=MemoryItem.from_dict(data.get(\"item\", {})),\n 275 |             score=data.get(\"score\", 0.0),\n 276 |             source=data.get(\"source\", \"long_term\"),\n 277 |             reason=data.get(\"reason\", \"\"),\n 278 |         )\n 279 | \n 280 | \n 281 | def _normalize_enum_value(value: Any, enum_cls: Any, default: str) -> str:\n 282 |     if isinstance(value, enum_cls):\n 283 |         return value.value\n 284 |     if isinstance(value, str):\n 285 |         normalized = value.strip().lower()\n 286 |         valid_values = {item.value for item in enum_cls}\n 287 |         if normalized in valid_values:\n 288 |             return normalized\n 289 |     return default\n 290 | \n 291 | \n 292 | def _clamp_float(value: Any, default: float) -> float:\n 293 |     try:\n 294 |         number = float(value)\n 295 |     except (TypeError, ValueError):\n 296 |         return default\n 297 |     return max(0.0, min(1.0, number))\n--- 读取完毕 ---",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:28:27.018345",
+  "updated_at": "2026-05-29T14:28:27.018345",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_items.py"
+  ],
+  "source_observation_ids": [
+    "obs_e9a31a04b7fe49c99a7f120b88f5d3cb"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_e9a31a04b7fe49c99a7f120b88f5d3cb",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:28:27.018345",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 297,
+        "path": "core/memory_items.py",
+        "raw_mode": false,
+        "start_line": 261
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_items.py (第 261 至 297 行，共 297 行) ---\n 261 |         self.score = float(self.score or 0.0)\n 262 | \n 263 |     def to_dict(self) -> Dict[str, Any]:\n 264 |         return {\n 265 |             \"item\": self.item.to_dict(),\n 266 |             \"score\": self.score,\n 267 |             \"source\": self.source,\n 268 |             \"reason\": self.reason,\n 269 |         }\n 270 | \n 271 |     @classmethod\n 272 |     def from_dict(cls, data: Dict[str, Any]) -> \"MemoryRecallResult\":\n 273 |         return cls(\n 274 |             item=MemoryItem.from_dict(data.get(\"item\", {})),\n 275 |             score=data.get(\"score\", 0.0),\n 276 |             source=data.get(\"source\", \"long_term\"),\n 277 |             reason=data.get(\"reason\", \"\"),\n 278 |         )\n 279 | \n 280 | \n 281 | def _normalize_enum_value(value: Any, enum_cls: Any, default: str) -> str:\n 282 |     if isinstance(value, enum_cls):\n 283 |         return value.value\n 284 |     if isinstance(value, str):\n 285 |         normalized = value.strip().lower()\n 286 |         valid_values = {item.value for item in enum_cls}\n 287 |         if normalized in valid_values:\n 288 |             return normalized\n 289 |     return default\n 290 | \n 291 | \n 292 | def _clamp_float(value: Any, default: float) -> float:\n 293 |     try:\n 294 |         number = float(value)\n 295 |     except (TypeError, ValueError):\n 296 |         return default\n 297 |     return max(0.0, min(1.0, number))\n--- 读取完毕 ---",
+      "files": [
+        "core/memory_items.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

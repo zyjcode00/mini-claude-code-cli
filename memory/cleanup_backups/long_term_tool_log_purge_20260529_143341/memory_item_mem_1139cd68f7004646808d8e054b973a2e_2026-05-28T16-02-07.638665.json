@@ -1,0 +1,55 @@
+{
+  "id": "mem_1139cd68f7004646808d8e054b973a2e",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "# tools/__init__.py\nfrom .bash_tool import BashTool\nfrom .file_tool import ReadTool, FileEditTool, FileTreeTool, WriteFullFileTool\nfrom .plan_tool import UpdatePlanTool, MarkDoneTool\nfrom .session_tool import SessionCleanerTool\nfrom .pytest_tool import PytestTool\nfrom .search_tool import SearchTool\nfrom .symbol_tool import ListSymbolsTool, FindSymbolTool\nfrom .git_tool import GitStatusTool, GitCommitTool, GitRollbackTool\nfrom .memory_tool import MemorySaveTool, MemoryRecallTool, MemoryFileHistoryTool, MemoryErrorHistoryTool, MemoryStatsTool\n\ndef get_default_tools(plan_manager=None, memory_manager=None, memory_storage_dir=\"memory/long_term\"):\n    shared_memory_manager = memory_manager\n    memory_save_tool = MemorySaveTool(memory_manager=shared_memory_manager, long_term_storage_dir=memory_storage_dir)\n    shared_memory_manager = memory_save_tool.memory_manager\n    memory_recall_tool = MemoryRecallTool(memory_manager=shared_memory_manager)\n    memory_file_history_tool = MemoryFileHistoryTool(memory_manager=shared_memory_manager)\n    memory_error_history_tool = MemoryErrorHistoryTool(memory_manager=shared_memory_manager)\n    memory_stats_tool = MemoryStatsTool(memory_manager=shared_memory_manager)\n\n    tools = [\n        BashTool(),\n        ReadTool(),\n        FileEditTool(),\n        WriteFullFileTool(),  # 新增：全量写入工具\n        FileTreeTool(),\n        SearchTool(),  # 新增：代码搜索工具\n        ListSymbolsTool(),  # 新增：符号索引工具\n        FindSymbolTool(),  # 新增：符号查找工具\n        PytestTool(),\n        SessionCleanerTool(),\n        # Git 自动化工具\n        GitStatusTool(),\n        GitCommitTool(),\n        GitRollbackTool(),\n        # 长期记忆工具\n        memory_save_tool,\n        memory_recall_tool,\n        memory_file_history_tool,\n        memory_error_history_tool,\n        memory_stats_tool\n    ]\n\n    # 如果提供了管家，就加载规划工具\n    if plan_manager:\n        tools.append(UpdatePlanTool(plan_manager))\n        tools.append(MarkDoneTool(plan_manager))  # 新增：标记完成工具\n\n    return tools",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T16:02:07.638665",
+  "updated_at": "2026-05-28T16:02:07.638665",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "tools/__init__.py"
+  ],
+  "source_observation_ids": [
+    "obs_308463a1465949b0a0217c9a7b8312ea"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_308463a1465949b0a0217c9a7b8312ea",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T16:02:07.638665",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "path": "tools/__init__.py",
+        "start_line": 1,
+        "end_line": 50,
+        "raw_mode": true
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "# tools/__init__.py\nfrom .bash_tool import BashTool\nfrom .file_tool import ReadTool, FileEditTool, FileTreeTool, WriteFullFileTool\nfrom .plan_tool import UpdatePlanTool, MarkDoneTool\nfrom .session_tool import SessionCleanerTool\nfrom .pytest_tool import PytestTool\nfrom .search_tool import SearchTool\nfrom .symbol_tool import ListSymbolsTool, FindSymbolTool\nfrom .git_tool import GitStatusTool, GitCommitTool, GitRollbackTool\nfrom .memory_tool import MemorySaveTool, MemoryRecallTool, MemoryFileHistoryTool, MemoryErrorHistoryTool, MemoryStatsTool\n\ndef get_default_tools(plan_manager=None, memory_manager=None, memory_storage_dir=\"memory/long_term\"):\n    shared_memory_manager = memory_manager\n    memory_save_tool = MemorySaveTool(memory_manager=shared_memory_manager, long_term_storage_dir=memory_storage_dir)\n    shared_memory_manager = memory_save_tool.memory_manager\n    memory_recall_tool = MemoryRecallTool(memory_manager=shared_memory_manager)\n    memory_file_history_tool = MemoryFileHistoryTool(memory_manager=shared_memory_manager)\n    memory_error_history_tool = MemoryErrorHistoryTool(memory_manager=shared_memory_manager)\n    memory_stats_tool = MemoryStatsTool(memory_manager=shared_memory_manager)\n\n    tools = [\n        BashTool(),\n        ReadTool(),\n        FileEditTool(),\n        WriteFullFileTool(),  # 新增：全量写入工具\n        FileTreeTool(),\n        SearchTool(),  # 新增：代码搜索工具\n        ListSymbolsTool(),  # 新增：符号索引工具\n        FindSymbolTool(),  # 新增：符号查找工具\n        PytestTool(),\n        SessionCleanerTool(),\n        # Git 自动化工具\n        GitStatusTool(),\n        GitCommitTool(),\n        GitRollbackTool(),\n        # 长期记忆工具\n        memory_save_tool,\n        memory_recall_tool,\n        memory_file_history_tool,\n        memory_error_history_tool,\n        memory_stats_tool\n    ]\n\n    # 如果提供了管家，就加载规划工具\n    if plan_manager:\n        tools.append(UpdatePlanTool(plan_manager))\n        tools.append(MarkDoneTool(plan_manager))  # 新增：标记完成工具\n\n    return tools",
+      "files": [
+        "tools/__init__.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

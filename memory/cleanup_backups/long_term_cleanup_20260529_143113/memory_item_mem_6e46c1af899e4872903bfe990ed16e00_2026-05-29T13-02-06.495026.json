@@ -1,0 +1,55 @@
+{
+  "id": "mem_6e46c1af899e4872903bfe990ed16e00",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_context_builder.py (第 1 至 144 行，共 144 行) ---\n   1 | \"\"\"Prompt 记忆上下文构建器。\n   2 | \n   3 | 阶段5引入：把 Hybrid Recall 结果按任务类型、置信度、去重和 token budget\n   4 | 格式化为可控的 prompt 注入片段，避免直接拼接全部记忆造成上下文污染。\n   5 | \"\"\"\n   6 | \n   7 | from __future__ import annotations\n   8 | \n   9 | import re\n  10 | from typing import Iterable, List, Optional, Sequence, Set\n  11 | \n  12 | from core.memory_items import MemoryKind, MemoryRecallResult\n  13 | \n  14 | \n  15 | class MemoryContextBuilder:\n  16 |     \"\"\"根据 token budget 构造可注入系统提示词的长期记忆上下文。\"\"\"\n  17 | \n  18 |     TASK_KIND_PRIORITY = {\n  19 |         \"code_edit\": [MemoryKind.BUG.value, MemoryKind.WORKFLOW.value, MemoryKind.DECISION.value, MemoryKind.ARCHITECTURE.value],\n  20 |         \"architecture\": [MemoryKind.ARCHITECTURE.value, MemoryKind.DECISION.value, MemoryKind.FACT.value, MemoryKind.WORKFLOW.value],\n  21 |         \"test_failure\": [MemoryKind.BUG.value, MemoryKind.PROCEDURAL.value, MemoryKind.WORKFLOW.value, MemoryKind.FACT.value],\n  22 |         \"documentation\": [MemoryKind.PREFERENCE.value, MemoryKind.ARCHITECTURE.value, MemoryKind.DECISION.value, MemoryKind.TASK.value],\n  23 |         \"git\": [MemoryKind.WORKFLOW.value, MemoryKind.PREFERENCE.value, MemoryKind.BUG.value, MemoryKind.PROCEDURAL.value],\n  24 |         \"general\": [MemoryKind.BUG.value, MemoryKind.ARCHITECTURE.value, MemoryKind.WORKFLOW.value, MemoryKind.DECISION.value, MemoryKind.PREFERENCE.value],\n  25 |     }\n  26 | \n  27 |     def __init__(\n  28 |         self,\n  29 |         default_token_budget: int = 1500,\n  30 |         max_items: int = 8,\n  31 |         per_item_char_limit: int = 200,\n  32 |         min_confidence: float = 0.2,\n  33 |     ):\n  34 |         self.default_token_budget = default_token_budget\n  35 |         self.max_items = max_items\n  36 |         self.per_item_char_limit = per_item_char_limit\n  37 |         self.min_confidence = min_confidence\n  38 | \n  39 |     def build(\n  40 |         self,\n  41 |         query: str,\n  42 |         memories: Sequence[MemoryRecallResult],\n  43 |         token_budget: Optional[int] = None,\n  44 |         task_type: Optional[str] = None,\n  45 |         max_items: Optional[int] = None,\n  46 |     ) -> str:\n  47 |         \"\"\"构造受预算约束的记忆上下文。\"\"\"\n  48 |         if not memories:\n  49 |             return \"\"\n  50 | \n  51 |         budget = max(0, token_budget or self.default_token_budget)\n  52 |         if budget <= 0:\n  53 |             return \"\"\n  54 | \n  55 |         inferred_task_type = task_type or self.infer_task_type(query)\n  56 |         char_budget = budget * 4  # 粗略估算：1 token ~= 4 chars\n  57 |         selected = self._select_memories(memories, inferred_task_type, max_items or self.max_items)\n  58 | \n  59 |         lines: List[str] = [\"\\n[相关长期记忆]\", \"### 相关长期记忆\", f\"任务类型: {inferred_task_type}\"]\n  60 |         used_chars = sum(len(line) + 1 for line in lines)\n  61 | \n  62 |         for index, result in enumerate(selected, 1):\n  63 |             item = result.item\n  64 |             files = \", \".join(item.files[:4]) if item.files else \"无\"\n  65 |             sources = \", \".join(item.source_session_ids[:3]) if item.source_session_ids else result.source\n  66 |             content = self._truncate_clean(item.content, self.per_item_char_limit)\n  67 |             block_lines = [\n  68 |                 f\"{index}. [{item.kind}] {item.title}\",\n  69 |                 f\"   来源: {files}; {sources}\",\n  70 |                 f\"   相关度: {result.score:.2f}; 原因: {result.reason}\",\n  71 |                 f\"   内容: {content}\",\n  72 |             ]\n  73 |             block = \"\\n\".join(block_lines)\n  74 |             block_cost = len(block) + 1\n  75 |             if used_chars + block_cost > char_budget:\n  76 |                 remaining = char_budget - used_chars - 80\n  77 |                 if remaining > 60:\n  78 |                     short_content = self._truncate_clean(item.content, min(remaining, self.per_item_char_limit))\n  79 |                     block = \"\\n\".join(block_lines[:-1] + [f\"...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:02:06.495026",
+  "updated_at": "2026-05-29T13:02:06.495026",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_context_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_9a288f50adae49739ad9cee6f3c46e85"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_9a288f50adae49739ad9cee6f3c46e85",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:02:06.495026",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 260,
+        "path": "core/memory_context_builder.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_context_builder.py (第 1 至 144 行，共 144 行) ---\n   1 | \"\"\"Prompt 记忆上下文构建器。\n   2 | \n   3 | 阶段5引入：把 Hybrid Recall 结果按任务类型、置信度、去重和 token budget\n   4 | 格式化为可控的 prompt 注入片段，避免直接拼接全部记忆造成上下文污染。\n   5 | \"\"\"\n   6 | \n   7 | from __future__ import annotations\n   8 | \n   9 | import re\n  10 | from typing import Iterable, List, Optional, Sequence, Set\n  11 | \n  12 | from core.memory_items import MemoryKind, MemoryRecallResult\n  13 | \n  14 | \n  15 | class MemoryContextBuilder:\n  16 |     \"\"\"根据 token budget 构造可注入系统提示词的长期记忆上下文。\"\"\"\n  17 | \n  18 |     TASK_KIND_PRIORITY = {\n  19 |         \"code_edit\": [MemoryKind.BUG.value, MemoryKind.WORKFLOW.value, MemoryKind.DECISION.value, MemoryKind.ARCHITECTURE.value],\n  20 |         \"architecture\": [MemoryKind.ARCHITECTURE.value, MemoryKind.DECISION.value, MemoryKind.FACT.value, MemoryKind.WORKFLOW.value],\n  21 |         \"test_failure\": [MemoryKind.BUG.value, MemoryKind.PROCEDURAL.value, MemoryKind.WORKFLOW.value, MemoryKind.FACT.value],\n  22 |         \"documentation\": [MemoryKind.PREFERENCE.value, MemoryKind.ARCHITECTURE.value, MemoryKind.DECISION.value, MemoryKind.TASK.value],\n  23 |         \"git\": [MemoryKind.WORKFLOW.value, MemoryKind.PREFERENCE.value, MemoryKind.BUG.value, MemoryKind.PROCEDURAL.value],\n  24 |         \"general\": [MemoryKind.BUG.value, MemoryKind.ARCHITECTURE.value, MemoryKind.WORKFLOW.value, MemoryKind.DECISION.value, MemoryKind.PREFERENCE.value],\n  25 |     }\n  26 | \n  27 |     def __init__(\n  28 |         self,\n  29 |         default_token_budget: int = 1500,\n  30 |         max_items: int = 8,\n  31 |         per_item_char_limit: int = 200,\n  32 |         min_confidence: float = 0.2,\n  33 |     ):\n  34 |         self.default_token_budget = default_token_budget\n  35 |         self.max_items = max_items\n  36 |         self.per_item_char_limit = per_item_char_limit\n  37 |         self.min_confidence = min_confidence\n  38 | \n  39 |     def build(\n  40 |         self,\n  41 |         query: str,\n  42 |         memories: Sequence[MemoryRecallResult],\n  43 |         token_budget: Optional[int] = None,\n  44 |         task_type: Optional[str] = None,\n  45 |         max_items: Optional[int] = None,\n  46 |     ) -> str:\n  47 |         \"\"\"构造受预算约束的记忆上下文。\"\"\"\n  48 |         if not memories:\n  49 |             return \"\"\n  50 | \n  51 |         budget = max(0, token_budget or self.default_token_budget)\n  52 |         if budget <= 0:\n  53 |             return \"\"\n  54 | \n  55 |         inferred_task_type = task_type or self.infer_task_type(query)\n  56 |         char_budget = budget * 4  # 粗略估算：1 token ~= 4 chars\n  57 |         selected = self._select_memories(memories, inferred_task_type, max_items or self.max_items)\n  58 | \n  59 |         lines: List[str] = [\"\\n[相关长期记忆]\", \"### 相关长期记忆\", f\"任务类型: {inferred_task_type}\"]\n  60 |         used_chars = sum(len(line) + 1 for line in lines)\n  61 | \n  62 |         for index, result in enumerate(selected, 1):\n  63 |             item = result.item\n  64 |             files = \", \".join(item.files[:4]) if item.files else \"无\"\n  65 |             sources = \", \".join(item.source_session_ids[:3]) if item.source_session_ids else result.source\n  66 |             content = self._truncate_clean(item.content, self.per_item_char_limit)\n  67 |             block_lines = [\n  68 |                 f\"{index}. [{item.kind}] {item.title}\",\n  69 |                 f\"   来源: {files}; {sources}\",\n  70 |                 f\"   相关度: {result.score:.2f}; 原因: {result.reason}\",\n  71 |                 f\"   内容: {content}\",\n  72 |             ]\n  73 |             block = \"\\n\".join(block_lines)\n  74 |             block_cost = len(block) + 1\n  75 |             if used_chars + block_cost > char_budget:\n  76 |                 remaining = char_budget - used_chars - 80\n  77 |                 if remaining > 60:\n  78 |                     short_content = self._truncate_clean(item.content, min(remaining, self.per_item_char_limit))\n  79 |                     block = \"\\n\".join(block_lines[:-1] + [f\"...",
+      "files": [
+        "core/memory_context_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

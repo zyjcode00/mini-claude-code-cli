@@ -1,0 +1,54 @@
+{
+  "id": "mem_36f7091b80fb45fa88d8743537889243",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 tests/test_memory_layers.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:32:27.136093",
+  "updated_at": "2026-05-29T13:32:27.136093",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "tests/test_memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_27ed04e3edd1478a922926d74eff6514"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_27ed04e3edd1478a922926d74eff6514",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:32:27.136093",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "    def test_save_index_writes_valid_json_atomically(self):\n        \"\"\"保存索引应通过临时文件原子替换，最终 index.json 始终为合法 JSON。\"\"\"\n        ltm = LongTermMemory(storage_dir=self.temp_dir)\n        summary = SessionSummary(\n            session_id=\"atomic_save\",\n            timestamp=\"2024-01-01T00:00:00\",\n            summary_text=\"原子保存索引\",\n            task_goal=\"避免半写入 JSON\",\n            task_status=\"completed\",\n        )\n\n        ltm.store(summary)\n\n        index_file = Path(self.temp_dir) / \"index.json\"\n        data = json.loads(index_file.read_text(encoding=\"utf-8\"))\n        assert \"atomic_save\" in data[\"index\"]\n        assert not list(Path(self.temp_dir).glob(\"index.*.tmp\"))\n\n    def test_save_index_skips_unchanged_content(self, monkeypatch):\n        \"\"\"索引内容未变化时不应重复 os.replace，降低启动期 Windows 文件占用冲突。\"\"\"\n        ltm = LongTermMemory(storage_dir=self.temp_dir)\n        summary = SessionSummary(\n            session_id=\"skip_unchanged\",\n            timestamp=\"2024-01-01T00:00:00\",\n            summary_text=\"跳过重复保存\",\n            task_goal=\"降低启动写入\",\n            task_status=\"completed\",\n        )\n        ltm.store(summary)\n\n        calls = []\n\n        def fail_if_called(*args, **kwargs):\n            calls.append(args)\n            raise AssertionError(\"unchanged index should not be replaced\")\n\n        monkeypatch.setattr(\"core.memory_layers.os.replace\", fail_if_called)\n        ltm._save_index()\n\n        assert calls == []\n\n    def test_save_index_permission_error_keeps_pending_snapshot_and_cleans_tmp(self, monkeypatch):\n        \"\"\"Windows 下 index.json 被占用导致 replace 拒绝访问时，应降级且不遗留 index.*.tmp。\"\"\"\n        ltm = LongTermMemory(storage_dir=self.temp_dir)\n        ltm.item_index[\"locked_item\"] = Path(self.temp_dir) / \"memory_item_locked.json\"\n        real_replace = os.replace\n\n        def locked_replace(src, dst):\n            if Path(dst).name == \"index.json\":\n                raise PermissionError(5, \"拒绝访问\", str(dst))\n            return real_replace(src, dst)\n\n        monkeypatch.setattr(\"core.memory_layers.os.replace\", locked_replace)\n        ltm._save_index()\n\n        pending_file = Path(self.temp_dir) / \"index.pending.json\"\n        assert pending_file.exists()\n        pending_data = json.loads(pending_file.read_text(encoding=\"utf-8\"))\n        assert \"locked_item\" in pending_data[\"item_index\"]\n        assert not list(Path(self.temp_dir).glob(\"index.*.tmp\"))\n\n    def test_clear(self):",
+        "old_str": "    def test_save_index_writes_valid_json_atomically(self):\n        \"\"\"保存索引应通过临时文件原子替换，最终 index.json 始终为合法 JSON。\"\"\"\n        ltm = LongTermMemory(storage_dir=self.temp_dir)\n        summary = SessionSummary(\n            session_id=\"atomic_save\",\n            timestamp=\"2024-01-01T00:00:00\",\n            summary_text=\"原子保存索引\",\n            task_goal=\"避免半写入 JSON\",\n            task_status=\"completed\",\n        )\n\n        ltm.store(summary)\n\n        index_file = Path(self.temp_dir) / \"index.json\"\n        data = json.loads(index_file.read_text(encoding=\"utf-8\"))\n        assert \"atomic_save\" in data[\"index\"]\n        assert not list(Path(self.temp_dir).glob(\"index.*.tmp\"))\n\n    def test_clear(self):",
+        "path": "tests/test_memory_layers.py"
+      },
+      "tool_output": "成功: 已更新 tests/test_memory_layers.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

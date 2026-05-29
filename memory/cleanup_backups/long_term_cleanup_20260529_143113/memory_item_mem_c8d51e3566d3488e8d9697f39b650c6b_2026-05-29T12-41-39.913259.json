@@ -1,0 +1,94 @@
+{
+  "id": "mem_c8d51e3566d3488e8d9697f39b650c6b",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 293 处匹配，分布在 4 个文件中\n\n================================================================================\n\n[FILE] architecture_summary.md (10 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       7 | - ✅ Tool calling (file operations, code search, Git management, test execution)\n       8 | - ✅ Task planning system (structured Plan management)\n>>>    9 | - ✅ Three-layer memory architecture (Working / Episodic / Long-term)\n      10 | - ✅ Multi-strategy context compression (LLM_SUMMARY / KEYFRAME / SLIDING_WINDOW / IMPORTANCE_FILTER)\n      11 | - ✅ Session persistence and recovery\n    [上下文]\n      47 | ```\n      48 | \n>>>   49 | ## Three-Layer Memory Architecture\n      50 | \n      51 | ```\n    [上下文]\n      54 |     ▼\n      55 | ┌─────────────────────────────────────────────────────┐\n>>>   56 | │  Working Memory (20 messages, FIFO eviction)         │\n      57 | │  Real-time access · Latest context                   │\n      58 | └───────────────────────────┬─────────────────────────┘\n    [上下文]\n      60 |                             ▼\n      61 | ┌─────────────────────────────────────────────────────┐\n>>>   62 | │  Episodic Memory (50 summaries, importance eviction) │\n      63 | │  Structured summaries · Keyword search               │\n      64 | └───────────────────────────┬─────────────────────────┘\n    [上下文]\n      66 |                             ▼\n      67 | ┌─────────────────────────────────────────────────────┐\n>>>   68 | │  Long-term Memory (unlimited, disk JSON storage)     │\n      69 | │  Cross-session retrieval · Inverted index + IDF      │\n      70 | │  Storage path: memory/long_term/*.json                │\n    [上下文]\n      68 | │  Long-term Memory (unlimited, disk JSON storage)     │\n      69 | │  Cross-session retrieval · Inverted index + IDF      │\n>>>   70 | │  Storage path: memory/long_term/*.json                │\n      71 | └─────────────────────────────────────────────────────┘\n      72 | ```\n    [上下文]\n      79 | |--------|-------------|\n      80 | | `execute_query(input)` | Main reasoning loop (max 80 steps) |\n>>>   81 | | `_call_llm()` | Async LLM call + 3-layer memory injection |\n      82 | | `compress_messages()` | Async context compression |\n      83 | | `save_session()` / `load_session()` | Session state persistence |\n    [上下文]\n      83 | | `save_session()` / `load_session()` | Session state persistence |\n      84 | \n>>>   85 | ### context.py — Context & Memory Manager\n      86 | \n      87 | - Message history management\n    [上下文]\n      86 | \n      87 | - Message history management\n>>>   88 | - Three-layer memory orchestration\n      89 | - Compression engine integration\n      90 | - `asyncio.Lock` for concurrent safety (`get_messages_snapshot()`)\n    [上下文]\n     122 | \n     123 | 1. **Async architecture** — `async/await` + `asyncio.gather` for parallel tool execution\n>>>  124 | 2. **Three-layer memory** — Working → Episodic → Long-term, with BM25 retrieval\n     125 | 3. **Adaptive compression** — 4 strategies with intelligent selection + fallback\n     126 | 4. **State synchronization** — Plan completion triggers summary state updates\n\n[FILE] context_compression_strategy_architecture.md (53 处匹配)\n--------------------------------------------------------------------------------\n>>>    1 | # Mini Claude Code CLI 上下文压缩策略优化架构规划\n       2 | \n       3 | > 项目路径：`D:\\LLM\\mini-claude-code-cli`\n    [上下文]\n       5 | > 关联文档：\n       6 | > - `docs/architecture_summary.md`\n>>>    7 | > - `docs/memory_system_refactor_roadmap.md`\n       8 | > - `docs/new_long_term_memory_system.md`\n       9 | >\n    [上下文]\n       6 | > - `docs/architecture_summary.md`\n       7 | > - `docs/memory_system_refactor_roadmap.md`\n>>>    8 | > - `docs/new_long_term_memory_system.md`\n       9 | >\n      10 | > 核心结论：下一步压缩策略不应继续停留在“按消息裁剪 + 出错后清理”的层面，而应升级为 **按 turn 原子化建模、分层压缩、结构化状态迁移、长期记忆联动、发送前协议校验** 的上下文管理系统。\n    [上下文]\n       8 | > - `docs/new_long_term_memory_system.md`\n       9 | >\n>>>   10 | > 核心结论：下一步压...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:41:39.913259",
+  "updated_at": "2026-05-29T12:41:39.913259",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    "docs",
+    "architecture_summary.md",
+    "context.py",
+    "context_compression_strategy_architecture.md",
+    "docs/architecture_summary.md",
+    "docs/memory_system_refactor_roadmap.md",
+    "docs/new_long_term_memory_system.md",
+    "tests/test_openai_tool_pairing.py",
+    "tests/test_compression_engine.py",
+    "tests/test_memory_context_builder.py",
+    "tests/test_compression_planner.py",
+    "tests/test_context_assembly_budget.py",
+    "memory_system_refactor_roadmap.md",
+    "memory_layers.py",
+    "memory_models.py",
+    "memory_retrieval.py",
+    "compression_engine.py",
+    "prompts.py",
+    "retrieval_tool.py",
+    "index.json"
+  ],
+  "source_observation_ids": [
+    "obs_92f8cfb839c14895b9c54114f99db5c6"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_92f8cfb839c14895b9c54114f99db5c6",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:41:39.913259",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 2,
+        "file_pattern": "*.md",
+        "path": "docs",
+        "pattern": "Phase 5|Phase 4|上下文压缩|长期记忆|memory"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 293 处匹配，分布在 4 个文件中\n\n================================================================================\n\n[FILE] architecture_summary.md (10 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       7 | - ✅ Tool calling (file operations, code search, Git management, test execution)\n       8 | - ✅ Task planning system (structured Plan management)\n>>>    9 | - ✅ Three-layer memory architecture (Working / Episodic / Long-term)\n      10 | - ✅ Multi-strategy context compression (LLM_SUMMARY / KEYFRAME / SLIDING_WINDOW / IMPORTANCE_FILTER)\n      11 | - ✅ Session persistence and recovery\n    [上下文]\n      47 | ```\n      48 | \n>>>   49 | ## Three-Layer Memory Architecture\n      50 | \n      51 | ```\n    [上下文]\n      54 |     ▼\n      55 | ┌─────────────────────────────────────────────────────┐\n>>>   56 | │  Working Memory (20 messages, FIFO eviction)         │\n      57 | │  Real-time access · Latest context                   │\n      58 | └───────────────────────────┬─────────────────────────┘\n    [上下文]\n      60 |                             ▼\n      61 | ┌─────────────────────────────────────────────────────┐\n>>>   62 | │  Episodic Memory (50 summaries, importance eviction) │\n      63 | │  Structured summaries · Keyword search               │\n      64 | └───────────────────────────┬─────────────────────────┘\n    [上下文]\n      66 |                             ▼\n      67 | ┌─────────────────────────────────────────────────────┐\n>>>   68 | │  Long-term Memory (unlimited, disk JSON storage)     │\n      69 | │  Cross-session retrieval · Inverted index + IDF      │\n      70 | │  Storage path: memory/long_term/*.json                │\n    [上下文]\n      68 | │  Long-term Memory (unlimited, disk JSON storage)     │\n      69 | │  Cross-session retrieval · Inverted index + IDF      │\n>>>   70 | │  Storage path: memory/long_term/*.json                │\n      71 | └─────────────────────────────────────────────────────┘\n      72 | ```\n    [上下文]\n      79 | |--------|-------------|\n      80 | | `execute_query(input)` | Main reasoning loop (max 80 steps) |\n>>>   81 | | `_call_llm()` | Async LLM call + 3-layer memory injection |\n      82 | | `compress_messages()` | Async context compression |\n      83 | | `save_session()` / `load_session()` | Session state persistence |\n    [上下文]\n      83 | | `save_session()` / `load_session()` | Session state persistence |\n      84 | \n>>>   85 | ### context.py — Context & Memory Manager\n      86 | \n      87 | - Message history management\n    [上下文]\n      86 | \n      87 | - Message history management\n>>>   88 | - Three-layer memory orchestration\n      89 | - Compression engine integration\n      90 | - `asyncio.Lock` for concurrent safety (`get_messages_snapshot()`)\n    [上下文]\n     122 | \n     123 | 1. **Async architecture** — `async/await` + `asyncio.gather` for parallel tool execution\n>>>  124 | 2. **Three-layer memory** — Working → Episodic → Long-term, with BM25 retrieval\n     125 | 3. **Adaptive compression** — 4 strategies with intelligent selection + fallback\n     126 | 4. **State synchronization** — Plan completion triggers summary state updates\n\n[FILE] context_compression_strategy_architecture.md (53 处匹配)\n--------------------------------------------------------------------------------\n>>>    1 | # Mini Claude Code CLI 上下文压缩策略优化架构规划\n       2 | \n       3 | > 项目路径：`D:\\LLM\\mini-claude-code-cli`\n    [上下文]\n       5 | > 关联文档：\n       6 | > - `docs/architecture_summary.md`\n>>>    7 | > - `docs/memory_system_refactor_roadmap.md`\n       8 | > - `docs/new_long_term_memory_system.md`\n       9 | >\n    [上下文]\n       6 | > - `docs/architecture_summary.md`\n       7 | > - `docs/memory_system_refactor_roadmap.md`\n>>>    8 | > - `docs/new_long_term_memory_system.md`\n       9 | >\n      10 | > 核心结论：下一步压缩策略不应继续停留在“按消息裁剪 + 出错后清理”的层面，而应升级为 **按 turn 原子化建模、分层压缩、结构化状态迁移、长期记忆联动、发送前协议校验** 的上下文管理系统。\n    [上下文]\n       8 | > - `docs/new_long_term_memory_system.md`\n       9 | >\n>>>   10 | > 核心结论：下一步压...",
+      "files": [
+        "docs",
+        "architecture_summary.md",
+        "context.py",
+        "context_compression_strategy_architecture.md",
+        "docs/architecture_summary.md",
+        "docs/memory_system_refactor_roadmap.md",
+        "docs/new_long_term_memory_system.md",
+        "tests/test_openai_tool_pairing.py",
+        "tests/test_compression_engine.py",
+        "tests/test_memory_context_builder.py",
+        "tests/test_compression_planner.py",
+        "tests/test_context_assembly_budget.py",
+        "memory_system_refactor_roadmap.md",
+        "memory_layers.py",
+        "memory_models.py",
+        "memory_retrieval.py",
+        "compression_engine.py",
+        "prompts.py",
+        "retrieval_tool.py",
+        "index.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

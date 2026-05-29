@@ -1,0 +1,55 @@
+{
+  "id": "mem_386ace5c24e0406f97858dc247e648aa",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "        elif strategy == CompressionStrategy.KEYFRAME:\n            return self._compress_with_keyframe(messages, target_ratio, min_keep)\n        elif strategy == CompressionStrategy.SLIDING_WINDOW:\n            return self._compress_with_sliding_window(messages, target_ratio, min_keep)\n        else:\n            raise ValueError(f\"未知的压缩策略: {strategy}\")\n\n    def _select_strategy(self, messages: List[Dict[str, Any]]) -> CompressionStrategy:\n        \"\"\"\n        根据消息特征自动选择压缩策略\n\n        决策规则：\n        1. 错误密集（错误占比 > 30%）→ LLM_SUMMARY\n        2. 工具密集（工具调用占比 > 40%）→ KEYFRAME\n        3. 其他情况 → SLIDING_WINDOW（最可靠）\n\n        Args:\n            messages: 消息列表\n\n        Returns:\n            CompressionStrategy: 选择的策略\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:37:07.432961",
+  "updated_at": "2026-05-29T12:37:07.432961",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_66281c25c4f244ddb27147bdf4cb1319"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_66281c25c4f244ddb27147bdf4cb1319",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:37:07.432961",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 250,
+        "path": "core/compression_engine.py",
+        "raw_mode": true,
+        "start_line": 230
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "        elif strategy == CompressionStrategy.KEYFRAME:\n            return self._compress_with_keyframe(messages, target_ratio, min_keep)\n        elif strategy == CompressionStrategy.SLIDING_WINDOW:\n            return self._compress_with_sliding_window(messages, target_ratio, min_keep)\n        else:\n            raise ValueError(f\"未知的压缩策略: {strategy}\")\n\n    def _select_strategy(self, messages: List[Dict[str, Any]]) -> CompressionStrategy:\n        \"\"\"\n        根据消息特征自动选择压缩策略\n\n        决策规则：\n        1. 错误密集（错误占比 > 30%）→ LLM_SUMMARY\n        2. 工具密集（工具调用占比 > 40%）→ KEYFRAME\n        3. 其他情况 → SLIDING_WINDOW（最可靠）\n\n        Args:\n            messages: 消息列表\n\n        Returns:\n            CompressionStrategy: 选择的策略\n",
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

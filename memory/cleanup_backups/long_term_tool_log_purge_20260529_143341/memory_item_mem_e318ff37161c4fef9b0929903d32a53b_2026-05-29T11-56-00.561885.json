@@ -1,0 +1,55 @@
+{
+  "id": "mem_e318ff37161c4fef9b0929903d32a53b",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "import pytest\nfrom pydantic import BaseModel\n\nfrom core.engine import AgentEngine\nfrom core.plan import PlanManager\nfrom tools.base import BaseTool\n\n\nclass DummyArgs(BaseModel):\n    value: str = \"ok\"\n\n\nclass EchoTool(BaseTool):\n    name = \"echo\"\n    description = \"echo tool\"\n    args_schema = DummyArgs\n\n    def run(self, **kwargs) -> str:\n        return f\"echo:{kwargs.get('value', 'ok')}\"\n\n\nclass DummyPlanManager(PlanManager):\n    pass\n\n\ndef make_engine():\n    return AgentEngine(\n        tools=[EchoTool()],\n        model=\"gpt-test\",\n        plan_manager=DummyPlanManager(),\n        base_url=\"http://example.invalid/v1\",\n        api_key=\"test\",\n        session_id=\"test_tool_pairing_unit\",\n    )\n\n\ndef assert_valid_openai_tool_pairs(messages):\n    for i, msg in enumerate(messages):\n        if msg.get(\"role\") == \"assistant\" and msg.get(\"tool_calls\"):\n            expected_ids = {tc[\"id\"] for tc in msg[\"tool_calls\"]}\n            contiguous_ids = set()\n            j = i + 1\n            while j < len(messages) and messages[j].get(\"role\") == \"tool\":\n                contiguous_ids.add(messages[j].get(\"tool_call_id\"))\n                j += 1\n            assert expected_ids.issubset(contiguous_ids), (\n                f\"assistant tool_calls {expected_ids - contiguous_ids} are not followed \"\n                \"by contiguous tool responses\"\n            )\n\n        if msg.get(\"role\") == \"tool\":\n            block_start = i\n            while block_start > 0 and messages[block_start - 1].get(\"role\") == \"tool\":\n                block_start -= 1\n            assert block_start > 0\n            prev_msg = messages[block_start - 1]\n            assert prev_msg.get(\"role\") == \"assistant\" and prev_msg.get(\"tool_calls\")\n            assert msg.get(\"tool_call_id\") in {tc[\"id\"] for tc in prev_msg[\"tool_calls\"]}\n\n\n@pytest.mark.asyncio\nasync def test_pre_tool_memory_context_does_not_split_assistant_tool_pair(monkeypatch):\n    engine = make_engine()\n\n    async def fake_compress_messages():\n        return None\n\n    monkeypatch.setattr(engine, \"compress_messages\", fake_compress_messages)\n    monkeypatch.setattr(engine, \"_build_relevant_memory_context\", lambda user_input: \"\")\n    monkeypatch.setattr(engine, \"_observe_prompt_submit\", lambda user_input: None)\n    monkeypatch.setattr(engine, \"_observe_tool_result\", lambda name, inp, res: None)\n    monkeypatch.setattr(engine, \"_build_post_tool_failure_memory_context\", lambda name, res: \"\")\n    monkeypatch.setattr(engine, \"save_session\", lambda: None)\n    monkeypatch.setattr(engine, \"_remember_task_completion\", lambda user_input, final_ans: None)\n\n    calls = {\"count\": 0}\n\n    async def fake_call_llm(relevant_history=\"\", user_input=\"\"):\n        calls[\"count\"] += 1\n        if calls[\"count\"] == 1:\n            engine.last_oa_msg = {\n                \"role\": \"assistant\",\n                \"content\": \"\",\n                \"tool_calls\": [\n                    {\n                        \"id\": \"call_1\",\n                        \"type\": \"function\",\n                        \"function\": {\"name\": \"echo\", \"arguments\": '{\"value\":\"ok\"}'},\n                    }\n                ],\n            }\n            return [\n                {\"type\": \"tool_use\", \"id\": \"call_1\", \"name\": \"echo\", \"input\": {\"value\": \"ok\"}}\n            ], \"tool_use\"\n\n        engine.last_oa_msg = {\"role\": \"assistant\", \"content\": \"done\"}\n        return [{\"type\": \"text\", \"text\": \"done\"}], \"end_turn\"\n\n    monkeypatch.setattr(engine, \"_call_llm\", fake_call_llm)\n    monkeypatch.setattr(engine, \"_build_pre_tool_memory_context\", lambda name, inp: \"memory hint\")\n\n    result = await engine.execute_query(\"start\")\n\n    assert result == \"done\"\n    assert_valid_openai_tool_pairs(engine.context.messages)\n\n    assistant_index = next(i for i, m in enumerate(engine.context.messages) if m.get(\"tool_calls\"))\n    tool_index = next(i for i, m in enumerate(engine.context.messages) if m.get(\"role\") == \"tool\")\n    inserted_user_indices = [\n        i for i, m in enumerate(engine.context.messages)\n        if m...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T11:56:00.561885",
+  "updated_at": "2026-05-29T11:56:00.561885",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "tests/test_openai_tool_pairing.py"
+  ],
+  "source_observation_ids": [
+    "obs_5750657a848649cc9c7e2268d6458fb6"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_5750657a848649cc9c7e2268d6458fb6",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T11:56:00.561885",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 220,
+        "path": "tests/test_openai_tool_pairing.py",
+        "raw_mode": true,
+        "start_line": 1
+      },
+      "tool_output": "import pytest\nfrom pydantic import BaseModel\n\nfrom core.engine import AgentEngine\nfrom core.plan import PlanManager\nfrom tools.base import BaseTool\n\n\nclass DummyArgs(BaseModel):\n    value: str = \"ok\"\n\n\nclass EchoTool(BaseTool):\n    name = \"echo\"\n    description = \"echo tool\"\n    args_schema = DummyArgs\n\n    def run(self, **kwargs) -> str:\n        return f\"echo:{kwargs.get('value', 'ok')}\"\n\n\nclass DummyPlanManager(PlanManager):\n    pass\n\n\ndef make_engine():\n    return AgentEngine(\n        tools=[EchoTool()],\n        model=\"gpt-test\",\n        plan_manager=DummyPlanManager(),\n        base_url=\"http://example.invalid/v1\",\n        api_key=\"test\",\n        session_id=\"test_tool_pairing_unit\",\n    )\n\n\ndef assert_valid_openai_tool_pairs(messages):\n    for i, msg in enumerate(messages):\n        if msg.get(\"role\") == \"assistant\" and msg.get(\"tool_calls\"):\n            expected_ids = {tc[\"id\"] for tc in msg[\"tool_calls\"]}\n            contiguous_ids = set()\n            j = i + 1\n            while j < len(messages) and messages[j].get(\"role\") == \"tool\":\n                contiguous_ids.add(messages[j].get(\"tool_call_id\"))\n                j += 1\n            assert expected_ids.issubset(contiguous_ids), (\n                f\"assistant tool_calls {expected_ids - contiguous_ids} are not followed \"\n                \"by contiguous tool responses\"\n            )\n\n        if msg.get(\"role\") == \"tool\":\n            block_start = i\n            while block_start > 0 and messages[block_start - 1].get(\"role\") == \"tool\":\n                block_start -= 1\n            assert block_start > 0\n            prev_msg = messages[block_start - 1]\n            assert prev_msg.get(\"role\") == \"assistant\" and prev_msg.get(\"tool_calls\")\n            assert msg.get(\"tool_call_id\") in {tc[\"id\"] for tc in prev_msg[\"tool_calls\"]}\n\n\n@pytest.mark.asyncio\nasync def test_pre_tool_memory_context_does_not_split_assistant_tool_pair(monkeypatch):\n    engine = make_engine()\n\n    async def fake_compress_messages():\n        return None\n\n    monkeypatch.setattr(engine, \"compress_messages\", fake_compress_messages)\n    monkeypatch.setattr(engine, \"_build_relevant_memory_context\", lambda user_input: \"\")\n    monkeypatch.setattr(engine, \"_observe_prompt_submit\", lambda user_input: None)\n    monkeypatch.setattr(engine, \"_observe_tool_result\", lambda name, inp, res: None)\n    monkeypatch.setattr(engine, \"_build_post_tool_failure_memory_context\", lambda name, res: \"\")\n    monkeypatch.setattr(engine, \"save_session\", lambda: None)\n    monkeypatch.setattr(engine, \"_remember_task_completion\", lambda user_input, final_ans: None)\n\n    calls = {\"count\": 0}\n\n    async def fake_call_llm(relevant_history=\"\", user_input=\"\"):\n        calls[\"count\"] += 1\n        if calls[\"count\"] == 1:\n            engine.last_oa_msg = {\n                \"role\": \"assistant\",\n                \"content\": \"\",\n                \"tool_calls\": [\n                    {\n                        \"id\": \"call_1\",\n                        \"type\": \"function\",\n                        \"function\": {\"name\": \"echo\", \"arguments\": '{\"value\":\"ok\"}'},\n                    }\n                ],\n            }\n            return [\n                {\"type\": \"tool_use\", \"id\": \"call_1\", \"name\": \"echo\", \"input\": {\"value\": \"ok\"}}\n            ], \"tool_use\"\n\n        engine.last_oa_msg = {\"role\": \"assistant\", \"content\": \"done\"}\n        return [{\"type\": \"text\", \"text\": \"done\"}], \"end_turn\"\n\n    monkeypatch.setattr(engine, \"_call_llm\", fake_call_llm)\n    monkeypatch.setattr(engine, \"_build_pre_tool_memory_context\", lambda name, inp: \"memory hint\")\n\n    result = await engine.execute_query(\"start\")\n\n    assert result == \"done\"\n    assert_valid_openai_tool_pairs(engine.context.messages)\n\n    assistant_index = next(i for i, m in enumerate(engine.context.messages) if m.get(\"tool_calls\"))\n    tool_index = next(i for i, m in enumerate(engine.context.messages) if m.get(\"role\") == \"tool\")\n    inserted_user_indices = [\n        i for i, m in enumerate(engine.context.messages)\n        if m...",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_openai_tool_pairing.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

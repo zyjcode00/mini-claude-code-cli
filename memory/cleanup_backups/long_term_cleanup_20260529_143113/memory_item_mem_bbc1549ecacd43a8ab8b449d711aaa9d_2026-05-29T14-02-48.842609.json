@@ -1,0 +1,55 @@
+{
+  "id": "mem_bbc1549ecacd43a8ab8b449d711aaa9d",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "--- 文件: D:\\LLM\\memory\\agentmemory\\src\\state\\memory-utils.ts (第 1 至 24 行，共 24 行) ---\n   1 | import type { CompressedObservation, Memory } from \"../types.js\";\n   2 | \n   3 | // Wraps a Memory record in the CompressedObservation shape that\n   4 | // SearchIndex / VectorIndex / enrichment paths consume. Memories share\n   5 | // the same searchable fields as observations (title + content +\n   6 | // concepts + files); type is normalized to \"decision\" so memories stay\n   7 | // distinguishable in result metadata without colliding with observation\n   8 | // enums (file_read, command_run, …). The synthetic sessionId\n   9 | // (\"memory\" or memory.sessionIds[0]) is what enrich-side fallbacks key\n  10 | // off of when looking up the source record in KV.memories.\n  11 | export function memoryToObservation(memory: Memory): CompressedObservation {\n  12 |   return {\n  13 |     id: memory.id,\n  14 |     sessionId: memory.sessionIds?.[0] ?? \"memory\",\n  15 |     timestamp: memory.createdAt,\n  16 |     type: \"decision\",\n  17 |     title: memory.title,\n  18 |     facts: [memory.content],\n  19 |     narrative: memory.content,\n  20 |     concepts: memory.concepts,\n  21 |     files: memory.files,\n  22 |     importance: memory.strength,\n  23 |   };\n  24 | }\n--- 读取完毕 ---",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:02:48.842609",
+  "updated_at": "2026-05-29T14:02:48.842609",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "D:\\LLM\\memory\\agentmemory\\src\\state\\memory-utils.ts"
+  ],
+  "source_observation_ids": [
+    "obs_d45e4ae7a59f4f4eae89f33f1f78016c"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_d45e4ae7a59f4f4eae89f33f1f78016c",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:02:48.842609",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 220,
+        "path": "D:\\LLM\\memory\\agentmemory\\src\\state\\memory-utils.ts",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": "--- 文件: D:\\LLM\\memory\\agentmemory\\src\\state\\memory-utils.ts (第 1 至 24 行，共 24 行) ---\n   1 | import type { CompressedObservation, Memory } from \"../types.js\";\n   2 | \n   3 | // Wraps a Memory record in the CompressedObservation shape that\n   4 | // SearchIndex / VectorIndex / enrichment paths consume. Memories share\n   5 | // the same searchable fields as observations (title + content +\n   6 | // concepts + files); type is normalized to \"decision\" so memories stay\n   7 | // distinguishable in result metadata without colliding with observation\n   8 | // enums (file_read, command_run, …). The synthetic sessionId\n   9 | // (\"memory\" or memory.sessionIds[0]) is what enrich-side fallbacks key\n  10 | // off of when looking up the source record in KV.memories.\n  11 | export function memoryToObservation(memory: Memory): CompressedObservation {\n  12 |   return {\n  13 |     id: memory.id,\n  14 |     sessionId: memory.sessionIds?.[0] ?? \"memory\",\n  15 |     timestamp: memory.createdAt,\n  16 |     type: \"decision\",\n  17 |     title: memory.title,\n  18 |     facts: [memory.content],\n  19 |     narrative: memory.content,\n  20 |     concepts: memory.concepts,\n  21 |     files: memory.files,\n  22 |     importance: memory.strength,\n  23 |   };\n  24 | }\n--- 读取完毕 ---",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "D:\\LLM\\memory\\agentmemory\\src\\state\\memory-utils.ts"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

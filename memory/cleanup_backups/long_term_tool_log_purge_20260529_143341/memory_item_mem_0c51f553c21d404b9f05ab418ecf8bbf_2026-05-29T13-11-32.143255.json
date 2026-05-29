@@ -1,0 +1,55 @@
+{
+  "id": "mem_0c51f553c21d404b9f05ab418ecf8bbf",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "        for line in text.splitlines():\n            clean = line.strip(\" -\\t\")\n            if any(keyword in clean for keyword in [\"用户偏好\", \"prefer\", \"preference\", \"希望\", \"要求\"]):\n                preferences.append(clean[:220])\n\n    def _collect_commands_and_tests(\n        self,\n        turn: ConversationTurn,\n        text: str,\n        commands: List[Dict[str, Any]],\n        tests: List[Dict[str, Any]],\n    ) -> None:\n        command_patterns = [r\"python -m pytest[^\\n`]*\", r\"pytest[^\\n`]*\", r\"python [^\\n`]*\", r\"npm [^\\n`]*\"]\n        for pattern in command_patterns:\n            for match in re.findall(pattern, text, flags=re.IGNORECASE):\n                command = match.strip()\n                if not command:\n                    continue\n                status = \"failed\" if any(k in text.lower() for k in [\"failed\", \"exit code 1\", \"exit code 4\", \"失败\", \"❌\"]) else \"passed\" if any(k in text.lower() for k in [\"passed\", \"测试通过\", \"✅\"]) else \"unknown\"\n                item = {\"command\": command[:220], \"status\": status, \"source_turn_id\": turn.id}\n                commands.append(item)\n                if \"pytest\" in command.lower() or \"test\" in command.lower():\n                    tests.append({**item, \"summary\": (turn.tests[0] if turn.tests else command)[:220]})\n        for test_line in turn.tests:\n            status = \"failed\" if any(k in test_line.lower() for k in [\"failed\", \"error\", \"失败\", \"❌\"]) else \"passed\" if any(k in test_line.lower() for k in [\"passed\", \"成功\", \"✅\"]) else \"unknown\"\n            tests.append({\"command\": \"\", \"summary\": test_line[:220], \"status\": status, \"source_turn_id\": turn.id})\n\n    def _infer_file_action(self, path: str, turns: List[ConversationTurn]) -> str:\n        relevant_text = \"\\n\".join(self._turn_text(turn) for turn in turns if path in turn.files_touched).lower()\n        if any(keyword in relevant_text for keyword in [\"delete\", \"deleted\", \"删除\"]):\n            return \"deleted\"\n        if any(keyword in relevant_text for keyword in [\"create\", \"created\", \"新增\", \"创建\"]):\n            return \"created\"\n        return \"modified\"\n\n    def _looks_resolved_after(self, turns: List[ConversationTurn], error_turn: ConversationTurn) -> bool:\n        later_text = \"\\n\".join(self._turn_text(turn) for turn in turns if turn.start_index > error_turn.start_index).lower()\n        return any(keyword in later_text for keyword in [\"passed\", \"测试通过\", \"修复\", \"resolved\", \"✅\"])\n\n    def _extract_llm_decision_lines(self, summary_text: str) -> List[str]:\n        decisions = []\n        for line in summary_text.splitlines():\n            clean = line.strip(\" -\\t\")\n            if any(keyword in clean for keyword in [\"决策\", \"决定\", \"建议\", \"注意\", \"decision\"]):\n                decisions.append(clean[:260])\n        return decisions[:5]\n\n    def _dedupe_keep_order(self, values: List[str]) -> List[str]:\n        return list(dict.fromkeys(value for value in values if value))\n\n    def _dedupe_dicts(self, values: List[Dict[str, Any]], key: str) -> List[Dict[str, Any]]:\n        result = []\n        seen = set()\n        for item in values:\n            marker = item.get(key) or json.dumps(item, ensure_ascii=False, sort_keys=True)\n            if marker in seen:\n                continue\n            seen.add(marker)\n            result.append(item)\n        return result\n\n    def _is_tool_call_start(self, message: Dict[str, Any]) -> bool:\n        \"\"\"\n        判断是否是工具调用的开始（即 assistant 消息包含 tool_calls）\n\n        Args:\n            message: 消息对象\n\n        Returns:\n            bool: 是否是工具调用开始\n        \"\"\"\n        # 如果是 tool 消息，需要前一条 assistant 消息\n        if message.get(\"role\") == \"tool\":\n            return True\n\n        # 如果是 assistant 消息包含 tool_calls\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:11:32.143255",
+  "updated_at": "2026-05-29T13:11:32.143255",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_573f60c1f3374f16b03c8b029ff91294"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_573f60c1f3374f16b03c8b029ff91294",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:11:32.143255",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 1175,
+        "path": "core/compression_engine.py",
+        "raw_mode": true,
+        "start_line": 1100
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "        for line in text.splitlines():\n            clean = line.strip(\" -\\t\")\n            if any(keyword in clean for keyword in [\"用户偏好\", \"prefer\", \"preference\", \"希望\", \"要求\"]):\n                preferences.append(clean[:220])\n\n    def _collect_commands_and_tests(\n        self,\n        turn: ConversationTurn,\n        text: str,\n        commands: List[Dict[str, Any]],\n        tests: List[Dict[str, Any]],\n    ) -> None:\n        command_patterns = [r\"python -m pytest[^\\n`]*\", r\"pytest[^\\n`]*\", r\"python [^\\n`]*\", r\"npm [^\\n`]*\"]\n        for pattern in command_patterns:\n            for match in re.findall(pattern, text, flags=re.IGNORECASE):\n                command = match.strip()\n                if not command:\n                    continue\n                status = \"failed\" if any(k in text.lower() for k in [\"failed\", \"exit code 1\", \"exit code 4\", \"失败\", \"❌\"]) else \"passed\" if any(k in text.lower() for k in [\"passed\", \"测试通过\", \"✅\"]) else \"unknown\"\n                item = {\"command\": command[:220], \"status\": status, \"source_turn_id\": turn.id}\n                commands.append(item)\n                if \"pytest\" in command.lower() or \"test\" in command.lower():\n                    tests.append({**item, \"summary\": (turn.tests[0] if turn.tests else command)[:220]})\n        for test_line in turn.tests:\n            status = \"failed\" if any(k in test_line.lower() for k in [\"failed\", \"error\", \"失败\", \"❌\"]) else \"passed\" if any(k in test_line.lower() for k in [\"passed\", \"成功\", \"✅\"]) else \"unknown\"\n            tests.append({\"command\": \"\", \"summary\": test_line[:220], \"status\": status, \"source_turn_id\": turn.id})\n\n    def _infer_file_action(self, path: str, turns: List[ConversationTurn]) -> str:\n        relevant_text = \"\\n\".join(self._turn_text(turn) for turn in turns if path in turn.files_touched).lower()\n        if any(keyword in relevant_text for keyword in [\"delete\", \"deleted\", \"删除\"]):\n            return \"deleted\"\n        if any(keyword in relevant_text for keyword in [\"create\", \"created\", \"新增\", \"创建\"]):\n            return \"created\"\n        return \"modified\"\n\n    def _looks_resolved_after(self, turns: List[ConversationTurn], error_turn: ConversationTurn) -> bool:\n        later_text = \"\\n\".join(self._turn_text(turn) for turn in turns if turn.start_index > error_turn.start_index).lower()\n        return any(keyword in later_text for keyword in [\"passed\", \"测试通过\", \"修复\", \"resolved\", \"✅\"])\n\n    def _extract_llm_decision_lines(self, summary_text: str) -> List[str]:\n        decisions = []\n        for line in summary_text.splitlines():\n            clean = line.strip(\" -\\t\")\n            if any(keyword in clean for keyword in [\"决策\", \"决定\", \"建议\", \"注意\", \"decision\"]):\n                decisions.append(clean[:260])\n        return decisions[:5]\n\n    def _dedupe_keep_order(self, values: List[str]) -> List[str]:\n        return list(dict.fromkeys(value for value in values if value))\n\n    def _dedupe_dicts(self, values: List[Dict[str, Any]], key: str) -> List[Dict[str, Any]]:\n        result = []\n        seen = set()\n        for item in values:\n            marker = item.get(key) or json.dumps(item, ensure_ascii=False, sort_keys=True)\n            if marker in seen:\n                continue\n            seen.add(marker)\n            result.append(item)\n        return result\n\n    def _is_tool_call_start(self, message: Dict[str, Any]) -> bool:\n        \"\"\"\n        判断是否是工具调用的开始（即 assistant 消息包含 tool_calls）\n\n        Args:\n            message: 消息对象\n\n        Returns:\n            bool: 是否是工具调用开始\n        \"\"\"\n        # 如果是 tool 消息，需要前一条 assistant 消息\n        if message.get(\"role\") == \"tool\":\n            return True\n\n        # 如果是 assistant 消息包含 tool_calls\n",
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

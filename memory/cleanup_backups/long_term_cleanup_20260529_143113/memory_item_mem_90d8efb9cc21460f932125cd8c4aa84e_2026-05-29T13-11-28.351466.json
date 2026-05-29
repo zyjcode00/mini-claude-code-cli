@@ -1,0 +1,58 @@
+{
+  "id": "mem_90d8efb9cc21460f932125cd8c4aa84e",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 2 处匹配，分布在 1 个文件中\n\n================================================================================\n\n[FILE] compression_engine.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n    1103 |                 preferences.append(clean[:220])\n    1104 | \n>>> 1105 |     def _collect_commands_and_tests(\n    1106 |         self,\n    1107 |         turn: ConversationTurn,\n    [上下文]\n    1148 |         return list(dict.fromkeys(value for value in values if value))\n    1149 | \n>>> 1150 |     def _dedupe_dicts(self, values: List[Dict[str, Any]], key: str) -> List[Dict[str, Any]]:\n    1151 |         result = []\n    1152 |         seen = set()\n\n================================================================================\n[DONE] 搜索完成: 2 处匹配，1 个文件，共搜索 17 个文件",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:11:28.351466",
+  "updated_at": "2026-05-29T13:11:28.351466",
+  "concepts": [
+    "post_tool_use",
+    "search_code"
+  ],
+  "files": [
+    "core",
+    "compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_4c9256f1ff3e4f4a881c31f8b50677fa"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_4c9256f1ff3e4f4a881c31f8b50677fa",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:11:28.351466",
+      "event_type": "post_tool_use",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": true,
+        "context": 2,
+        "file_pattern": "*.py",
+        "path": "core",
+        "pattern": "def _dedupe_dicts|def _collect_commands_and_tests|def _extract_tool"
+      },
+      "tool_output": "[SEARCH] 搜索结果: 共找到 2 处匹配，分布在 1 个文件中\n\n================================================================================\n\n[FILE] compression_engine.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n    1103 |                 preferences.append(clean[:220])\n    1104 | \n>>> 1105 |     def _collect_commands_and_tests(\n    1106 |         self,\n    1107 |         turn: ConversationTurn,\n    [上下文]\n    1148 |         return list(dict.fromkeys(value for value in values if value))\n    1149 | \n>>> 1150 |     def _dedupe_dicts(self, values: List[Dict[str, Any]], key: str) -> List[Dict[str, Any]]:\n    1151 |         result = []\n    1152 |         seen = set()\n\n================================================================================\n[DONE] 搜索完成: 2 处匹配，1 个文件，共搜索 17 个文件",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core",
+        "compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "mem_9b0361f70f4f4e62906900a4deab4ed6",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: mark_task_done",
+  "content": "✅ 任务 1 已完成！进度: 1/5\n\n当前计划:\n目标: 继续执行上下文压缩重构 Phase 2：利用 Turn 元数据增强关键帧压缩和摘要选择\n1. ✅ 阅读 Phase 2 相关架构文档、现有 TurnBuilder 与 CompressionEngine 实现，明确待改造点\n2. ⏳ 设计并实现 Turn 重要性/分类/文件/错误/测试等元数据提取或评分能力\n3. ⏳ 将 Turn 元数据接入关键帧压缩和摘要候选选择流程，保持 tool pair 原子性\n4. ⏳ 新增或更新 pytest 覆盖 Phase 2 元数据提取、关键帧选择、摘要选择及回归场景\n5. ⏳ 运行相关 pytest，修复失败并总结 Phase 2 改动与后续建议",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:04:23.197922",
+  "updated_at": "2026-05-29T12:04:23.197922",
+  "concepts": [
+    "tool_failure",
+    "mark_task_done"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_2b3778bdbbf34615b2941a950a923b57"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_2b3778bdbbf34615b2941a950a923b57",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:04:23.197922",
+      "event_type": "tool_failure",
+      "tool_name": "mark_task_done",
+      "tool_input": {
+        "task_id": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "✅ 任务 1 已完成！进度: 1/5\n\n当前计划:\n目标: 继续执行上下文压缩重构 Phase 2：利用 Turn 元数据增强关键帧压缩和摘要选择\n1. ✅ 阅读 Phase 2 相关架构文档、现有 TurnBuilder 与 CompressionEngine 实现，明确待改造点\n2. ⏳ 设计并实现 Turn 重要性/分类/文件/错误/测试等元数据提取或评分能力\n3. ⏳ 将 Turn 元数据接入关键帧压缩和摘要候选选择流程，保持 tool pair 原子性\n4. ⏳ 新增或更新 pytest 覆盖 Phase 2 元数据提取、关键帧选择、摘要选择及回归场景\n5. ⏳ 运行相关 pytest，修复失败并总结 Phase 2 改动与后续建议",
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

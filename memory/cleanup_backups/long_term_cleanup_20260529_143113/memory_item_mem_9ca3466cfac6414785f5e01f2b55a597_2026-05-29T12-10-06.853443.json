@@ -1,0 +1,54 @@
+{
+  "id": "mem_9ca3466cfac6414785f5e01f2b55a597",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: execute_bash",
+  "content": "STDOUT:\n============================= test session starts =============================\r\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\r\ncachedir: .pytest_cache\r\nrootdir: D:\\LLM\\mini-claude-code-cli\r\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\r\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\r\ncollecting ... collected 22 items\r\n\r\ntests/test_compression_engine.py::test_compression_engine_init PASSED    [  4%]\r\ntests/test_compression_engine.py::test_select_strategy_error_dense PASSED [  9%]\r\ntests/test_compression_engine.py::test_select_strategy_tool_dense PASSED [ 13%]\r\ntests/test_compression_engine.py::test_select_strategy_simple PASSED     [ 18%]\r\ntests/test_compression_engine.py::test_select_strategy_empty PASSED      [ 22%]\r\ntests/test_compression_engine.py::test_select_strategy_function PASSED   [ 27%]\r\ntests/test_compression_engine.py::test_sliding_window_compression PASSED [ 31%]\r\ntests/test_compression_engine.py::test_sliding_window_preserve_order PASSED [ 36%]\r\ntests/test_compression_engine.py::test_keyframe_compression PASSED       [ 40%]\r\ntests/test_compression_engine.py::test_keyframe_extract_user_messages PASSED [ 45%]\r\ntests/test_compression_engine.py::test_keyframe_extract_tool_messages PASSED [ 50%]\r\ntests/test_compression_engine.py::test_llm_summary_compression PASSED    [ 54%]\r\ntests/test_compression_engine.py::test_llm_summary_without_llm PASSED    [ 59%]\r\ntests/test_compression_engine.py::test_auto_strategy_selection PASSED    [ 63%]\r\ntests/test_compression_engine.py::test_compression_ratio PASSED          [ 68%]\r\ntests/test_compression_engine.py::test_empty_messages PASSED             [ 72%]\r\ntests/test_compression_engine.py::test_context_manager_compression_engine PASSED [ 77%]\r\ntests/test_compression_engine.py::test_context_manager_compress_with_strategy PASSED [ 81%]\r\ntests/test_compression_engine.py::test_context_manager_compress_auto_strategy FAILED [ 86%]\r\ntests/test_compression_engine.py::test_context_manager_compress_with_summary PASSED [ 90%]\r\ntests/test_compression_engine.py::test_compression_result_dataclass PASSED [ 95%]\r\ntests/test_compression_engine.py::test_compression_performance PASSED    [100%]\r\n\r\n================================== FAILURES ===================================\r\n_________________ test_context_manager_compress_auto_strategy _________________\r\n\r\n    @pytest.mark.asyncio\r\n    async def test_context_manager_compress_auto_strategy():\r\n        \"\"\"测试 ContextManager 自动策略压缩\"\"\"\r\n        ctx = ContextManager(max_history=50, min_keep=4)\r\n    \r\n        # 添加工具密集的消息\r\n        for i in range(30):\r\n            ctx.add_message({\"role\": \"user\", \"content\": f\"任务 {i}\"})\r\n            ctx.add_message({\"role\": \"tool\", \"content\": f\"工具结果 {i}\"})\r\n    \r\n        # 自动选择策略（应该选择 KEYFRAME）\r\n        success = await ctx.compress(mock_llm_summarizer)\r\n    \r\n        assert success\r\n>       assert len(ctx.messages) <= 10\r\nE       AssertionError: assert 30 <= 10\r\nE        +  where 30 = len([{'role': 'user', 'content': '\\u4efb\\u52a1 0'}, {'role': 'user', 'content': '\\u4efb\\u52a1 1'}, {'role': 'user', 'content': '\\u4efb\\u52a1 2'}, {'role': 'user', 'content': '\\u4efb\\u52a1 3'}, {'role': 'user', 'content': '\\u4efb\\u52a1 4'}, {'role': 'user', 'content': '\\u4efb\\u52a1 5'}, {'role': 'user', 'content': '\\u4efb\\u52a1 6'}, {'role': 'user', 'content': '\\u4efb\\u52a1 7'}, {'role': 'user', 'content': '\\u4efb\\u52a1 8'}, {'role': 'user', 'content': '\\u4efb\\u52a1 9'}, {'role': 'user', 'content': '\\u4efb\\u52a1 10'}, {'role': 'user', 'content': '\\u4efb\\u52a1 11'}, {'role': 'user', 'content': '\\u4efb\\u52a1 12'}, {'role': 'user', 'content': '\\u4efb\\u52a1 13'}, {'role': 'user', 'content': '\\u4efb\\u52a1 14'}, {'role': 'user', 'content': '\\u4efb\\u52a1 15'}, {'role': 'user', 'content': '\\u4efb\\u52a1 16'}, {'role': 'user', 'content': '\\u4efb\\u52a1 17'}, {'role': 'user', 'content': '\\u4efb\\u52a1 18'}, {'role': 'user', 'c...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:10:06.853443",
+  "updated_at": "2026-05-29T12:10:06.853443",
+  "concepts": [
+    "tool_failure",
+    "execute_bash"
+  ],
+  "files": [
+    "tests/test_compression_engine.py",
+    "tests\\test_compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_598317747b8f43b7b900de71595cb587"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_598317747b8f43b7b900de71595cb587",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:10:06.853443",
+      "event_type": "tool_failure",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -m pytest tests/test_compression_engine.py -vv"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "STDOUT:\n============================= test session starts =============================\r\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\r\ncachedir: .pytest_cache\r\nrootdir: D:\\LLM\\mini-claude-code-cli\r\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\r\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\r\ncollecting ... collected 22 items\r\n\r\ntests/test_compression_engine.py::test_compression_engine_init PASSED    [  4%]\r\ntests/test_compression_engine.py::test_select_strategy_error_dense PASSED [  9%]\r\ntests/test_compression_engine.py::test_select_strategy_tool_dense PASSED [ 13%]\r\ntests/test_compression_engine.py::test_select_strategy_simple PASSED     [ 18%]\r\ntests/test_compression_engine.py::test_select_strategy_empty PASSED      [ 22%]\r\ntests/test_compression_engine.py::test_select_strategy_function PASSED   [ 27%]\r\ntests/test_compression_engine.py::test_sliding_window_compression PASSED [ 31%]\r\ntests/test_compression_engine.py::test_sliding_window_preserve_order PASSED [ 36%]\r\ntests/test_compression_engine.py::test_keyframe_compression PASSED       [ 40%]\r\ntests/test_compression_engine.py::test_keyframe_extract_user_messages PASSED [ 45%]\r\ntests/test_compression_engine.py::test_keyframe_extract_tool_messages PASSED [ 50%]\r\ntests/test_compression_engine.py::test_llm_summary_compression PASSED    [ 54%]\r\ntests/test_compression_engine.py::test_llm_summary_without_llm PASSED    [ 59%]\r\ntests/test_compression_engine.py::test_auto_strategy_selection PASSED    [ 63%]\r\ntests/test_compression_engine.py::test_compression_ratio PASSED          [ 68%]\r\ntests/test_compression_engine.py::test_empty_messages PASSED             [ 72%]\r\ntests/test_compression_engine.py::test_context_manager_compression_engine PASSED [ 77%]\r\ntests/test_compression_engine.py::test_context_manager_compress_with_strategy PASSED [ 81%]\r\ntests/test_compression_engine.py::test_context_manager_compress_auto_strategy FAILED [ 86%]\r\ntests/test_compression_engine.py::test_context_manager_compress_with_summary PASSED [ 90%]\r\ntests/test_compression_engine.py::test_compression_result_dataclass PASSED [ 95%]\r\ntests/test_compression_engine.py::test_compression_performance PASSED    [100%]\r\n\r\n================================== FAILURES ===================================\r\n_________________ test_context_manager_compress_auto_strategy _________________\r\n\r\n    @pytest.mark.asyncio\r\n    async def test_context_manager_compress_auto_strategy():\r\n        \"\"\"测试 ContextManager 自动策略压缩\"\"\"\r\n        ctx = ContextManager(max_history=50, min_keep=4)\r\n    \r\n        # 添加工具密集的消息\r\n        for i in range(30):\r\n            ctx.add_message({\"role\": \"user\", \"content\": f\"任务 {i}\"})\r\n            ctx.add_message({\"role\": \"tool\", \"content\": f\"工具结果 {i}\"})\r\n    \r\n        # 自动选择策略（应该选择 KEYFRAME）\r\n        success = await ctx.compress(mock_llm_summarizer)\r\n    \r\n        assert success\r\n>       assert len(ctx.messages) <= 10\r\nE       AssertionError: assert 30 <= 10\r\nE        +  where 30 = len([{'role': 'user', 'content': '\\u4efb\\u52a1 0'}, {'role': 'user', 'content': '\\u4efb\\u52a1 1'}, {'role': 'user', 'content': '\\u4efb\\u52a1 2'}, {'role': 'user', 'content': '\\u4efb\\u52a1 3'}, {'role': 'user', 'content': '\\u4efb\\u52a1 4'}, {'role': 'user', 'content': '\\u4efb\\u52a1 5'}, {'role': 'user', 'content': '\\u4efb\\u52a1 6'}, {'role': 'user', 'content': '\\u4efb\\u52a1 7'}, {'role': 'user', 'content': '\\u4efb\\u52a1 8'}, {'role': 'user', 'content': '\\u4efb\\u52a1 9'}, {'role': 'user', 'content': '\\u4efb\\u52a1 10'}, {'role': 'user', 'content': '\\u4efb\\u52a1 11'}, {'role': 'user', 'content': '\\u4efb\\u52a1 12'}, {'role': 'user', 'content': '\\u4efb\\u52a1 13'}, {'role': 'user', 'content': '\\u4efb\\u52a1 14'}, {'role': 'user', 'content': '\\u4efb\\u52a1 15'}, {'role': 'user', 'content': '\\u4efb\\u52a1 16'}, {'role': 'user', 'content': '\\u4efb\\u52a1 17'}, {'role': 'user', 'content': '\\u4efb\\u52a1 18'}, {'role': 'user', 'c...",
+      "files": [
+        "tests/test_compression_engine.py",
+        "tests\\test_compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

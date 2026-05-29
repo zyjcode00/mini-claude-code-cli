@@ -1,0 +1,61 @@
+{
+  "id": "mem_3914b6da28d54fe1890e2390395bdcfd",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: tests/test_turn_builder.py (第 150 至 260 行，共 290 行) ---\n 150 |     ]\n 151 | \n 152 |     result = await engine.compress(\n 153 |         messages=messages,\n 154 |         strategy=CompressionStrategy.SLIDING_WINDOW,\n 155 |         target_ratio=0.4,\n 156 |         min_keep=2,\n 157 |     )\n 158 | \n 159 |     assert result.success\n 160 |     assert result.compressed_messages == messages[1:]\n 161 |     assert_valid_openai_tool_pairs(result.compressed_messages)\n 162 | \n 163 | \n 164 | def test_turn_builder_extracts_phase2_metadata_for_code_error_and_tests():\n 165 |     messages = [\n 166 |         {\n 167 |             \"role\": \"tool\",\n 168 |             \"tool_call_id\": \"call_meta\",\n 169 |             \"name\": \"execute_bash\",\n 170 |             \"content\": \"pytest tests/test_core.py\\nFAILED tests/test_core.py::test_x\\nTraceback: ValueError in core/engine.py\",\n 171 |         },\n 172 |         {\n 173 |             \"role\": \"assistant\",\n 174 |             \"content\": \"已修改 core/engine.py，并计划继续运行 pytest tests/test_core.py\",\n 175 |         },\n 176 |     ]\n 177 | \n 178 |     turns = TurnBuilder().build(messages)\n 179 |     orphan_turn = turns[0]\n 180 |     assistant_turn = turns[1]\n 181 | \n 182 |     assert {\"tool\", \"error\", \"test\", \"command\"}.issubset(set(orphan_turn.categories))\n 183 |     assert \"core/engine.py\" in orphan_turn.files_touched\n 184 |     assert orphan_turn.errors\n 185 |     assert orphan_turn.tests\n 186 |     assert orphan_turn.importance > 0.35\n 187 | \n 188 |     assert {\"planning\", \"code_edit\", \"test\"}.issubset(set(assistant_turn.categories))\n 189 |     assert \"core/engine.py\" in assistant_turn.files_touched\n 190 |     assert assistant_turn.importance > 0.5\n 191 | \n 192 | \n 193 | @pytest.mark.asyncio\n 194 | async def test_keyframe_uses_turn_metadata_and_keeps_tool_pairs_atomic():\n 195 |     engine = CompressionEngine()\n 196 |     messages = [\n 197 |         {\"role\": \"user\", \"content\": \"old low value chat\"},\n 198 |         {\"role\": \"assistant\", \"content\": \"generic reply\"},\n 199 |         {\"role\": \"user\", \"content\": \"请修改 core/engine.py 并运行测试\"},\n 200 |         {\n 201 |             \"role\": \"assistant\",\n 202 |             \"content\": \"\",\n 203 |             \"tool_calls\": [tool_call(\"call_edit\", \"edit_file\")],\n 204 |         },\n 205 |         {\n 206 |             \"role\": \"tool\",\n 207 |             \"tool_call_id\": \"call_edit\",\n 208 |             \"name\": \"edit_file\",\n 209 |             \"content\": \"成功修改 core/engine.py\",\n 210 |         },\n 211 |         {\n 212 |             \"role\": \"tool\",\n 213 |             \"tool_call_id\": \"call_orphan\",\n 214 |             \"name\": \"execute_bash\",\n 215 |             \"content\": \"orphan should be removed\",\n 216 |         },\n 217 |         {\n 218 |             \"role\": \"assistant\",\n 219 |             \"content\": \"pytest tests/test_engine.py FAILED\\nTraceback: AssertionError in tests/test_engine.py\",\n 220 |         },\n 221 |         {\"role\": \"assistant\", \"content\": \"final recent status\"},\n 222 |     ]\n 223 | \n 224 |     result = await engine.compress(\n 225 |         messages=messages,\n 226 |         strategy=CompressionStrategy.KEYFRAME,\n 227 |         target_ratio=0.25,\n 228 |         min_keep=2,\n 229 |     )\n 230 | \n 231 |     assert result.success\n 232 |     assert result.strategy == CompressionStrategy.KEYFRAME\n 233 |     assert messages[3] in result.compressed_messages\n 234 |     assert messages[4] in result.compressed_messages\n 235 |     assert messages[5] not in result.compressed_messages\n 236 |     assert messages[6] in result.compressed_messages\n 237 |     assert \"error\" in result.metadata[\"selected_categories\"]\n 238 |     assert \"test\" in result.metadata[\"selected_categories\"]\n 239 |     assert \"core/engine.py\" in result.metadata[\"files_touched\"]\n 240 |     assert_valid_openai_tool_pairs(result.compressed_messages)\n 241 | \n 242 | \n 243 | @pytest.mark.asyncio\n 244 | async def test_llm_summary_uses_metadata_filtered_summary_candidates_and_recent_complete_turns():\n 245 |     captured = {}\n 246 | \n 24...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:08:13.100381",
+  "updated_at": "2026-05-29T12:08:13.100381",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "tests/test_turn_builder.py",
+    "tests/test_core.py",
+    "core/engine.py",
+    "tests/test_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_5106ebf257ac4bab9ff572a5628bdadc"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_5106ebf257ac4bab9ff572a5628bdadc",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:08:13.099324",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 260,
+        "path": "tests/test_turn_builder.py",
+        "raw_mode": false,
+        "start_line": 150
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: tests/test_turn_builder.py (第 150 至 260 行，共 290 行) ---\n 150 |     ]\n 151 | \n 152 |     result = await engine.compress(\n 153 |         messages=messages,\n 154 |         strategy=CompressionStrategy.SLIDING_WINDOW,\n 155 |         target_ratio=0.4,\n 156 |         min_keep=2,\n 157 |     )\n 158 | \n 159 |     assert result.success\n 160 |     assert result.compressed_messages == messages[1:]\n 161 |     assert_valid_openai_tool_pairs(result.compressed_messages)\n 162 | \n 163 | \n 164 | def test_turn_builder_extracts_phase2_metadata_for_code_error_and_tests():\n 165 |     messages = [\n 166 |         {\n 167 |             \"role\": \"tool\",\n 168 |             \"tool_call_id\": \"call_meta\",\n 169 |             \"name\": \"execute_bash\",\n 170 |             \"content\": \"pytest tests/test_core.py\\nFAILED tests/test_core.py::test_x\\nTraceback: ValueError in core/engine.py\",\n 171 |         },\n 172 |         {\n 173 |             \"role\": \"assistant\",\n 174 |             \"content\": \"已修改 core/engine.py，并计划继续运行 pytest tests/test_core.py\",\n 175 |         },\n 176 |     ]\n 177 | \n 178 |     turns = TurnBuilder().build(messages)\n 179 |     orphan_turn = turns[0]\n 180 |     assistant_turn = turns[1]\n 181 | \n 182 |     assert {\"tool\", \"error\", \"test\", \"command\"}.issubset(set(orphan_turn.categories))\n 183 |     assert \"core/engine.py\" in orphan_turn.files_touched\n 184 |     assert orphan_turn.errors\n 185 |     assert orphan_turn.tests\n 186 |     assert orphan_turn.importance > 0.35\n 187 | \n 188 |     assert {\"planning\", \"code_edit\", \"test\"}.issubset(set(assistant_turn.categories))\n 189 |     assert \"core/engine.py\" in assistant_turn.files_touched\n 190 |     assert assistant_turn.importance > 0.5\n 191 | \n 192 | \n 193 | @pytest.mark.asyncio\n 194 | async def test_keyframe_uses_turn_metadata_and_keeps_tool_pairs_atomic():\n 195 |     engine = CompressionEngine()\n 196 |     messages = [\n 197 |         {\"role\": \"user\", \"content\": \"old low value chat\"},\n 198 |         {\"role\": \"assistant\", \"content\": \"generic reply\"},\n 199 |         {\"role\": \"user\", \"content\": \"请修改 core/engine.py 并运行测试\"},\n 200 |         {\n 201 |             \"role\": \"assistant\",\n 202 |             \"content\": \"\",\n 203 |             \"tool_calls\": [tool_call(\"call_edit\", \"edit_file\")],\n 204 |         },\n 205 |         {\n 206 |             \"role\": \"tool\",\n 207 |             \"tool_call_id\": \"call_edit\",\n 208 |             \"name\": \"edit_file\",\n 209 |             \"content\": \"成功修改 core/engine.py\",\n 210 |         },\n 211 |         {\n 212 |             \"role\": \"tool\",\n 213 |             \"tool_call_id\": \"call_orphan\",\n 214 |             \"name\": \"execute_bash\",\n 215 |             \"content\": \"orphan should be removed\",\n 216 |         },\n 217 |         {\n 218 |             \"role\": \"assistant\",\n 219 |             \"content\": \"pytest tests/test_engine.py FAILED\\nTraceback: AssertionError in tests/test_engine.py\",\n 220 |         },\n 221 |         {\"role\": \"assistant\", \"content\": \"final recent status\"},\n 222 |     ]\n 223 | \n 224 |     result = await engine.compress(\n 225 |         messages=messages,\n 226 |         strategy=CompressionStrategy.KEYFRAME,\n 227 |         target_ratio=0.25,\n 228 |         min_keep=2,\n 229 |     )\n 230 | \n 231 |     assert result.success\n 232 |     assert result.strategy == CompressionStrategy.KEYFRAME\n 233 |     assert messages[3] in result.compressed_messages\n 234 |     assert messages[4] in result.compressed_messages\n 235 |     assert messages[5] not in result.compressed_messages\n 236 |     assert messages[6] in result.compressed_messages\n 237 |     assert \"error\" in result.metadata[\"selected_categories\"]\n 238 |     assert \"test\" in result.metadata[\"selected_categories\"]\n 239 |     assert \"core/engine.py\" in result.metadata[\"files_touched\"]\n 240 |     assert_valid_openai_tool_pairs(result.compressed_messages)\n 241 | \n 242 | \n 243 | @pytest.mark.asyncio\n 244 | async def test_llm_summary_uses_metadata_filtered_summary_candidates_and_recent_complete_turns():\n 245 |     captured = {}\n 246 | \n 24...",
+      "files": [
+        "tests/test_turn_builder.py",
+        "tests/test_core.py",
+        "core/engine.py",
+        "tests/test_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

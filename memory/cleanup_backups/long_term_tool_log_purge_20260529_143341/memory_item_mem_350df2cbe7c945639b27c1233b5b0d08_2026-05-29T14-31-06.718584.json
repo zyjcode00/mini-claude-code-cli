@@ -1,0 +1,53 @@
+{
+  "id": "mem_350df2cbe7c945639b27c1233b5b0d08",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: write_full_file",
+  "content": "成功: 已写入 tmp_cleanup_long_term.py",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:31:06.718584",
+  "updated_at": "2026-05-29T14:31:06.718584",
+  "concepts": [
+    "post_tool_use",
+    "write_full_file"
+  ],
+  "files": [
+    "tmp_cleanup_long_term.py"
+  ],
+  "source_observation_ids": [
+    "obs_cf7b4c5870a543ceaf656a31f756df67"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_cf7b4c5870a543ceaf656a31f756df67",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:31:06.718584",
+      "event_type": "post_tool_use",
+      "tool_name": "write_full_file",
+      "tool_input": {
+        "content": "import json\nimport shutil\nfrom collections import Counter\nfrom datetime import datetime\nfrom pathlib import Path\n\nbase = Path('memory/long_term')\nbackup_root = Path('memory/cleanup_backups')\nstamp = datetime.now().strftime('%Y%m%d_%H%M%S')\nbackup_dir = backup_root / f'long_term_cleanup_{stamp}'\nbackup_dir.mkdir(parents=True, exist_ok=True)\n\nremoved = []\nerrors = []\nkept_items = 0\nremoved_reason = Counter()\n\nfor path in sorted(base.iterdir()):\n    name = path.name\n    is_tmp = name.startswith('index.') and name.endswith('.tmp')\n    is_corrupt_backup = '.corrupt_' in name and name.endswith('.bak')\n    if path.is_file() and (name == '.gitkeep' or is_tmp or name == 'index.pending.json' or is_corrupt_backup):\n        shutil.copy2(path, backup_dir / name)\n        path.unlink()\n        removed.append(str(path))\n        removed_reason['non_canonical_runtime_or_placeholder'] += 1\n\nfor path in sorted(base.glob('memory_item_*.json')):\n    try:\n        data = json.loads(path.read_text(encoding='utf-8'))\n    except Exception as e:\n        shutil.copy2(path, backup_dir / path.name)\n        path.unlink()\n        removed.append(str(path))\n        removed_reason['invalid_json'] += 1\n        errors.append((str(path), str(e)))\n        continue\n\n    title = str(data.get('title') or '')\n    content = str(data.get('content') or '')\n    kind = str(data.get('kind') or data.get('type') or '')\n    importance = float(data.get('importance') or 0)\n    metadata = data.get('metadata') if isinstance(data.get('metadata'), dict) else {}\n    source = str(metadata.get('source') or '').lower()\n    task_type = str(metadata.get('task_type') or '').lower()\n\n    is_tool_log = title.startswith('工具执行成功:') or title.startswith('工具执行失败:')\n    is_raw_transcript = content.startswith('STDOUT:') or content.startswith('[SEARCH]') or content.startswith('--- 文件:') or content.startswith('📁 ./')\n    is_low_importance_tool_memory = kind in {'workflow', 'bug'} and importance <= 0.30 and (source in {'test', 'memory', 'default'} or task_type in {'test_failure', 'general'})\n\n    if is_tool_log and (is_raw_transcript or is_low_importance_tool_memory):\n        shutil.copy2(path, backup_dir / path.name)\n        path.unlink()\n        removed.append(str(path))\n        removed_reason['low_quality_tool_execution_log'] += 1\n    else:\n        kept_items += 1\n\nprint('BASE', base.resolve())\nprint('BACKUP', backup_dir.resolve())\nprint('removed_total', len(removed))\nprint('kept_memory_items', kept_items)\nprint('removed_reason', dict(removed_reason))\nif errors:\n    print('json_errors', errors[:10])\nprint('sample_removed')\nfor p in removed[:20]:\n    print(' ', p)\n",
+        "path": "tmp_cleanup_long_term.py"
+      },
+      "tool_output": "成功: 已写入 tmp_cleanup_long_term.py",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tmp_cleanup_long_term.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

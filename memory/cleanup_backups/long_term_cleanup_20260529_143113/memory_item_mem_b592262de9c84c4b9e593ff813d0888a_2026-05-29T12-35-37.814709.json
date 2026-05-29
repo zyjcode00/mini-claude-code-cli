@@ -1,0 +1,65 @@
+{
+  "id": "mem_b592262de9c84c4b9e593ff813d0888a",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: tests/test_memory_phase4.py (第 1 至 164 行，共 164 行) ---\n   1 | \"\"\"阶段4：统一检索层与 Hybrid Recall 测试。\"\"\"\n   2 | \n   3 | from __future__ import annotations\n   4 | \n   5 | from datetime import datetime, timedelta\n   6 | \n   7 | from core.memory_items import MemoryItem, MemoryKind\n   8 | from core.memory_manager import MemoryManager\n   9 | from core.memory_models import ErrorRecord, FileChange, SessionSummary\n  10 | from core.memory_retrieval import MemoryDocument\n  11 | from tools import get_default_tools\n  12 | from tools.memory_tool import MemoryErrorHistoryTool, MemoryFileHistoryTool\n  13 | \n  14 | \n  15 | def _summary(session_id: str, goal: str, text: str, file_path: str, error_type: str = \"\") -> SessionSummary:\n  16 |     errors = []\n  17 |     if error_type:\n  18 |         errors.append(ErrorRecord(\n  19 |             error_type=error_type,\n  20 |             error_message=f\"{error_type}: import failed in {file_path}\",\n  21 |             timestamp=datetime.now().isoformat(),\n  22 |             file_path=file_path,\n  23 |             solution=\"补充缺失依赖并重新运行 pytest\",\n  24 |             resolved=True,\n  25 |         ))\n  26 |     return SessionSummary(\n  27 |         session_id=session_id,\n  28 |         timestamp=(datetime.now() - timedelta(days=1)).isoformat(),\n  29 |         summary_text=text,\n  30 |         task_goal=goal,\n  31 |         task_status=\"completed\",\n  32 |         files_changed=[FileChange(path=file_path, action=\"modified\", summary=text, importance=0.8)],\n  33 |         errors_encountered=errors,\n  34 |         key_decisions=[\"统一使用 MemoryRetriever.hybrid_recall\"],\n  35 |         importance=0.7,\n  36 |     )\n  37 | \n  38 | \n  39 | def test_hybrid_recall_unifies_memory_items_and_session_summaries(tmp_path):\n  40 |     manager = MemoryManager(long_term_storage_dir=str(tmp_path / \"long_term\"))\n  41 |     summary = _summary(\n  42 |         \"s1\",\n  43 |         \"修复检索工具\",\n  44 |         \"SearchMemoryTool 需要接入统一 Hybrid Recall 检索层\",\n  45 |         \"tools/retrieval_tool.py\",\n  46 |     )\n  47 |     manager.save_summary(summary)\n  48 |     manager.save_memory_item(MemoryItem(\n  49 |         kind=MemoryKind.ARCHITECTURE.value,\n  50 |         title=\"Hybrid Recall 架构\",\n  51 |         content=\"MemoryRetriever 将 MemoryItem 与 SessionSummary 统一为 MemoryDocument 后加权排序。\",\n  52 |         files=[\"core/memory_retrieval.py\"],\n  53 |         concepts=[\"hybrid\", \"recall\", \"MemoryDocument\"],\n  54 |         importance=0.95,\n  55 |     ))\n  56 | \n  57 |     results = manager.hybrid_recall(\"Hybrid Recall MemoryRetriever\", top_k=5)\n  58 | \n  59 |     assert len(results) >= 2\n  60 |     assert all(isinstance(result.item, MemoryItem) for result in results)\n  61 |     assert results[0].item.title == \"Hybrid Recall 架构\"\n  62 |     assert results[0].source in {\"memory_item\", \"long_term_memory_item\", \"long_term_items\"}\n  63 |     assert any(result.item.kind == MemoryKind.SUMMARY.value for result in results)\n  64 |     assert all(result.reason for result in results)\n  65 | \n  66 | \n  67 | def test_memory_document_from_summary_preserves_file_error_metadata():\n  68 |     summary = _summary(\n  69 |         \"s_error\",\n  70 |         \"修复 pytest 导入错误\",\n  71 |         \"pytest 运行失败，原因是 ModuleNotFoundError，需要调整依赖。\",\n  72 |         \"tests/test_memory_phase4.py\",\n  73 |         \"ModuleNotFoundError\",\n  74 |     )\n  75 | \n  76 |     document = MemoryDocument.from_session_summary(summary, source_type=\"episodic\")\n  77 | \n  78 |     assert document.source_type == \"episodic\"\n  79 |     assert document.files == [\"tests/test_memory_phase4.py\"]\n  80 |     assert \"ModuleNotFoundError\" in document.error_types\n  81 |     assert \"pytest\" in document.content\n  82 |     assert document.to_memory_item().kind == MemoryKind.SUMMARY.value\n  83 | \n  84 | \n  85 | def test_file_history_recall_weights_exact_file_match(tmp_path):\n  86 |     manager = MemoryManager(long_term_storage_dir=str(tmp_path / \"long_term\"))\n  87 |     manager.save_memory_item(MemoryItem(\n  88 |         kind=Mem...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:35:37.814709",
+  "updated_at": "2026-05-29T12:35:37.814709",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "tests/test_memory_phase4.py",
+    "tools/retrieval_tool.py",
+    "core/memory_retrieval.py",
+    "engine.py",
+    "core/engine.py",
+    "README.md"
+  ],
+  "source_observation_ids": [
+    "obs_d6e7ae3873a942a88eb6f25e624097de"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_d6e7ae3873a942a88eb6f25e624097de",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:35:37.814709",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 460,
+        "path": "tests/test_memory_phase4.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: tests/test_memory_phase4.py (第 1 至 164 行，共 164 行) ---\n   1 | \"\"\"阶段4：统一检索层与 Hybrid Recall 测试。\"\"\"\n   2 | \n   3 | from __future__ import annotations\n   4 | \n   5 | from datetime import datetime, timedelta\n   6 | \n   7 | from core.memory_items import MemoryItem, MemoryKind\n   8 | from core.memory_manager import MemoryManager\n   9 | from core.memory_models import ErrorRecord, FileChange, SessionSummary\n  10 | from core.memory_retrieval import MemoryDocument\n  11 | from tools import get_default_tools\n  12 | from tools.memory_tool import MemoryErrorHistoryTool, MemoryFileHistoryTool\n  13 | \n  14 | \n  15 | def _summary(session_id: str, goal: str, text: str, file_path: str, error_type: str = \"\") -> SessionSummary:\n  16 |     errors = []\n  17 |     if error_type:\n  18 |         errors.append(ErrorRecord(\n  19 |             error_type=error_type,\n  20 |             error_message=f\"{error_type}: import failed in {file_path}\",\n  21 |             timestamp=datetime.now().isoformat(),\n  22 |             file_path=file_path,\n  23 |             solution=\"补充缺失依赖并重新运行 pytest\",\n  24 |             resolved=True,\n  25 |         ))\n  26 |     return SessionSummary(\n  27 |         session_id=session_id,\n  28 |         timestamp=(datetime.now() - timedelta(days=1)).isoformat(),\n  29 |         summary_text=text,\n  30 |         task_goal=goal,\n  31 |         task_status=\"completed\",\n  32 |         files_changed=[FileChange(path=file_path, action=\"modified\", summary=text, importance=0.8)],\n  33 |         errors_encountered=errors,\n  34 |         key_decisions=[\"统一使用 MemoryRetriever.hybrid_recall\"],\n  35 |         importance=0.7,\n  36 |     )\n  37 | \n  38 | \n  39 | def test_hybrid_recall_unifies_memory_items_and_session_summaries(tmp_path):\n  40 |     manager = MemoryManager(long_term_storage_dir=str(tmp_path / \"long_term\"))\n  41 |     summary = _summary(\n  42 |         \"s1\",\n  43 |         \"修复检索工具\",\n  44 |         \"SearchMemoryTool 需要接入统一 Hybrid Recall 检索层\",\n  45 |         \"tools/retrieval_tool.py\",\n  46 |     )\n  47 |     manager.save_summary(summary)\n  48 |     manager.save_memory_item(MemoryItem(\n  49 |         kind=MemoryKind.ARCHITECTURE.value,\n  50 |         title=\"Hybrid Recall 架构\",\n  51 |         content=\"MemoryRetriever 将 MemoryItem 与 SessionSummary 统一为 MemoryDocument 后加权排序。\",\n  52 |         files=[\"core/memory_retrieval.py\"],\n  53 |         concepts=[\"hybrid\", \"recall\", \"MemoryDocument\"],\n  54 |         importance=0.95,\n  55 |     ))\n  56 | \n  57 |     results = manager.hybrid_recall(\"Hybrid Recall MemoryRetriever\", top_k=5)\n  58 | \n  59 |     assert len(results) >= 2\n  60 |     assert all(isinstance(result.item, MemoryItem) for result in results)\n  61 |     assert results[0].item.title == \"Hybrid Recall 架构\"\n  62 |     assert results[0].source in {\"memory_item\", \"long_term_memory_item\", \"long_term_items\"}\n  63 |     assert any(result.item.kind == MemoryKind.SUMMARY.value for result in results)\n  64 |     assert all(result.reason for result in results)\n  65 | \n  66 | \n  67 | def test_memory_document_from_summary_preserves_file_error_metadata():\n  68 |     summary = _summary(\n  69 |         \"s_error\",\n  70 |         \"修复 pytest 导入错误\",\n  71 |         \"pytest 运行失败，原因是 ModuleNotFoundError，需要调整依赖。\",\n  72 |         \"tests/test_memory_phase4.py\",\n  73 |         \"ModuleNotFoundError\",\n  74 |     )\n  75 | \n  76 |     document = MemoryDocument.from_session_summary(summary, source_type=\"episodic\")\n  77 | \n  78 |     assert document.source_type == \"episodic\"\n  79 |     assert document.files == [\"tests/test_memory_phase4.py\"]\n  80 |     assert \"ModuleNotFoundError\" in document.error_types\n  81 |     assert \"pytest\" in document.content\n  82 |     assert document.to_memory_item().kind == MemoryKind.SUMMARY.value\n  83 | \n  84 | \n  85 | def test_file_history_recall_weights_exact_file_match(tmp_path):\n  86 |     manager = MemoryManager(long_term_storage_dir=str(tmp_path / \"long_term\"))\n  87 |     manager.save_memory_item(MemoryItem(\n  88 |         kind=Mem...",
+      "files": [
+        "tests/test_memory_phase4.py",
+        "tools/retrieval_tool.py",
+        "core/memory_retrieval.py",
+        "engine.py",
+        "core/engine.py",
+        "README.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

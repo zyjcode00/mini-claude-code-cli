@@ -1,0 +1,54 @@
+{
+  "id": "mem_31f954df81ab453ebb42110344fbc81c",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 core/engine.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T18:56:57.000622",
+  "updated_at": "2026-05-28T18:56:57.000622",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "core/engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_b87a958253c84da9bacefce963c53b80"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_b87a958253c84da9bacefce963c53b80",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T18:56:57.000622",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "        # ========== 统一长期记忆召回：通过 MemoryManager/Hybrid Recall 注入相关历史 ==========\n        relevant_history = self._build_relevant_memory_context(user_input)\n        # =====================================================================\n\n        await self.compress_messages()",
+        "old_str": "        # ========== 检索增强：自动检索相关历史 ==========\n        relevant_history = self._build_relevant_memory_context(user_input)\n        if self.retrieval_enabled and len(self.bm25_retriever) > 0:\n            try:\n                # 使用 BM25 检索相关历史\n                results = self.bm25_retriever.search(user_input, top_k=3)\n\n                if results:\n                    # 格式化检索结果\n                    history_lines = [\"\\n[相关历史记忆]\"]\n                    for i, (doc_id, score) in enumerate(results[:3], 1):\n                        content = self.bm25_retriever.get_document(doc_id)\n                        if content:\n                            # 截取前 200 字符\n                            preview = content[:200] + \"...\" if len(content) > 200 else content\n                            history_lines.append(f\"{i}. (相关度: {score:.2f}) {preview}\")\n\n                    relevant_history += \"\\n\" + \"\\n\".join(history_lines) + \"\\n\"\n                    print(f\" [🔍] 检索到 {len(results)} 条相关历史\")\n            except Exception as e:\n                print(f\" [⚠️] 检索失败: {e}\")\n        # ============================================\n\n        await self.compress_messages()",
+        "path": "core/engine.py"
+      },
+      "tool_output": "成功: 已更新 core/engine.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

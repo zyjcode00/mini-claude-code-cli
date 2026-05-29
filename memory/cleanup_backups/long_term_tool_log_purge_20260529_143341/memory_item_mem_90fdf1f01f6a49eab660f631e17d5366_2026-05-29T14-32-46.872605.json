@@ -1,0 +1,48 @@
+{
+  "id": "mem_90fdf1f01f6a49eab660f631e17d5366",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "Command executed with no output.",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:32:46.872605",
+  "updated_at": "2026-05-29T14:32:46.872605",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_222633806d1340fe9a8fe22671d68a19"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_222633806d1340fe9a8fe22671d68a19",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:32:46.872605",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python tmp_validate_long_term_recall.py"
+      },
+      "tool_output": "Command executed with no output.",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

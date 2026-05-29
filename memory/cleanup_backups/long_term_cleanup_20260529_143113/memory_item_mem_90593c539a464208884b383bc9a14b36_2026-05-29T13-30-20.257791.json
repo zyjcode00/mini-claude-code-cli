@@ -1,0 +1,48 @@
+{
+  "id": "mem_90593c539a464208884b383bc9a14b36",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nexists True\r\nsize 3261268\r\nreadonly_attr False\r\nwritable True\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:30:20.257791",
+  "updated_at": "2026-05-29T13:30:20.257791",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_ec67b43e36884b5685cc29cd30856c0c"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_ec67b43e36884b5685cc29cd30856c0c",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:30:20.257791",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -c \"from pathlib import Path; import os; p=Path('memory/long_term/index.json'); print('exists', p.exists()); print('size', p.stat().st_size if p.exists() else None); print('readonly_attr', bool(getattr(p.stat(), 'st_file_attributes', 0) & 1) if p.exists() else 'n/a'); print('writable', p.exists() and os.access(p, os.W_OK))\""
+      },
+      "tool_output": "STDOUT:\nexists True\r\nsize 3261268\r\nreadonly_attr False\r\nwritable True\r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

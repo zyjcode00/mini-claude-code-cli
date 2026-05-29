@@ -1,0 +1,55 @@
+{
+  "id": "mem_91e3c00ef9264035ac7c7c924c80cdfb",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: find_symbol_definition",
+  "content": "🔍 找到 1 个匹配项\n\n================================================================================\n\n\n[1] CLASS: AgentEngine\n    📁 文件: core\\engine.py\n    📍 行号: L21 - L859\n\n    📝 代码片段 (前 10 行):\n      21 | class AgentEngine:\n      22 |     def __init__(self, tools: List[BaseTool], model: str, plan_manager, # <--- 传入管家\n      23 |                  base_url: str = None, api_key: str = None,\n      24 |                  max_history: int = 100, min_keep: int = 4, session_id=\"default\"):\n      25 |         self.tools = tools\n      26 |         self.model = model\n      27 |         self.plan_manager = plan_manager  # <--- 保存管家引用\n      28 |         self.tool_map = {t.name: t for t in tools}\n      29 |         self.tool_specs = [t.to_anthropic_spec() for t in tools]\n      30 | \n\n--------------------------------------------------------------------------------",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T17:09:39.230612",
+  "updated_at": "2026-05-28T17:09:39.230612",
+  "concepts": [
+    "post_tool_use",
+    "find_symbol_definition"
+  ],
+  "files": [
+    ".",
+    "core\\engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_a37c344d04c94f82b86fd8b62def4175"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_a37c344d04c94f82b86fd8b62def4175",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T17:09:39.230612",
+      "event_type": "post_tool_use",
+      "tool_name": "find_symbol_definition",
+      "tool_input": {
+        "name": "AgentEngine",
+        "path": "."
+      },
+      "tool_output": "🔍 找到 1 个匹配项\n\n================================================================================\n\n\n[1] CLASS: AgentEngine\n    📁 文件: core\\engine.py\n    📍 行号: L21 - L859\n\n    📝 代码片段 (前 10 行):\n      21 | class AgentEngine:\n      22 |     def __init__(self, tools: List[BaseTool], model: str, plan_manager, # <--- 传入管家\n      23 |                  base_url: str = None, api_key: str = None,\n      24 |                  max_history: int = 100, min_keep: int = 4, session_id=\"default\"):\n      25 |         self.tools = tools\n      26 |         self.model = model\n      27 |         self.plan_manager = plan_manager  # <--- 保存管家引用\n      28 |         self.tool_map = {t.name: t for t in tools}\n      29 |         self.tool_specs = [t.to_anthropic_spec() for t in tools]\n      30 | \n\n--------------------------------------------------------------------------------",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        ".",
+        "core\\engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

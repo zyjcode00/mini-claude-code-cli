@@ -1,0 +1,76 @@
+{
+  "id": "mem_566e5d697abf46fe9772cf73b9e55a6e",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 34 处匹配，分布在 8 个文件中\n\n================================================================================\n\n[FILE] core\\context.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      61 |         self.session_summaries: List[SessionSummary] = []\n      62 | \n      63 |         # Phase 2: 三层记忆架构统一由 MemoryManager 编排\n>>>   64 |         self.memory_manager = MemoryManager(plan_manager=plan_manager)\n      65 |         self.working_memory = self.memory_manager.working_memory\n      66 |         self.episodic_memory = self.memory_manager.episodic_memory\n      67 |         self.long_term_memory = self.memory_manager.long_term_memory\n\n[FILE] core\\memory_manager.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     439 | \n     440 |     def __repr__(self) -> str:\n     441 |         return (\n>>>  442 |             f\"MemoryManager(enabled={self.enabled}, \"\n     443 |             f\"working={len(self.working_memory)}, \"\n     444 |             f\"episodic={len(self.episodic_memory)}, \"\n     445 |             f\"long_term={len(self.long_term_memory)})\"\n\n[FILE] tests\\test_memory_manager.py (8 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      27 | \n      28 | def test_memory_manager_initializes_all_components():\n      29 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>   30 |         manager = MemoryManager(\n      31 |             working_max_size=3,\n      32 |             episodic_max_size=2,\n      33 |             long_term_storage_dir=temp_dir,\n    [上下文]\n      45 | \n      46 | def test_memory_manager_add_message_and_reset_working_memory():\n      47 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>   48 |         manager = MemoryManager(working_max_size=2, long_term_storage_dir=temp_dir)\n      49 | \n      50 |         assert manager.add_message({\"role\": \"user\", \"content\": \"第一条\"}) is None\n      51 |         assert manager.add_message({\"role\": \"assistant\", \"content\": \"第二条\"}) is None\n    [上下文]\n      63 | \n      64 | def test_memory_manager_save_summary_archives_evicted_to_long_term():\n      65 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>   66 |         manager = MemoryManager(episodic_max_size=1, long_term_storage_dir=temp_dir)\n      67 | \n      68 |         old_summary = make_summary(\"old\", importance=0.1)\n      69 |         new_summary = make_summary(\"new\", importance=0.9)\n    [上下文]\n      79 | \n      80 | def test_memory_manager_search_and_specialized_retrieval():\n      81 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>   82 |         manager = MemoryManager(long_term_storage_dir=temp_dir)\n      83 |         summary = make_summary(\"memory_manager\", goal=\"实现统一记忆管理器\", importance=0.9)\n      84 |         manager.save_summary(summary)\n      85 | \n    [上下文]\n      97 | \n      98 | def test_memory_manager_export_import_roundtrip_and_compat_fields():\n      99 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>  100 |         manager = MemoryManager(long_term_storage_dir=temp_dir)\n     101 |         manager.add_message({\"role\": \"user\", \"content\": \"测试导出\"})\n     102 |         episodic_summary = make_summary(\"episodic_export\", goal=\"导出情景记忆\")\n     103 |         session_summary = make_summary(\"session_export\", goal=\"导出会话摘要\")\n    [上下文]\n     113 |         assert exported[\"episodic_memory\"][0][\"session_id\"] == \"episodic_export\"\n     114 |         assert exported[\"session_summaries\"][0][\"session_id\"] == \"session_export\"\n     115 | \n>>>  116 |         restored = MemoryManager(long_term_storage_dir=temp_dir)\n     117 |         imported = restored.import_memories(exported)\n     118 | \n     119 |         assert imported[\"history_summary\"] == \"历史摘要\"\n    [上下文]\n     126 | \n     127 | def test_memory_manager_export_to_files_and_clear():\n     128 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>  129 |         manager = MemoryManager(long_term_storage_dir...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:17:46.275798",
+  "updated_at": "2026-05-29T13:17:46.275798",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    ".",
+    "core\\context.py",
+    "core\\memory_manager.py",
+    "tests\\test_memory_manager.py",
+    "tests\\test_memory_manager_phase2.py",
+    "index.json",
+    "tests\\test_memory_phase4.py",
+    "engine.py",
+    "tests\\test_memory_phase4_promotion.py",
+    "tests\\test_memory_phase5.py",
+    "tools\\memory_tool.py"
+  ],
+  "source_observation_ids": [
+    "obs_9ea01f0ae51b4979a1ad13b9d8575647"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_9ea01f0ae51b4979a1ad13b9d8575647",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:17:46.275798",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": true,
+        "context": 3,
+        "file_pattern": "*.py",
+        "path": ".",
+        "pattern": "MemoryManager\\("
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 34 处匹配，分布在 8 个文件中\n\n================================================================================\n\n[FILE] core\\context.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      61 |         self.session_summaries: List[SessionSummary] = []\n      62 | \n      63 |         # Phase 2: 三层记忆架构统一由 MemoryManager 编排\n>>>   64 |         self.memory_manager = MemoryManager(plan_manager=plan_manager)\n      65 |         self.working_memory = self.memory_manager.working_memory\n      66 |         self.episodic_memory = self.memory_manager.episodic_memory\n      67 |         self.long_term_memory = self.memory_manager.long_term_memory\n\n[FILE] core\\memory_manager.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     439 | \n     440 |     def __repr__(self) -> str:\n     441 |         return (\n>>>  442 |             f\"MemoryManager(enabled={self.enabled}, \"\n     443 |             f\"working={len(self.working_memory)}, \"\n     444 |             f\"episodic={len(self.episodic_memory)}, \"\n     445 |             f\"long_term={len(self.long_term_memory)})\"\n\n[FILE] tests\\test_memory_manager.py (8 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      27 | \n      28 | def test_memory_manager_initializes_all_components():\n      29 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>   30 |         manager = MemoryManager(\n      31 |             working_max_size=3,\n      32 |             episodic_max_size=2,\n      33 |             long_term_storage_dir=temp_dir,\n    [上下文]\n      45 | \n      46 | def test_memory_manager_add_message_and_reset_working_memory():\n      47 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>   48 |         manager = MemoryManager(working_max_size=2, long_term_storage_dir=temp_dir)\n      49 | \n      50 |         assert manager.add_message({\"role\": \"user\", \"content\": \"第一条\"}) is None\n      51 |         assert manager.add_message({\"role\": \"assistant\", \"content\": \"第二条\"}) is None\n    [上下文]\n      63 | \n      64 | def test_memory_manager_save_summary_archives_evicted_to_long_term():\n      65 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>   66 |         manager = MemoryManager(episodic_max_size=1, long_term_storage_dir=temp_dir)\n      67 | \n      68 |         old_summary = make_summary(\"old\", importance=0.1)\n      69 |         new_summary = make_summary(\"new\", importance=0.9)\n    [上下文]\n      79 | \n      80 | def test_memory_manager_search_and_specialized_retrieval():\n      81 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>   82 |         manager = MemoryManager(long_term_storage_dir=temp_dir)\n      83 |         summary = make_summary(\"memory_manager\", goal=\"实现统一记忆管理器\", importance=0.9)\n      84 |         manager.save_summary(summary)\n      85 | \n    [上下文]\n      97 | \n      98 | def test_memory_manager_export_import_roundtrip_and_compat_fields():\n      99 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>  100 |         manager = MemoryManager(long_term_storage_dir=temp_dir)\n     101 |         manager.add_message({\"role\": \"user\", \"content\": \"测试导出\"})\n     102 |         episodic_summary = make_summary(\"episodic_export\", goal=\"导出情景记忆\")\n     103 |         session_summary = make_summary(\"session_export\", goal=\"导出会话摘要\")\n    [上下文]\n     113 |         assert exported[\"episodic_memory\"][0][\"session_id\"] == \"episodic_export\"\n     114 |         assert exported[\"session_summaries\"][0][\"session_id\"] == \"session_export\"\n     115 | \n>>>  116 |         restored = MemoryManager(long_term_storage_dir=temp_dir)\n     117 |         imported = restored.import_memories(exported)\n     118 | \n     119 |         assert imported[\"history_summary\"] == \"历史摘要\"\n    [上下文]\n     126 | \n     127 | def test_memory_manager_export_to_files_and_clear():\n     128 |     with tempfile.TemporaryDirectory() as temp_dir:\n>>>  129 |         manager = MemoryManager(long_term_storage_dir...",
+      "files": [
+        ".",
+        "core\\context.py",
+        "core\\memory_manager.py",
+        "tests\\test_memory_manager.py",
+        "tests\\test_memory_manager_phase2.py",
+        "index.json",
+        "tests\\test_memory_phase4.py",
+        "engine.py",
+        "tests\\test_memory_phase4_promotion.py",
+        "tests\\test_memory_phase5.py",
+        "tools\\memory_tool.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

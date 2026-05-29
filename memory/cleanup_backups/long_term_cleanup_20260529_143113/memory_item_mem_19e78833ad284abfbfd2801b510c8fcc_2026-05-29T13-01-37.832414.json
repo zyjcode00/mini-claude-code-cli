@@ -1,0 +1,94 @@
+{
+  "id": "mem_19e78833ad284abfbfd2801b510c8fcc",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 117 处匹配，分布在 19 个文件中\n\n================================================================================\n\n[FILE] main.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      11 | \n      12 | # 1. 核心引擎导入\n>>>   13 | from core.engine import AgentEngine\n      14 | \n      15 | # 2. 优化后的工具导入\n    [上下文]\n     104 | \n     105 |     # 4. 初始化核心引擎\n>>>  106 |     engine = AgentEngine(\n     107 |         tools=tools_list,\n     108 |         model=args.model,\n\n[FILE] core\\context.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      32 | \n      33 | \n>>>   34 | class ContextManager:\n      35 |     \"\"\"\n      36 |     上下文管理器\n\n[FILE] core\\engine.py (9 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       9 | from tools.base import BaseTool\n      10 | from core.prompts import get_system_prompt\n>>>   11 | from core.context import ContextManager  # <--- 导入新管家\n      12 | from core.context_assembler import ContextAssembler, ContextBudget\n      13 | from core.memory_items import MemoryKind, ObservationType, RawObservation\n    [上下文]\n      16 | from tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes, start_task_branch, finalize_task, start_plan_branch, finalize_plan\n      17 | \n>>>   18 | class AgentEngine:\n      19 |     def __init__(self, tools: List[BaseTool], model: str, plan_manager, # <--- 传入管家\n      20 |                  base_url: str = None, api_key: str = None,\n    [上下文]\n      26 |         self.tool_specs = [t.to_anthropic_spec() for t in tools]\n      27 | \n>>>   28 |         # --- 核心修改：使用 ContextManager 替代原有的 self.messages ---\n      29 |         # 🔥 新增：传入 plan_manager，让压缩引擎能查询真实任务状态\n      30 |         self.context = ContextManager(max_history=max_history, min_keep=min_keep, plan_manager=plan_manager)\n    [上下文]\n      28 |         # --- 核心修改：使用 ContextManager 替代原有的 self.messages ---\n      29 |         # 🔥 新增：传入 plan_manager，让压缩引擎能查询真实任务状态\n>>>   30 |         self.context = ContextManager(max_history=max_history, min_keep=min_keep, plan_manager=plan_manager)\n      31 |         self.last_oa_msg = None\n      32 |         self.session_id = session_id\n    [上下文]\n      40 |         # Phase 5: Prompt 记忆注入预算配置\n      41 |         self.memory_token_budget = 1500\n>>>   42 |         self.memory_recall_top_k = 8\n      43 |         self.context_assembler = ContextAssembler(\n      44 |             ContextBudget(memory=self.memory_token_budget)\n    [上下文]\n     351 |                 token_budget=self.memory_token_budget,\n     352 |                 task_type=None,\n>>>  353 |                 top_k=top_k or self.memory_recall_top_k,\n     354 |             )\n     355 |         except Exception as e:\n    [上下文]\n     427 |             event_type=ObservationType.PROMPT_SUBMIT.value,\n     428 |             user_prompt=user_input,\n>>>  429 |             metadata={\"source\": \"AgentEngine.execute_query\"},\n     430 |         )\n     431 |         return self.context.memory_manager.save_observation(\n    [上下文]\n     457 |             error=self._shorten(result_text, 4000) if failed else None,\n     458 |             files=files,\n>>>  459 |             metadata={\"source\": \"AgentEngine.tool_dispatch\", \"success\": not failed},\n     460 |         )\n     461 | \n    [上下文]\n     482 |             assistant_message=final_answer,\n     483 |             files=self._extract_file_paths(content),\n>>>  484 |             metadata={\"source\": \"AgentEngine.final_answer\"},\n     485 |         )\n     486 |         item = self.context.memory_manager.save_observation(\n\n[FILE] core\\memory_context_builder.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      13 | \n      14 | \n>>>   15 | class MemoryContextBuilder:\n      16 |     \"\"\"根据 token budget 构造可注入系统提示词的长期记忆上下文。\"\"\"\n      17 | \n\n[FILE] core\\memory_layers.py (3 处匹配)\n----------------------------------------------...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:01:37.832414",
+  "updated_at": "2026-05-29T13:01:37.832414",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    ".",
+    "main.py",
+    "core\\context.py",
+    "core\\engine.py",
+    "core\\memory_context_builder.py",
+    "core\\memory_layers.py",
+    "core\\memory_manager.py",
+    "core\\memory_retrieval.py",
+    "tests\\test_compression_engine.py",
+    "tests\\test_memory_items.py",
+    "tests\\test_memory_layers.py",
+    "summary_legacy_2024-01-01T00-00-00.json",
+    "tests\\test_memory_manager_phase2.py",
+    "tests\\test_memory_persistence.py",
+    "tests\\test_memory_phase3.py",
+    "core/engine.py",
+    "tests\\test_memory_phase4.py",
+    "engine.py",
+    "tests\\test_memory_phase5.py",
+    "core/a.py"
+  ],
+  "source_observation_ids": [
+    "obs_631caa36be5e4078a5e1b1c086680102"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_631caa36be5e4078a5e1b1c086680102",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:01:37.832414",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": true,
+        "context": 2,
+        "file_pattern": "*.py",
+        "path": ".",
+        "pattern": "build_system_prompt|MemoryContextBuilder|memory_recall|hybrid_recall|ContextManager|AgentEngine|LongTermMemory"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 117 处匹配，分布在 19 个文件中\n\n================================================================================\n\n[FILE] main.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      11 | \n      12 | # 1. 核心引擎导入\n>>>   13 | from core.engine import AgentEngine\n      14 | \n      15 | # 2. 优化后的工具导入\n    [上下文]\n     104 | \n     105 |     # 4. 初始化核心引擎\n>>>  106 |     engine = AgentEngine(\n     107 |         tools=tools_list,\n     108 |         model=args.model,\n\n[FILE] core\\context.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      32 | \n      33 | \n>>>   34 | class ContextManager:\n      35 |     \"\"\"\n      36 |     上下文管理器\n\n[FILE] core\\engine.py (9 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       9 | from tools.base import BaseTool\n      10 | from core.prompts import get_system_prompt\n>>>   11 | from core.context import ContextManager  # <--- 导入新管家\n      12 | from core.context_assembler import ContextAssembler, ContextBudget\n      13 | from core.memory_items import MemoryKind, ObservationType, RawObservation\n    [上下文]\n      16 | from tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes, start_task_branch, finalize_task, start_plan_branch, finalize_plan\n      17 | \n>>>   18 | class AgentEngine:\n      19 |     def __init__(self, tools: List[BaseTool], model: str, plan_manager, # <--- 传入管家\n      20 |                  base_url: str = None, api_key: str = None,\n    [上下文]\n      26 |         self.tool_specs = [t.to_anthropic_spec() for t in tools]\n      27 | \n>>>   28 |         # --- 核心修改：使用 ContextManager 替代原有的 self.messages ---\n      29 |         # 🔥 新增：传入 plan_manager，让压缩引擎能查询真实任务状态\n      30 |         self.context = ContextManager(max_history=max_history, min_keep=min_keep, plan_manager=plan_manager)\n    [上下文]\n      28 |         # --- 核心修改：使用 ContextManager 替代原有的 self.messages ---\n      29 |         # 🔥 新增：传入 plan_manager，让压缩引擎能查询真实任务状态\n>>>   30 |         self.context = ContextManager(max_history=max_history, min_keep=min_keep, plan_manager=plan_manager)\n      31 |         self.last_oa_msg = None\n      32 |         self.session_id = session_id\n    [上下文]\n      40 |         # Phase 5: Prompt 记忆注入预算配置\n      41 |         self.memory_token_budget = 1500\n>>>   42 |         self.memory_recall_top_k = 8\n      43 |         self.context_assembler = ContextAssembler(\n      44 |             ContextBudget(memory=self.memory_token_budget)\n    [上下文]\n     351 |                 token_budget=self.memory_token_budget,\n     352 |                 task_type=None,\n>>>  353 |                 top_k=top_k or self.memory_recall_top_k,\n     354 |             )\n     355 |         except Exception as e:\n    [上下文]\n     427 |             event_type=ObservationType.PROMPT_SUBMIT.value,\n     428 |             user_prompt=user_input,\n>>>  429 |             metadata={\"source\": \"AgentEngine.execute_query\"},\n     430 |         )\n     431 |         return self.context.memory_manager.save_observation(\n    [上下文]\n     457 |             error=self._shorten(result_text, 4000) if failed else None,\n     458 |             files=files,\n>>>  459 |             metadata={\"source\": \"AgentEngine.tool_dispatch\", \"success\": not failed},\n     460 |         )\n     461 | \n    [上下文]\n     482 |             assistant_message=final_answer,\n     483 |             files=self._extract_file_paths(content),\n>>>  484 |             metadata={\"source\": \"AgentEngine.final_answer\"},\n     485 |         )\n     486 |         item = self.context.memory_manager.save_observation(\n\n[FILE] core\\memory_context_builder.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      13 | \n      14 | \n>>>   15 | class MemoryContextBuilder:\n      16 |     \"\"\"根据 token budget 构造可注入系统提示词的长期记忆上下文。\"\"\"\n      17 | \n\n[FILE] core\\memory_layers.py (3 处匹配)\n----------------------------------------------...",
+      "files": [
+        ".",
+        "main.py",
+        "core\\context.py",
+        "core\\engine.py",
+        "core\\memory_context_builder.py",
+        "core\\memory_layers.py",
+        "core\\memory_manager.py",
+        "core\\memory_retrieval.py",
+        "tests\\test_compression_engine.py",
+        "tests\\test_memory_items.py",
+        "tests\\test_memory_layers.py",
+        "summary_legacy_2024-01-01T00-00-00.json",
+        "tests\\test_memory_manager_phase2.py",
+        "tests\\test_memory_persistence.py",
+        "tests\\test_memory_phase3.py",
+        "core/engine.py",
+        "tests\\test_memory_phase4.py",
+        "engine.py",
+        "tests\\test_memory_phase5.py",
+        "core/a.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

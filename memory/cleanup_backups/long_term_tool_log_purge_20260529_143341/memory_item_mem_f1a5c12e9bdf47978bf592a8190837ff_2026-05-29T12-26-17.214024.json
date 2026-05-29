@@ -1,0 +1,55 @@
+{
+  "id": "mem_f1a5c12e9bdf47978bf592a8190837ff",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "                    key_content_count += 1\n\n        # 3. 统计数据作为补充\n        stats_parts = []\n        stats_parts.append(f\"压缩了 {len(messages)} 条消息\")\n        if files_changed:\n            stats_parts.append(f\"{len(files_changed)} 个文件变更\")\n        if errors_encountered:\n            stats_parts.append(f\"{len(errors_encountered)} 个错误\")\n        if tools_used:\n            stats_parts.append(f\"使用 {len(tools_used)} 种工具\")\n\n        summary_text = \"\\n\".join(summary_parts + [\"统计: \" + \"，\".join(stats_parts)])\n\n        # 如果没有提取到任何关键内容，使用简化版摘要\n        if not summary_parts:\n            summary_text = f\"使用{strategy.value}策略压缩了 {len(messages)} 条消息（无关键内容提取）\"\n\n        # 🔥 新增：检测任务状态（优先使用真实 Plan 状态）\n        task_status = \"in_progress\"  # 默认值\n\n        # 🔥🔥🔥 关键修复：优先检查 Plan 状态（真实数据源）\n        if self.plan_manager and hasattr(self.plan_manager, 'is_plan_complete'):\n            if self.plan_manager.is_plan_complete():\n                # Plan 已全部完成，强制使用 \"completed\" 状态\n                task_status = \"completed\"\n                print(f\"   [Phase 3] ✅ 检测到 Plan 已完成，状态同步为 completed\")\n            elif self.plan_manager.has_incomplete_tasks():\n                # Plan 还有未完成的步骤，强制使用 \"in_progress\"\n                task_status = \"in_progress\"\n                print(f\"   [Phase 3] ⏳ Plan 尚未完成，状态保持 in_progress\")\n        else:\n            # 没有 plan_manager，使用推断逻辑（备用）\n            if errors_encountered:\n                unresolved_errors = [\n                    e for e in errors_encountered\n                    if not (e.get(\"resolved\", False) if isinstance(e, dict) else e.resolved)\n                ]\n                if unresolved_errors:\n                    task_status = \"in_progress\"\n                else:\n                    task_status = \"completed\"\n            else:\n                task_status = \"completed\"\n\n        return SessionSummary(\n            session_id=f\"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{len(messages)}\",\n            timestamp=datetime.now().isoformat(),\n            summary_text=summary_text,\n            task_goal=task_goal or f\"压缩策略: {strategy.value}\",\n            task_status=task_status,  # 🔥 使用检测到的状态\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:26:17.214024",
+  "updated_at": "2026-05-29T12:26:17.214024",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_dcaf31be62a5458990c8336d96484232"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_dcaf31be62a5458990c8336d96484232",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:26:17.214024",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 750,
+        "path": "core/compression_engine.py",
+        "raw_mode": true,
+        "start_line": 700
+      },
+      "tool_output": "                    key_content_count += 1\n\n        # 3. 统计数据作为补充\n        stats_parts = []\n        stats_parts.append(f\"压缩了 {len(messages)} 条消息\")\n        if files_changed:\n            stats_parts.append(f\"{len(files_changed)} 个文件变更\")\n        if errors_encountered:\n            stats_parts.append(f\"{len(errors_encountered)} 个错误\")\n        if tools_used:\n            stats_parts.append(f\"使用 {len(tools_used)} 种工具\")\n\n        summary_text = \"\\n\".join(summary_parts + [\"统计: \" + \"，\".join(stats_parts)])\n\n        # 如果没有提取到任何关键内容，使用简化版摘要\n        if not summary_parts:\n            summary_text = f\"使用{strategy.value}策略压缩了 {len(messages)} 条消息（无关键内容提取）\"\n\n        # 🔥 新增：检测任务状态（优先使用真实 Plan 状态）\n        task_status = \"in_progress\"  # 默认值\n\n        # 🔥🔥🔥 关键修复：优先检查 Plan 状态（真实数据源）\n        if self.plan_manager and hasattr(self.plan_manager, 'is_plan_complete'):\n            if self.plan_manager.is_plan_complete():\n                # Plan 已全部完成，强制使用 \"completed\" 状态\n                task_status = \"completed\"\n                print(f\"   [Phase 3] ✅ 检测到 Plan 已完成，状态同步为 completed\")\n            elif self.plan_manager.has_incomplete_tasks():\n                # Plan 还有未完成的步骤，强制使用 \"in_progress\"\n                task_status = \"in_progress\"\n                print(f\"   [Phase 3] ⏳ Plan 尚未完成，状态保持 in_progress\")\n        else:\n            # 没有 plan_manager，使用推断逻辑（备用）\n            if errors_encountered:\n                unresolved_errors = [\n                    e for e in errors_encountered\n                    if not (e.get(\"resolved\", False) if isinstance(e, dict) else e.resolved)\n                ]\n                if unresolved_errors:\n                    task_status = \"in_progress\"\n                else:\n                    task_status = \"completed\"\n            else:\n                task_status = \"completed\"\n\n        return SessionSummary(\n            session_id=f\"session_{datetime.now().strftime('%Y%m%d_%H%M%S')}_{len(messages)}\",\n            timestamp=datetime.now().isoformat(),\n            summary_text=summary_text,\n            task_goal=task_goal or f\"压缩策略: {strategy.value}\",\n            task_status=task_status,  # 🔥 使用检测到的状态\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

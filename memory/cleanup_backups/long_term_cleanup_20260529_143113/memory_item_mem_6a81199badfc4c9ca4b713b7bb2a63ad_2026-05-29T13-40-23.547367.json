@@ -1,0 +1,55 @@
+{
+  "id": "mem_6a81199badfc4c9ca4b713b7bb2a63ad",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "--- 文件: core/context.py (第 520 至 667 行，共 667 行) ---\n 520 |             if keyword_lower in summary.summary_text.lower():\n 521 |                 results.append(summary)\n 522 |                 continue\n 523 | \n 524 |             # 搜索任务目标\n 525 |             if keyword_lower in summary.task_goal.lower():\n 526 |                 results.append(summary)\n 527 |                 continue\n 528 | \n 529 |             # 搜索文件路径\n 530 |             for file_change in summary.files_changed:\n 531 |                 if keyword_lower in file_change.path.lower():\n 532 |                     results.append(summary)\n 533 |                     break\n 534 | \n 535 |             # 搜索错误类型\n 536 |             for error in summary.errors_encountered:\n 537 |                 if keyword_lower in error.error_type.lower():\n 538 |                     results.append(summary)\n 539 |                     break\n 540 | \n 541 |         return results\n 542 | \n 543 |     def get_summary_statistics(self) -> Dict[str, Any]:\n 544 |         \"\"\"\n 545 |         获取摘要统计信息\n 546 | \n 547 |         Returns:\n 548 |             统计信息字典\n 549 |         \"\"\"\n 550 |         if not self.session_summaries:\n 551 |             return {\n 552 |                 \"total_summaries\": 0,\n 553 |                 \"total_messages\": 0,\n 554 |                 \"total_tokens\": 0,\n 555 |                 \"avg_importance\": 0.0\n 556 |             }\n 557 | \n 558 |         total_messages = sum(s.message_count for s in self.session_summaries)\n 559 |         total_tokens = sum(s.token_count for s in self.session_summaries)\n 560 |         avg_importance = sum(s.importance for s in self.session_summaries) / len(self.session_summaries)\n 561 | \n 562 |         return {\n 563 |             \"total_summaries\": len(self.session_summaries),\n 564 |             \"total_messages\": total_messages,\n 565 |             \"total_tokens\": total_tokens,\n 566 |             \"avg_importance\": round(avg_importance, 2),\n 567 |             \"total_files_changed\": sum(len(s.files_changed) for s in self.session_summaries),\n 568 |             \"total_errors\": sum(len(s.errors_encountered) for s in self.session_summaries)\n 569 |         }\n 570 | \n 571 |     # ==================== Phase 2 新增方法 ====================\n 572 | \n 573 |     def get_memory_statistics(self) -> Dict[str, Any]:\n 574 |         \"\"\"\n 575 |         获取三层记忆统计信息\n 576 | \n 577 |         Returns:\n 578 |             统计信息字典\n 579 |         \"\"\"\n 580 |         if not self._enable_memory_layers:\n 581 |             return self.get_summary_statistics()\n 582 | \n 583 |         return self.memory_manager.get_statistics()\n 584 | \n 585 |     def search_all_memories(self, query: str, top_k: int = 5) -> List[SessionSummary]:\n 586 |         \"\"\"\n 587 |         在三层记忆中检索摘要\n 588 | \n 589 |         Args:\n 590 |             query: 查询关键词\n 591 |             top_k: 返回结果数量\n 592 | \n 593 |         Returns:\n 594 |             匹配的摘要列表\n 595 |         \"\"\"\n 596 |         if not self._enable_memory_layers:\n 597 |             return self.search_summaries(query)[:top_k]\n 598 | \n 599 |         return self.memory_manager.search(query, top_k)\n 600 | \n 601 |     def get_recent_summaries_from_episodic(self, n: int = 5) -> List[SessionSummary]:\n 602 |         \"\"\"\n 603 |         从情景记忆获取最近的摘要\n 604 | \n 605 |         Args:\n 606 |             n: 返回数量\n 607 | \n 608 |         Returns:\n 609 |             摘要列表\n 610 |         \"\"\"\n 611 |         if not self._enable_memory_layers:\n 612 |             return self.session_summaries[-n:] if n < len(self.session_summaries) else self.session_summaries\n 613 | \n 614 |         return self.memory_manager.get_recent_summaries(n)\n 615 | \n 616 |     def clear_all_memories(self):\n 617 |         \"\"\"清空所有三层记忆\"\"\"\n 618 |         if self._enable_memory_layers:\n 619 |             self.memory_manager.clear()\n 620 | \n 621 |         # 兼容 Phase 1\n 622 |         self.session_summaries.clear()\n 623 |         self.history_summary = \"\"\n 624 |         self.messages.clear()\n 625 | \n 626 |         print(\"[Phase 2] 所有记忆已清空\")\n 627 | \n...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:40:23.547367",
+  "updated_at": "2026-05-29T13:40:23.547367",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/context.py"
+  ],
+  "source_observation_ids": [
+    "obs_1739bdc59169484f8992260fd998500b"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_1739bdc59169484f8992260fd998500b",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:40:23.547367",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 667,
+        "path": "core/context.py",
+        "raw_mode": false,
+        "start_line": 520
+      },
+      "tool_output": "--- 文件: core/context.py (第 520 至 667 行，共 667 行) ---\n 520 |             if keyword_lower in summary.summary_text.lower():\n 521 |                 results.append(summary)\n 522 |                 continue\n 523 | \n 524 |             # 搜索任务目标\n 525 |             if keyword_lower in summary.task_goal.lower():\n 526 |                 results.append(summary)\n 527 |                 continue\n 528 | \n 529 |             # 搜索文件路径\n 530 |             for file_change in summary.files_changed:\n 531 |                 if keyword_lower in file_change.path.lower():\n 532 |                     results.append(summary)\n 533 |                     break\n 534 | \n 535 |             # 搜索错误类型\n 536 |             for error in summary.errors_encountered:\n 537 |                 if keyword_lower in error.error_type.lower():\n 538 |                     results.append(summary)\n 539 |                     break\n 540 | \n 541 |         return results\n 542 | \n 543 |     def get_summary_statistics(self) -> Dict[str, Any]:\n 544 |         \"\"\"\n 545 |         获取摘要统计信息\n 546 | \n 547 |         Returns:\n 548 |             统计信息字典\n 549 |         \"\"\"\n 550 |         if not self.session_summaries:\n 551 |             return {\n 552 |                 \"total_summaries\": 0,\n 553 |                 \"total_messages\": 0,\n 554 |                 \"total_tokens\": 0,\n 555 |                 \"avg_importance\": 0.0\n 556 |             }\n 557 | \n 558 |         total_messages = sum(s.message_count for s in self.session_summaries)\n 559 |         total_tokens = sum(s.token_count for s in self.session_summaries)\n 560 |         avg_importance = sum(s.importance for s in self.session_summaries) / len(self.session_summaries)\n 561 | \n 562 |         return {\n 563 |             \"total_summaries\": len(self.session_summaries),\n 564 |             \"total_messages\": total_messages,\n 565 |             \"total_tokens\": total_tokens,\n 566 |             \"avg_importance\": round(avg_importance, 2),\n 567 |             \"total_files_changed\": sum(len(s.files_changed) for s in self.session_summaries),\n 568 |             \"total_errors\": sum(len(s.errors_encountered) for s in self.session_summaries)\n 569 |         }\n 570 | \n 571 |     # ==================== Phase 2 新增方法 ====================\n 572 | \n 573 |     def get_memory_statistics(self) -> Dict[str, Any]:\n 574 |         \"\"\"\n 575 |         获取三层记忆统计信息\n 576 | \n 577 |         Returns:\n 578 |             统计信息字典\n 579 |         \"\"\"\n 580 |         if not self._enable_memory_layers:\n 581 |             return self.get_summary_statistics()\n 582 | \n 583 |         return self.memory_manager.get_statistics()\n 584 | \n 585 |     def search_all_memories(self, query: str, top_k: int = 5) -> List[SessionSummary]:\n 586 |         \"\"\"\n 587 |         在三层记忆中检索摘要\n 588 | \n 589 |         Args:\n 590 |             query: 查询关键词\n 591 |             top_k: 返回结果数量\n 592 | \n 593 |         Returns:\n 594 |             匹配的摘要列表\n 595 |         \"\"\"\n 596 |         if not self._enable_memory_layers:\n 597 |             return self.search_summaries(query)[:top_k]\n 598 | \n 599 |         return self.memory_manager.search(query, top_k)\n 600 | \n 601 |     def get_recent_summaries_from_episodic(self, n: int = 5) -> List[SessionSummary]:\n 602 |         \"\"\"\n 603 |         从情景记忆获取最近的摘要\n 604 | \n 605 |         Args:\n 606 |             n: 返回数量\n 607 | \n 608 |         Returns:\n 609 |             摘要列表\n 610 |         \"\"\"\n 611 |         if not self._enable_memory_layers:\n 612 |             return self.session_summaries[-n:] if n < len(self.session_summaries) else self.session_summaries\n 613 | \n 614 |         return self.memory_manager.get_recent_summaries(n)\n 615 | \n 616 |     def clear_all_memories(self):\n 617 |         \"\"\"清空所有三层记忆\"\"\"\n 618 |         if self._enable_memory_layers:\n 619 |             self.memory_manager.clear()\n 620 | \n 621 |         # 兼容 Phase 1\n 622 |         self.session_summaries.clear()\n 623 |         self.history_summary = \"\"\n 624 |         self.messages.clear()\n 625 | \n 626 |         print(\"[Phase 2] 所有记忆已清空\")\n 627 | \n...",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/context.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

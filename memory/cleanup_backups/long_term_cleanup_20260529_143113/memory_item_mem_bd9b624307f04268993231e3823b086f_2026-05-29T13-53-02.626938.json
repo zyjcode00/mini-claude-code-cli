@@ -1,0 +1,48 @@
+{
+  "id": "mem_bd9b624307f04268993231e3823b086f",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: execute_bash",
+  "content": "STDOUT:\nitem_index_count 615\r\nkeyword_count 8560\r\nsample_keys: ['code', 'prompt_submit', 'active', 'task', 'prompt', 'mini', 'submit', '你好', 'default', '任务', '用户', 'claude', 'cli', '用户任', '存储', '检索', '项目', '期记', 'llm', '召回', '的长', '索召', '发流程', '如何', '写入', '查看', '执行', '阅读长', '总结长', '户说明', '期记忆', '与上下', '工具执', '相关', '何时检', 'post_tool_use', '目标', '参与', '成功', '并基于', 'manage_plan', '梳理调', '码向', '发流', '记忆', '何时', '已更', '何时写', '如何参', '召回算', '关实现', '实代', '的存储', '召回与', 'plan', '数据结', '项目的', '的文', '工具', '向用', '文件入', 'post', 'memory', '存储机', '目结构', '机制', '并基', '召回相', '相关的', '上下', '忆检', '算法', '索引', 'use', '法和触', 'tool', '户总', 'workflow', '位置', '规划']\r\ntop_terms:\r\ncode 615\r\nactive 615\r\nmini 615\r\nclaude 615\r\ncli 615\r\nmemory 569\r\n执行 551\r\ntool 544\r\n工具执 540\r\n工具 540\r\npy 411\r\n成功 347\r\nworkflow 346\r\nfile 346\r\ncore 334\r\n行成功 326\r\nuse 311\r\npost_tool_use 299\r\npost 299\r\nengine 253\r\ntest 249\r\ntask 248\r\nbug 231\r\n失败 224\r\nfailure 224\r\ntool_failure 222\r\n行失败 220\r\n任务 215\r\ncompression 207\r\nsession 206\r\nin 192\r\nread 186\r\nplan 184\r\nread_file 183\r\nsummary 175\r\ndef 171\r\n测试 168\r\ntests 166\r\n文件 165\r\nllm 164\r\nshort_or_frag_samples: ['你好', '任务', '用户', 'cli', '用户任', '存储', '检索', '项目', '期记', 'llm', '召回', '的长', '索召', '发流程', '如何', '写入', '查看', '执行', '阅读长', '总结长', '户说明', '期记忆', '与上下', '工具执', '相关', '何时检', '目标', '参与', '成功', '并基于', '梳理调', '码向', '发流', '记忆', '何时', '已更', '何时写', '如何参', '召回算', '关实现', '实代', '的存储', '召回与', '数据结', '项目的', '的文', '工具', '向用', '文件入', '存储机', '目结构', '机制', '并基', '召回相', '相关的', '上下', '忆检', '算法', '索引', 'use', '法和触', '户总', '位置', '规划', '长期', '真实代', '忆的', '行成功', '说明', '件入', '数据', '和与', '的存', '于真', '和触', '结构', '查看项', '规划已', '梳理', '阅读']\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:53:02.626938",
+  "updated_at": "2026-05-29T13:53:02.626938",
+  "concepts": [
+    "tool_failure",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_0ac666a5836c4c579d8a8c29ef914e31"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_0ac666a5836c4c579d8a8c29ef914e31",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:53:02.626938",
+      "event_type": "tool_failure",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -c \"import json; from pathlib import Path; data=json.loads(Path('memory/long_term/index.json').read_text(encoding='utf-8')); ii=data.get('item_inverted_index',{}); print('item_index_count', len(data.get('item_index',{}))); print('keyword_count', len(ii)); print('sample_keys:', list(ii.keys())[:80]); print('top_terms:'); [print(k, len(v)) for k,v in sorted(ii.items(), key=lambda kv: len(kv[1]), reverse=True)[:40]]; print('short_or_frag_samples:', [k for k in ii if len(k)<=3][:80])\""
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "STDOUT:\nitem_index_count 615\r\nkeyword_count 8560\r\nsample_keys: ['code', 'prompt_submit', 'active', 'task', 'prompt', 'mini', 'submit', '你好', 'default', '任务', '用户', 'claude', 'cli', '用户任', '存储', '检索', '项目', '期记', 'llm', '召回', '的长', '索召', '发流程', '如何', '写入', '查看', '执行', '阅读长', '总结长', '户说明', '期记忆', '与上下', '工具执', '相关', '何时检', 'post_tool_use', '目标', '参与', '成功', '并基于', 'manage_plan', '梳理调', '码向', '发流', '记忆', '何时', '已更', '何时写', '如何参', '召回算', '关实现', '实代', '的存储', '召回与', 'plan', '数据结', '项目的', '的文', '工具', '向用', '文件入', 'post', 'memory', '存储机', '目结构', '机制', '并基', '召回相', '相关的', '上下', '忆检', '算法', '索引', 'use', '法和触', 'tool', '户总', 'workflow', '位置', '规划']\r\ntop_terms:\r\ncode 615\r\nactive 615\r\nmini 615\r\nclaude 615\r\ncli 615\r\nmemory 569\r\n执行 551\r\ntool 544\r\n工具执 540\r\n工具 540\r\npy 411\r\n成功 347\r\nworkflow 346\r\nfile 346\r\ncore 334\r\n行成功 326\r\nuse 311\r\npost_tool_use 299\r\npost 299\r\nengine 253\r\ntest 249\r\ntask 248\r\nbug 231\r\n失败 224\r\nfailure 224\r\ntool_failure 222\r\n行失败 220\r\n任务 215\r\ncompression 207\r\nsession 206\r\nin 192\r\nread 186\r\nplan 184\r\nread_file 183\r\nsummary 175\r\ndef 171\r\n测试 168\r\ntests 166\r\n文件 165\r\nllm 164\r\nshort_or_frag_samples: ['你好', '任务', '用户', 'cli', '用户任', '存储', '检索', '项目', '期记', 'llm', '召回', '的长', '索召', '发流程', '如何', '写入', '查看', '执行', '阅读长', '总结长', '户说明', '期记忆', '与上下', '工具执', '相关', '何时检', '目标', '参与', '成功', '并基于', '梳理调', '码向', '发流', '记忆', '何时', '已更', '何时写', '如何参', '召回算', '关实现', '实代', '的存储', '召回与', '数据结', '项目的', '的文', '工具', '向用', '文件入', '存储机', '目结构', '机制', '并基', '召回相', '相关的', '上下', '忆检', '算法', '索引', 'use', '法和触', '户总', '位置', '规划', '长期', '真实代', '忆的', '行成功', '说明', '件入', '数据', '和与', '的存', '于真', '和触', '结构', '查看项', '规划已', '梳理', '阅读']\r\n",
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

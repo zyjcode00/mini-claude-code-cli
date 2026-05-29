@@ -1,0 +1,55 @@
+{
+  "id": "mem_ebbe4d835749423582c5ea7623bf0289",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_items.py (第 221 至 297 行，共 297 行) ---\n 221 |             importance=data.get(\"importance\", 0.5),\n 222 |             confidence=data.get(\"confidence\", 0.8),\n 223 |             status=data.get(\"status\", MemoryStatus.ACTIVE.value),\n 224 |             version=data.get(\"version\", 1),\n 225 |             metadata=data.get(\"metadata\", {}),\n 226 |         )\n 227 | \n 228 |     def to_json(self, indent: int = 2) -> str:\n 229 |         return json.dumps(self.to_dict(), ensure_ascii=False, indent=indent)\n 230 | \n 231 |     @classmethod\n 232 |     def from_json(cls, json_str: str) -> \"MemoryItem\":\n 233 |         return cls.from_dict(json.loads(json_str))\n 234 | \n 235 |     def searchable_text(self) -> str:\n 236 |         \"\"\"返回用于关键词检索的文本。\"\"\"\n 237 |         parts = [\n 238 |             self.kind,\n 239 |             self.title,\n 240 |             self.content,\n 241 |             self.project,\n 242 |             \" \".join(self.concepts),\n 243 |             \" \".join(self.files),\n 244 |             \" \".join(self.source_session_ids),\n 245 |         ]\n 246 |         return \"\\n\".join(part for part in parts if part)\n 247 | \n 248 | \n 249 | @dataclass\n 250 | class MemoryRecallResult:\n 251 |     \"\"\"统一召回结果。\"\"\"\n 252 | \n 253 |     item: MemoryItem\n 254 |     score: float = 0.0\n 255 |     source: str = \"long_term\"\n 256 |     reason: str = \"\"\n 257 | \n 258 |     def __post_init__(self) -> None:\n 259 |         if isinstance(self.item, dict):\n 260 |             self.item = MemoryItem.from_dict(self.item)\n 261 |         self.score = float(self.score or 0.0)\n 262 | \n 263 |     def to_dict(self) -> Dict[str, Any]:\n 264 |         return {\n 265 |             \"item\": self.item.to_dict(),\n 266 |             \"score\": self.score,\n 267 |             \"source\": self.source,\n 268 |             \"reason\": self.reason,\n 269 |         }\n 270 | \n 271 |     @classmethod\n 272 |     def from_dict(cls, data: Dict[str, Any]) -> \"MemoryRecallResult\":\n 273 |         return cls(\n 274 |             item=MemoryItem.from_dict(data.get(\"item\", {})),\n 275 |             score=data.get(\"score\", 0.0),\n 276 |             source=data.get(\"source\", \"long_term\"),\n 277 |             reason=data.get(\"reason\", \"\"),\n 278 |         )\n 279 | \n 280 | \n 281 | def _normalize_enum_value(value: Any, enum_cls: Any, default: str) -> str:\n 282 |     if isinstance(value, enum_cls):\n 283 |         return value.value\n 284 |     if isinstance(value, str):\n 285 |         normalized = value.strip().lower()\n 286 |         valid_values = {item.value for item in enum_cls}\n 287 |         if normalized in valid_values:\n 288 |             return normalized\n 289 |     return default\n 290 | \n 291 | \n 292 | def _clamp_float(value: Any, default: float) -> float:\n 293 |     try:\n 294 |         number = float(value)\n 295 |     except (TypeError, ValueError):\n 296 |         return default\n 297 |     return max(0.0, min(1.0, number))\n--- 读取完毕 ---",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:59:54.434935",
+  "updated_at": "2026-05-29T12:59:54.434935",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_items.py"
+  ],
+  "source_observation_ids": [
+    "obs_b9b8eaf1883b4221b85b50eb6fbadcd8"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_b9b8eaf1883b4221b85b50eb6fbadcd8",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:59:54.434935",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 297,
+        "path": "core/memory_items.py",
+        "raw_mode": false,
+        "start_line": 221
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_items.py (第 221 至 297 行，共 297 行) ---\n 221 |             importance=data.get(\"importance\", 0.5),\n 222 |             confidence=data.get(\"confidence\", 0.8),\n 223 |             status=data.get(\"status\", MemoryStatus.ACTIVE.value),\n 224 |             version=data.get(\"version\", 1),\n 225 |             metadata=data.get(\"metadata\", {}),\n 226 |         )\n 227 | \n 228 |     def to_json(self, indent: int = 2) -> str:\n 229 |         return json.dumps(self.to_dict(), ensure_ascii=False, indent=indent)\n 230 | \n 231 |     @classmethod\n 232 |     def from_json(cls, json_str: str) -> \"MemoryItem\":\n 233 |         return cls.from_dict(json.loads(json_str))\n 234 | \n 235 |     def searchable_text(self) -> str:\n 236 |         \"\"\"返回用于关键词检索的文本。\"\"\"\n 237 |         parts = [\n 238 |             self.kind,\n 239 |             self.title,\n 240 |             self.content,\n 241 |             self.project,\n 242 |             \" \".join(self.concepts),\n 243 |             \" \".join(self.files),\n 244 |             \" \".join(self.source_session_ids),\n 245 |         ]\n 246 |         return \"\\n\".join(part for part in parts if part)\n 247 | \n 248 | \n 249 | @dataclass\n 250 | class MemoryRecallResult:\n 251 |     \"\"\"统一召回结果。\"\"\"\n 252 | \n 253 |     item: MemoryItem\n 254 |     score: float = 0.0\n 255 |     source: str = \"long_term\"\n 256 |     reason: str = \"\"\n 257 | \n 258 |     def __post_init__(self) -> None:\n 259 |         if isinstance(self.item, dict):\n 260 |             self.item = MemoryItem.from_dict(self.item)\n 261 |         self.score = float(self.score or 0.0)\n 262 | \n 263 |     def to_dict(self) -> Dict[str, Any]:\n 264 |         return {\n 265 |             \"item\": self.item.to_dict(),\n 266 |             \"score\": self.score,\n 267 |             \"source\": self.source,\n 268 |             \"reason\": self.reason,\n 269 |         }\n 270 | \n 271 |     @classmethod\n 272 |     def from_dict(cls, data: Dict[str, Any]) -> \"MemoryRecallResult\":\n 273 |         return cls(\n 274 |             item=MemoryItem.from_dict(data.get(\"item\", {})),\n 275 |             score=data.get(\"score\", 0.0),\n 276 |             source=data.get(\"source\", \"long_term\"),\n 277 |             reason=data.get(\"reason\", \"\"),\n 278 |         )\n 279 | \n 280 | \n 281 | def _normalize_enum_value(value: Any, enum_cls: Any, default: str) -> str:\n 282 |     if isinstance(value, enum_cls):\n 283 |         return value.value\n 284 |     if isinstance(value, str):\n 285 |         normalized = value.strip().lower()\n 286 |         valid_values = {item.value for item in enum_cls}\n 287 |         if normalized in valid_values:\n 288 |             return normalized\n 289 |     return default\n 290 | \n 291 | \n 292 | def _clamp_float(value: Any, default: float) -> float:\n 293 |     try:\n 294 |         number = float(value)\n 295 |     except (TypeError, ValueError):\n 296 |         return default\n 297 |     return max(0.0, min(1.0, number))\n--- 读取完毕 ---",
+      "files": [
+        "core/memory_items.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

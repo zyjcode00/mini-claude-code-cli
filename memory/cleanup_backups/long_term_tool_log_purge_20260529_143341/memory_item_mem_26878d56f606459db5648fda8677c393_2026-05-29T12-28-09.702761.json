@@ -1,0 +1,54 @@
+{
+  "id": "mem_26878d56f606459db5648fda8677c393",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 core/compression_engine.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:28:09.702761",
+  "updated_at": "2026-05-29T12:28:09.702761",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_e43b8b7903614e0eab162702b31d6f90"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_e43b8b7903614e0eab162702b31d6f90",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:28:09.702761",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "                \"files_touched\": sorted({path for turn in selected_turns for path in turn.files_touched})[:20],\n                \"compressed_state\": compressed_state.to_dict(),\n                \"compressed_state_prompt\": compressed_state.render_for_prompt(),\n            },\n            compressed_state=compressed_state\n        )",
+        "old_str": "                \"files_touched\": sorted({path for turn in selected_turns for path in turn.files_touched})[:20],\n            }\n        )",
+        "path": "core/compression_engine.py"
+      },
+      "tool_output": "成功: 已更新 core/compression_engine.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

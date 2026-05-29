@@ -1,0 +1,54 @@
+{
+  "id": "mem_49ef7c2241a94d7d8e0e1006344aea3d",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 tests/test_memory_phase5.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T17:12:38.393561",
+  "updated_at": "2026-05-28T17:12:38.393561",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "tests/test_memory_phase5.py"
+  ],
+  "source_observation_ids": [
+    "obs_5999aaabbfc04dfc88c6d5b59d130de9"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_5999aaabbfc04dfc88c6d5b59d130de9",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T17:12:38.393561",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "path": "tests/test_memory_phase5.py",
+        "old_str": "from tools import get_default_tools\nfrom tools.memory_tool import MemoryStatsTool\nfrom core.engine import AgentEngine\n",
+        "new_str": "from tools import get_default_tools\nfrom tools.memory_tool import MemoryRecallTool, MemoryStatsTool\nfrom core.engine import AgentEngine\n"
+      },
+      "tool_output": "成功: 已更新 tests/test_memory_phase5.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_memory_phase5.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "mem_5f99e7eb803d435eb7d35630670b7181",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_layers.py (第 180 至 538 行，共 648 行) ---\n 180 |             storage_dir: 存储目录路径\n 181 |         \"\"\"\n 182 |         self.storage_dir = Path(storage_dir)\n 183 |         self.storage_dir.mkdir(parents=True, exist_ok=True)\n 184 | \n 185 |         # 内存索引：{session_id: file_path}\n 186 |         self.index: Dict[str, Path] = {}\n 187 | \n 188 |         # MemoryItem 索引：{memory_item_id: file_path}\n 189 |         self.item_index: Dict[str, Path] = {}\n 190 | \n 191 |         # 倒排索引：{keyword: [session_ids]}\n 192 |         self.inverted_index: Dict[str, List[str]] = {}\n 193 | \n 194 |         # MemoryItem 倒排索引：{keyword: [memory_item_ids]}\n 195 |         self.item_inverted_index: Dict[str, List[str]] = {}\n 196 | \n 197 |         # 初始化时加载索引\n 198 |         self._load_index()\n 199 | \n 200 |     def _load_index(self):\n 201 |         \"\"\"从磁盘加载索引\"\"\"\n 202 |         index_file = self.storage_dir / \"index.json\"\n 203 |         if index_file.exists():\n 204 |             try:\n 205 |                 with open(index_file, 'r', encoding='utf-8') as f:\n 206 |                     data = json.load(f)\n 207 |                     self.index = {k: Path(v) for k, v in data.get(\"index\", {}).items()}\n 208 |                     self.item_index = {k: Path(v) for k, v in data.get(\"item_index\", {}).items()}\n 209 |                     self.inverted_index = data.get(\"inverted_index\", {})\n 210 |                     self.item_inverted_index = data.get(\"item_inverted_index\", {})\n 211 |             except Exception as e:\n 212 |                 # 如果加载失败，重建索引\n 213 |                 backup_path = self._backup_corrupt_index(index_file)\n 214 |                 backup_hint = f\"，已备份损坏索引到: {backup_path}\" if backup_path else \"\"\n 215 |                 print(f\"⚠️ 加载索引失败，将重建索引: {e}{backup_hint}\")\n 216 |                 self._rebuild_index()\n 217 | \n 218 |     def _backup_corrupt_index(self, index_file: Path) -> str:\n 219 |         \"\"\"备份无法解析的索引文件，避免重建时直接覆盖现场。\"\"\"\n 220 |         if not index_file.exists():\n 221 |             return \"\"\n 222 | \n 223 |         timestamp = datetime.now().strftime(\"%Y%m%d_%H%M%S_%f\")\n 224 |         backup_path = index_file.with_name(f\"{index_file.name}.corrupt_{timestamp}.bak\")\n 225 |         try:\n 226 |             index_file.replace(backup_path)\n 227 |             return str(backup_path)\n 228 |         except Exception as backup_error:\n 229 |             print(f\"⚠️ 备份损坏索引失败: {backup_error}\")\n 230 |             return \"\"\n 231 | \n 232 |     def _serialize_index(self) -> Dict[str, Any]:\n 233 |         \"\"\"把内存索引转换为可持久化 JSON 的普通字典。\"\"\"\n 234 |         return {\n 235 |             \"index\": {k: str(v) for k, v in self.index.items()},\n 236 |             \"item_index\": {k: str(v) for k, v in self.item_index.items()},\n 237 |             \"inverted_index\": self.inverted_index,\n 238 |             \"item_inverted_index\": self.item_inverted_index,\n 239 |         }\n 240 | \n 241 |     def _save_index(self):\n 242 |         \"\"\"保存索引到磁盘。\n 243 | \n 244 |         Windows 下 os.replace 在目标文件被杀毒软件、编辑器、同步盘或另一个\n 245 |         Python 进程短暂占用时可能抛 PermissionError(WinError 5)。索引只是缓存，\n 246 |         单次保存失败不应影响启动/工具调用，因此这里采用：\n 247 |         1. 内容未变化时跳过写入，降低启动期无意义 replace；\n 248 |         2. PermissionError 短暂重试；\n 249 |         3. 仍失败时保留一个 fallback 快照并清理临时文件，避免刷屏和 tmp 堆积。\n 250 |         \"\"\"\n 251 |         index_file = self.storage_dir / \"index.json\"\n 252 |         payload = self._serialize_index()\n 253 | \n 254 |         try:\n 255 |             serialized = json.dumps(payload, ensure_ascii=False, indent=2)\n 256 |             if index_file.exists():\n 257 |                 try:\n 258 |                     if index_file.read_text(encoding='utf-8') == serialized:\n 259 |                         return\n 260 |                 except OSError:\n 261 |                     # 读旧索引失败时继续尝试写入；写入失败会走下面的降级逻辑。\n 262 |                     pass\n 263 | \n 264 |             fd, tmp_name = tempfile.mkstemp(\n 265 |                 prefix=\"index.\",\n 266 |                 suffix=\".tmp\",\n 267 |                 dir=str(self.sto...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:27:59.561288",
+  "updated_at": "2026-05-29T14:27:59.561288",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py",
+    "index.json",
+    "index.pending.json"
+  ],
+  "source_observation_ids": [
+    "obs_b01d9202193444d0af96a2783c2f83e6"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_b01d9202193444d0af96a2783c2f83e6",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:27:59.561288",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 538,
+        "path": "core/memory_layers.py",
+        "raw_mode": false,
+        "start_line": 180
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_layers.py (第 180 至 538 行，共 648 行) ---\n 180 |             storage_dir: 存储目录路径\n 181 |         \"\"\"\n 182 |         self.storage_dir = Path(storage_dir)\n 183 |         self.storage_dir.mkdir(parents=True, exist_ok=True)\n 184 | \n 185 |         # 内存索引：{session_id: file_path}\n 186 |         self.index: Dict[str, Path] = {}\n 187 | \n 188 |         # MemoryItem 索引：{memory_item_id: file_path}\n 189 |         self.item_index: Dict[str, Path] = {}\n 190 | \n 191 |         # 倒排索引：{keyword: [session_ids]}\n 192 |         self.inverted_index: Dict[str, List[str]] = {}\n 193 | \n 194 |         # MemoryItem 倒排索引：{keyword: [memory_item_ids]}\n 195 |         self.item_inverted_index: Dict[str, List[str]] = {}\n 196 | \n 197 |         # 初始化时加载索引\n 198 |         self._load_index()\n 199 | \n 200 |     def _load_index(self):\n 201 |         \"\"\"从磁盘加载索引\"\"\"\n 202 |         index_file = self.storage_dir / \"index.json\"\n 203 |         if index_file.exists():\n 204 |             try:\n 205 |                 with open(index_file, 'r', encoding='utf-8') as f:\n 206 |                     data = json.load(f)\n 207 |                     self.index = {k: Path(v) for k, v in data.get(\"index\", {}).items()}\n 208 |                     self.item_index = {k: Path(v) for k, v in data.get(\"item_index\", {}).items()}\n 209 |                     self.inverted_index = data.get(\"inverted_index\", {})\n 210 |                     self.item_inverted_index = data.get(\"item_inverted_index\", {})\n 211 |             except Exception as e:\n 212 |                 # 如果加载失败，重建索引\n 213 |                 backup_path = self._backup_corrupt_index(index_file)\n 214 |                 backup_hint = f\"，已备份损坏索引到: {backup_path}\" if backup_path else \"\"\n 215 |                 print(f\"⚠️ 加载索引失败，将重建索引: {e}{backup_hint}\")\n 216 |                 self._rebuild_index()\n 217 | \n 218 |     def _backup_corrupt_index(self, index_file: Path) -> str:\n 219 |         \"\"\"备份无法解析的索引文件，避免重建时直接覆盖现场。\"\"\"\n 220 |         if not index_file.exists():\n 221 |             return \"\"\n 222 | \n 223 |         timestamp = datetime.now().strftime(\"%Y%m%d_%H%M%S_%f\")\n 224 |         backup_path = index_file.with_name(f\"{index_file.name}.corrupt_{timestamp}.bak\")\n 225 |         try:\n 226 |             index_file.replace(backup_path)\n 227 |             return str(backup_path)\n 228 |         except Exception as backup_error:\n 229 |             print(f\"⚠️ 备份损坏索引失败: {backup_error}\")\n 230 |             return \"\"\n 231 | \n 232 |     def _serialize_index(self) -> Dict[str, Any]:\n 233 |         \"\"\"把内存索引转换为可持久化 JSON 的普通字典。\"\"\"\n 234 |         return {\n 235 |             \"index\": {k: str(v) for k, v in self.index.items()},\n 236 |             \"item_index\": {k: str(v) for k, v in self.item_index.items()},\n 237 |             \"inverted_index\": self.inverted_index,\n 238 |             \"item_inverted_index\": self.item_inverted_index,\n 239 |         }\n 240 | \n 241 |     def _save_index(self):\n 242 |         \"\"\"保存索引到磁盘。\n 243 | \n 244 |         Windows 下 os.replace 在目标文件被杀毒软件、编辑器、同步盘或另一个\n 245 |         Python 进程短暂占用时可能抛 PermissionError(WinError 5)。索引只是缓存，\n 246 |         单次保存失败不应影响启动/工具调用，因此这里采用：\n 247 |         1. 内容未变化时跳过写入，降低启动期无意义 replace；\n 248 |         2. PermissionError 短暂重试；\n 249 |         3. 仍失败时保留一个 fallback 快照并清理临时文件，避免刷屏和 tmp 堆积。\n 250 |         \"\"\"\n 251 |         index_file = self.storage_dir / \"index.json\"\n 252 |         payload = self._serialize_index()\n 253 | \n 254 |         try:\n 255 |             serialized = json.dumps(payload, ensure_ascii=False, indent=2)\n 256 |             if index_file.exists():\n 257 |                 try:\n 258 |                     if index_file.read_text(encoding='utf-8') == serialized:\n 259 |                         return\n 260 |                 except OSError:\n 261 |                     # 读旧索引失败时继续尝试写入；写入失败会走下面的降级逻辑。\n 262 |                     pass\n 263 | \n 264 |             fd, tmp_name = tempfile.mkstemp(\n 265 |                 prefix=\"index.\",\n 266 |                 suffix=\".tmp\",\n 267 |                 dir=str(self.sto...",
+      "files": [
+        "core/memory_layers.py",
+        "index.json",
+        "index.pending.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

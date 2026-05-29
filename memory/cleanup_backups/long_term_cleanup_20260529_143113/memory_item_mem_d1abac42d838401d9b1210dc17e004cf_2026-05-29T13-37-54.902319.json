@@ -1,0 +1,94 @@
+{
+  "id": "mem_d1abac42d838401d9b1210dc17e004cf",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 684 处匹配，分布在 6 个文件中\n\n================================================================================\n\n[FILE] CLAUDE.md (5 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      23 | - **读取内容时**：优先使用 `raw_mode=True` 参数，输出无装饰符的原始内容，方便拷贝\n>>>   24 | - **编辑长代码块时**：old_str 应包含足够的上下文行（至少上下各 2 行），确保唯一性\n      25 | - **遇到匹配失败时**：\n    [上下文]\n      31 | - **强制性**：在进行跨文件重构或修改核心接口前，必须先调用 `search_code` 进行全局影响评估，了解受影响的文件范围。\n>>>   32 | - **最佳实践**：使用 `search_code` 时，建议设置 `context=2` 参数以查看上下文行，避免误判。\n      33 | \n    [上下文]\n      40 | \n>>>   41 | ## 会话管理规范\n      42 | - 当检测到任务跨度超过 30 轮对话时，主动建议用户使用 `manage_plan` 更新状态并开启新会话。\n    [上下文]\n      41 | ## 会话管理规范\n>>>   42 | - 当检测到任务跨度超过 30 轮对话时，主动建议用户使用 `manage_plan` 更新状态并开启新会话。\n      43 | - 在完成重大重构任务后，必须调用 `write_file` 将核心逻辑总结到 `docs/arch_notes.md` 中，实现长效记忆。\n    [上下文]\n      42 | - 当检测到任务跨度超过 30 轮对话时，主动建议用户使用 `manage_plan` 更新状态并开启新会话。\n>>>   43 | - 在完成重大重构任务后，必须调用 `write_file` 将核心逻辑总结到 `docs/arch_notes.md` 中，实现长效记忆。\n      44 | \n\n[FILE] README.md (85 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       6 | \n>>>    7 | 基于工程化 Agent 架构 · 闭环测试驱动 · 三层记忆系统 · 影子分支保护\n       8 | \n    [上下文]\n      25 | | 串行调用工具，效率低下 | ⚡ 异步并发推理，3-5x 速度提升 |\n>>>   26 | | 长对话后遗忘上下文 | 🧠 三层记忆架构，跨会话知识沉淀 |\n      27 | | 改错了就束手无策 | 🛡️ 影子分支 + Git 物理回滚，零风险重构 |\n    [上下文]\n      44 | │  ┌────────────────┐  ┌──────────────┐  ┌──────────────────┐ │\n>>>   45 | │  │  PlanManager   │  │   Context    │  │  SessionManager  │ │\n      46 | │  │  任务规划看板   │  │  上下文管家   │  │   会话持久化     │ │\n    [上下文]\n      45 | │  │  PlanManager   │  │   Context    │  │  SessionManager  │ │\n>>>   46 | │  │  任务规划看板   │  │  上下文管家   │  │   会话持久化     │ │\n      47 | │  └────────────────┘  └──────────────┘  └──────────────────┘ │\n    [上下文]\n      57 | ┌──────────────────────────────────────────────────────────────┐\n>>>   58 | │                    三层记忆系统 (Memory)                       │\n      59 | │  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐       │\n    [上下文]\n      59 | │  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐       │\n>>>   60 | │  │  工作记忆    │ → │  情景记忆    │ → │  长期记忆    │      │\n      61 | │  │ 最近N条消息 │   │ 结构化摘要   │   │ BM25检索库  │       │\n    [上下文]\n      78 | ├── core/                      # 🧠 核心引擎层\n>>>   79 | │   ├── engine.py              # 异步决策中枢：并发 ReAct 循环，接入主动记忆召回/保存\n      80 | │   ├── context.py             # 上下文管家：压缩与持久化\n    [上下文]\n      79 | │   ├── engine.py              # 异步决策中枢：并发 ReAct 循环，接入主动记忆召回/保存\n>>>   80 | │   ├── context.py             # 上下文管家：压缩与持久化\n      81 | │   ├── plan.py                # PlanManager：显式任务规划\n    [上下文]\n      81 | │   ├── plan.py                # PlanManager：显式任务规划\n>>>   82 | │   ├── prompts.py             # 提示词工厂：动态注入环境/记忆/计划\n      83 | │   ├── session_manager.py     # 会话管理器：跨会话状态持久化\n    [上下文]\n      82 | │   ├── prompts.py             # 提示词工厂：动态注入环境/记忆/计划\n>>>   83 | │   ├── session_manager.py     # 会话管理器：跨会话状态持久化\n      84 | │   ├── compression_engine.py  # 智能压缩引擎：4 种自适应策略\n    [上下文]\n      83 | │   ├── session_manager.py     # 会话管理器：跨会话状态持久化\n>>>   84 | │   ├── compression_engine.py  # 智能压缩引擎：4 种自适应策略\n      85 | │   ├── memory_layers.py       # 三层记忆架构管理\n    [上下文]\n      84 | │   ├── compression_engine.py  # 智能压缩引擎：4 种自适应策略\n>>>   85 | │   ├── memory_layers.py       # 三层记忆架构管理\n      86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n    [上下文]\n      85 | │   ├── memory_layers.py       # 三层记忆架构管理\n>>>   86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n    [上下文]\n      86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n>>>   87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n      88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n    [上下文]\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n>>>   88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:37:54.902319",
+  "updated_at": "2026-05-29T13:37:54.902319",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    ".",
+    "CLAUDE.md",
+    "docs/arch_notes.md",
+    "README.md",
+    "engine.py",
+    "context.py",
+    "plan.py",
+    "prompts.py",
+    "session_manager.py",
+    "compression_engine.py",
+    "memory_layers.py",
+    "memory_models.py",
+    "memory_items.py",
+    "memory_manager.py",
+    "memory_context_builder.py",
+    "memory_retrieval.py",
+    "keyword_indexer.py",
+    "plan_tool.py",
+    "session_tool.py",
+    "retrieval_tool.py"
+  ],
+  "source_observation_ids": [
+    "obs_77a588ec56c44375a7d198afe70eb385"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_77a588ec56c44375a7d198afe70eb385",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:37:54.902319",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 1,
+        "file_pattern": "*.md",
+        "path": ".",
+        "pattern": "memory|context|session|compress|compression|summary|summar|记忆|上下文|压缩|会话"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 684 处匹配，分布在 6 个文件中\n\n================================================================================\n\n[FILE] CLAUDE.md (5 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      23 | - **读取内容时**：优先使用 `raw_mode=True` 参数，输出无装饰符的原始内容，方便拷贝\n>>>   24 | - **编辑长代码块时**：old_str 应包含足够的上下文行（至少上下各 2 行），确保唯一性\n      25 | - **遇到匹配失败时**：\n    [上下文]\n      31 | - **强制性**：在进行跨文件重构或修改核心接口前，必须先调用 `search_code` 进行全局影响评估，了解受影响的文件范围。\n>>>   32 | - **最佳实践**：使用 `search_code` 时，建议设置 `context=2` 参数以查看上下文行，避免误判。\n      33 | \n    [上下文]\n      40 | \n>>>   41 | ## 会话管理规范\n      42 | - 当检测到任务跨度超过 30 轮对话时，主动建议用户使用 `manage_plan` 更新状态并开启新会话。\n    [上下文]\n      41 | ## 会话管理规范\n>>>   42 | - 当检测到任务跨度超过 30 轮对话时，主动建议用户使用 `manage_plan` 更新状态并开启新会话。\n      43 | - 在完成重大重构任务后，必须调用 `write_file` 将核心逻辑总结到 `docs/arch_notes.md` 中，实现长效记忆。\n    [上下文]\n      42 | - 当检测到任务跨度超过 30 轮对话时，主动建议用户使用 `manage_plan` 更新状态并开启新会话。\n>>>   43 | - 在完成重大重构任务后，必须调用 `write_file` 将核心逻辑总结到 `docs/arch_notes.md` 中，实现长效记忆。\n      44 | \n\n[FILE] README.md (85 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       6 | \n>>>    7 | 基于工程化 Agent 架构 · 闭环测试驱动 · 三层记忆系统 · 影子分支保护\n       8 | \n    [上下文]\n      25 | | 串行调用工具，效率低下 | ⚡ 异步并发推理，3-5x 速度提升 |\n>>>   26 | | 长对话后遗忘上下文 | 🧠 三层记忆架构，跨会话知识沉淀 |\n      27 | | 改错了就束手无策 | 🛡️ 影子分支 + Git 物理回滚，零风险重构 |\n    [上下文]\n      44 | │  ┌────────────────┐  ┌──────────────┐  ┌──────────────────┐ │\n>>>   45 | │  │  PlanManager   │  │   Context    │  │  SessionManager  │ │\n      46 | │  │  任务规划看板   │  │  上下文管家   │  │   会话持久化     │ │\n    [上下文]\n      45 | │  │  PlanManager   │  │   Context    │  │  SessionManager  │ │\n>>>   46 | │  │  任务规划看板   │  │  上下文管家   │  │   会话持久化     │ │\n      47 | │  └────────────────┘  └──────────────┘  └──────────────────┘ │\n    [上下文]\n      57 | ┌──────────────────────────────────────────────────────────────┐\n>>>   58 | │                    三层记忆系统 (Memory)                       │\n      59 | │  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐       │\n    [上下文]\n      59 | │  ┌─────────────┐   ┌─────────────┐   ┌─────────────┐       │\n>>>   60 | │  │  工作记忆    │ → │  情景记忆    │ → │  长期记忆    │      │\n      61 | │  │ 最近N条消息 │   │ 结构化摘要   │   │ BM25检索库  │       │\n    [上下文]\n      78 | ├── core/                      # 🧠 核心引擎层\n>>>   79 | │   ├── engine.py              # 异步决策中枢：并发 ReAct 循环，接入主动记忆召回/保存\n      80 | │   ├── context.py             # 上下文管家：压缩与持久化\n    [上下文]\n      79 | │   ├── engine.py              # 异步决策中枢：并发 ReAct 循环，接入主动记忆召回/保存\n>>>   80 | │   ├── context.py             # 上下文管家：压缩与持久化\n      81 | │   ├── plan.py                # PlanManager：显式任务规划\n    [上下文]\n      81 | │   ├── plan.py                # PlanManager：显式任务规划\n>>>   82 | │   ├── prompts.py             # 提示词工厂：动态注入环境/记忆/计划\n      83 | │   ├── session_manager.py     # 会话管理器：跨会话状态持久化\n    [上下文]\n      82 | │   ├── prompts.py             # 提示词工厂：动态注入环境/记忆/计划\n>>>   83 | │   ├── session_manager.py     # 会话管理器：跨会话状态持久化\n      84 | │   ├── compression_engine.py  # 智能压缩引擎：4 种自适应策略\n    [上下文]\n      83 | │   ├── session_manager.py     # 会话管理器：跨会话状态持久化\n>>>   84 | │   ├── compression_engine.py  # 智能压缩引擎：4 种自适应策略\n      85 | │   ├── memory_layers.py       # 三层记忆架构管理\n    [上下文]\n      84 | │   ├── compression_engine.py  # 智能压缩引擎：4 种自适应策略\n>>>   85 | │   ├── memory_layers.py       # 三层记忆架构管理\n      86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n    [上下文]\n      85 | │   ├── memory_layers.py       # 三层记忆架构管理\n>>>   86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n    [上下文]\n      86 | │   ├── memory_models.py       # 会话摘要、文件变更、错误记录等记忆数据模型\n>>>   87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n      88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计、Prompt 构建\n    [上下文]\n      87 | │   ├── memory_items.py        # 长期记忆实体：MemoryItem / RawObservation\n>>>   88 | │   ├── memory_manager.py      # 统一记忆编排：观察、保存、召回、统计...",
+      "files": [
+        ".",
+        "CLAUDE.md",
+        "docs/arch_notes.md",
+        "README.md",
+        "engine.py",
+        "context.py",
+        "plan.py",
+        "prompts.py",
+        "session_manager.py",
+        "compression_engine.py",
+        "memory_layers.py",
+        "memory_models.py",
+        "memory_items.py",
+        "memory_manager.py",
+        "memory_context_builder.py",
+        "memory_retrieval.py",
+        "keyword_indexer.py",
+        "plan_tool.py",
+        "session_tool.py",
+        "retrieval_tool.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

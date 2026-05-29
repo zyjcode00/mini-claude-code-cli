@@ -1,0 +1,55 @@
+{
+  "id": "mem_3d7c4808a5f745d792251c89da0ec9df",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "        # 中文分词（简单实现：提取 2-3 字的片段）\n        # 注意：这是简化版本，实际应用中应使用 jieba 等分词工具\n        chinese_2char = re.findall(r'[\\u4e00-\\u9fa5]{2}', text)\n        chinese_3char = re.findall(r'[\\u4e00-\\u9fa5]{3}', text)\n\n        # 合并并去重\n        chinese = list(set(chinese_2char + chinese_3char))\n\n        return words + chinese\n\n    def store(self, summary: SessionSummary) -> str:\n        \"\"\"\n        存储摘要到长期记忆\n\n        Args:\n            summary: 会话摘要\n\n        Returns:\n            存储的文件路径\n        \"\"\"\n        # 生成文件名\n        timestamp = summary.timestamp.replace(\":\", \"-\").replace(\" \", \"_\")\n        filename = f\"summary_{summary.session_id}_{timestamp}.json\"\n        file_path = self.storage_dir / filename\n\n        # 保存到磁盘\n        try:\n            with open(file_path, 'w', encoding='utf-8') as f:\n                json.dump(summary.to_dict(), f, ensure_ascii=False, indent=2)\n\n            # 更新索引\n            self.index[summary.session_id] = file_path\n\n            # 更新倒排索引\n            keywords = self._extract_keywords(summary.to_dict())\n            for keyword in keywords:\n                if keyword not in self.inverted_index:\n                    self.inverted_index[keyword] = []\n                if summary.session_id not in self.inverted_index[keyword]:\n                    self.inverted_index[keyword].append(summary.session_id)\n\n            # 保存索引\n            self._save_index()\n\n            return str(file_path)\n        except Exception as e:\n            print(f\"⚠️ 存储摘要失败: {e}\")\n            return \"\"\n\n    def store_item(self, item: MemoryItem) -> str:\n        \"\"\"\n        存储 MemoryItem 到长期记忆。\n\n        Args:\n            item: 长期知识条目\n\n        Returns:\n            存储的文件路径\n        \"\"\"\n        timestamp = item.updated_at.replace(\":\", \"-\").replace(\" \", \"_\")\n        filename = f\"memory_item_{item.id}_{timestamp}.json\"\n        file_path = self.storage_dir / filename\n\n        try:\n            with open(file_path, 'w', encoding='utf-8') as f:\n                json.dump(item.to_dict(), f, ensure_ascii=False, indent=2)\n\n            old_file = self.item_index.get(item.id)\n            if old_file and old_file != file_path and old_file.exists():\n                old_file.unlink()\n\n            self.item_index[item.id] = file_path\n            self._remove_id_from_inverted_index(self.item_inverted_index, item.id)\n\n            keywords = self._extract_item_keywords(item.to_dict())\n            for keyword in keywords:\n                if keyword not in self.item_inverted_index:\n                    self.item_inverted_index[keyword] = []\n                if item.id not in self.item_inverted_index[keyword]:\n                    self.item_inverted_index[keyword].append(item.id)\n\n            self._save_index()\n            return str(file_path)\n        except Exception as e:\n            print(f\"⚠️ 存储 MemoryItem 失败: {e}\")\n            return \"\"\n\n    def retrieve_item(self, item_id: str) -> Optional[MemoryItem]:\n        \"\"\"根据 item_id 检索 MemoryItem。\"\"\"\n        file_path = self.item_index.get(item_id)\n        if not file_path or not file_path.exists():\n            return None\n\n        try:\n            with open(file_path, 'r', encoding='utf-8') as f:\n                data = json.load(f)\n                return MemoryItem.from_dict(data)\n        except Exception as e:\n            print(f\"⚠️ 读取 MemoryItem 失败: {e}\")\n            return None\n\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:31:16.799990",
+  "updated_at": "2026-05-29T13:31:16.799990",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_daa36bfc9fdd4156a2dba860e4fa5c78"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_daa36bfc9fdd4156a2dba860e4fa5c78",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:31:16.799990",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 460,
+        "path": "core/memory_layers.py",
+        "raw_mode": true,
+        "start_line": 360
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "        # 中文分词（简单实现：提取 2-3 字的片段）\n        # 注意：这是简化版本，实际应用中应使用 jieba 等分词工具\n        chinese_2char = re.findall(r'[\\u4e00-\\u9fa5]{2}', text)\n        chinese_3char = re.findall(r'[\\u4e00-\\u9fa5]{3}', text)\n\n        # 合并并去重\n        chinese = list(set(chinese_2char + chinese_3char))\n\n        return words + chinese\n\n    def store(self, summary: SessionSummary) -> str:\n        \"\"\"\n        存储摘要到长期记忆\n\n        Args:\n            summary: 会话摘要\n\n        Returns:\n            存储的文件路径\n        \"\"\"\n        # 生成文件名\n        timestamp = summary.timestamp.replace(\":\", \"-\").replace(\" \", \"_\")\n        filename = f\"summary_{summary.session_id}_{timestamp}.json\"\n        file_path = self.storage_dir / filename\n\n        # 保存到磁盘\n        try:\n            with open(file_path, 'w', encoding='utf-8') as f:\n                json.dump(summary.to_dict(), f, ensure_ascii=False, indent=2)\n\n            # 更新索引\n            self.index[summary.session_id] = file_path\n\n            # 更新倒排索引\n            keywords = self._extract_keywords(summary.to_dict())\n            for keyword in keywords:\n                if keyword not in self.inverted_index:\n                    self.inverted_index[keyword] = []\n                if summary.session_id not in self.inverted_index[keyword]:\n                    self.inverted_index[keyword].append(summary.session_id)\n\n            # 保存索引\n            self._save_index()\n\n            return str(file_path)\n        except Exception as e:\n            print(f\"⚠️ 存储摘要失败: {e}\")\n            return \"\"\n\n    def store_item(self, item: MemoryItem) -> str:\n        \"\"\"\n        存储 MemoryItem 到长期记忆。\n\n        Args:\n            item: 长期知识条目\n\n        Returns:\n            存储的文件路径\n        \"\"\"\n        timestamp = item.updated_at.replace(\":\", \"-\").replace(\" \", \"_\")\n        filename = f\"memory_item_{item.id}_{timestamp}.json\"\n        file_path = self.storage_dir / filename\n\n        try:\n            with open(file_path, 'w', encoding='utf-8') as f:\n                json.dump(item.to_dict(), f, ensure_ascii=False, indent=2)\n\n            old_file = self.item_index.get(item.id)\n            if old_file and old_file != file_path and old_file.exists():\n                old_file.unlink()\n\n            self.item_index[item.id] = file_path\n            self._remove_id_from_inverted_index(self.item_inverted_index, item.id)\n\n            keywords = self._extract_item_keywords(item.to_dict())\n            for keyword in keywords:\n                if keyword not in self.item_inverted_index:\n                    self.item_inverted_index[keyword] = []\n                if item.id not in self.item_inverted_index[keyword]:\n                    self.item_inverted_index[keyword].append(item.id)\n\n            self._save_index()\n            return str(file_path)\n        except Exception as e:\n            print(f\"⚠️ 存储 MemoryItem 失败: {e}\")\n            return \"\"\n\n    def retrieve_item(self, item_id: str) -> Optional[MemoryItem]:\n        \"\"\"根据 item_id 检索 MemoryItem。\"\"\"\n        file_path = self.item_index.get(item_id)\n        if not file_path or not file_path.exists():\n            return None\n\n        try:\n            with open(file_path, 'r', encoding='utf-8') as f:\n                data = json.load(f)\n                return MemoryItem.from_dict(data)\n        except Exception as e:\n            print(f\"⚠️ 读取 MemoryItem 失败: {e}\")\n            return None\n\n",
+      "files": [
+        "core/memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

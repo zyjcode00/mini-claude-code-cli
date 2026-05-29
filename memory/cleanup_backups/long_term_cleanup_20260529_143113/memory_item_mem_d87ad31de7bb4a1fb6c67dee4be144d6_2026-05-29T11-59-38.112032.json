@@ -1,0 +1,57 @@
+{
+  "id": "mem_d87ad31de7bb4a1fb6c67dee4be144d6",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/compression_engine.py (第 1 至 925 行，共 925 行) ---\n   1 | # core/compression_engine.py\n   2 | \"\"\"\n   3 | 多策略压缩引擎\n   4 | \n   5 | Phase 3 增强功能：\n   6 | - 支持多种压缩策略（LLM_SUMMARY/KEYFRAME/SLIDING_WINDOW/IMPORTANCE_FILTER）\n   7 | - 根据消息特征智能选择策略\n   8 | - 可配置压缩比\n   9 | \"\"\"\n  10 | \n  11 | from typing import List, Dict, Any, Optional, Callable\n  12 | from enum import Enum\n  13 | from dataclasses import dataclass\n  14 | import json\n  15 | import hashlib\n  16 | import time\n  17 | from datetime import datetime\n  18 | \n  19 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n  20 | from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2\n  21 | from core.turn_builder import TurnBuilder\n  22 | \n  23 | \n  24 | class CompressionStrategy(Enum):\n  25 |     \"\"\"压缩策略枚举\"\"\"\n  26 |     LLM_SUMMARY = \"llm_summary\"           # 调用 LLM 生成摘要\n  27 |     KEYFRAME = \"keyframe\"                # 提取关键帧（工具调用、错误消息）\n  28 |     SLIDING_WINDOW = \"sliding_window\"    # 滑动窗口保留最近消息\n  29 | \n  30 | \n  31 | @dataclass\n  32 | class CompressionResult:\n  33 |     \"\"\"压缩结果\"\"\"\n  34 |     success: bool\n  35 |     strategy: CompressionStrategy\n  36 |     compressed_messages: List[Dict[str, Any]]\n  37 |     summary: Optional[SessionSummary] = None\n  38 |     compression_ratio: float = 0.0\n  39 |     original_count: int = 0\n  40 |     compressed_count: int = 0\n  41 |     metadata: Dict[str, Any] = None\n  42 | \n  43 |     def __post_init__(self):\n  44 |         if self.metadata is None:\n  45 |             self.metadata = {}\n  46 | \n  47 | \n  48 | class CompressionEngine:\n  49 |     \"\"\"\n  50 |     多策略压缩引擎\n  51 | \n  52 |     支持 3 种压缩策略：\n  53 |     1. LLM_SUMMARY: 调用 LLM 生成结构化摘要\n  54 |     2. KEYFRAME: 提取关键帧（工具调用、错误消息）\n  55 |     3. SLIDING_WINDOW: 滑动窗口保留最近消息（默认、最可靠）\n  56 |     \"\"\"\n  57 | \n  58 |     def __init__(self, default_strategy: CompressionStrategy = None, plan_manager=None):\n  59 |         \"\"\"\n  60 |         初始化压缩引擎\n  61 | \n  62 |         Args:\n  63 |             default_strategy: 默认压缩策略（None 表示自动选择）\n  64 |             plan_manager: Plan 状态管理器（用于查询真实任务状态）\n  65 |         \"\"\"\n  66 |         self.default_strategy = default_strategy\n  67 |         self.plan_manager = plan_manager  # Plan 状态管理器\n  68 | \n  69 |         # 策略选择阈值\n  70 |         self.error_dense_threshold = 0.3      # 错误消息占比 > 30% → LLM_SUMMARY\n  71 |         self.tool_dense_threshold = 0.4       # 工具调用占比 > 40% → KEYFRAME\n  72 | \n  73 |         # 🔥🔥🔥 Phase 2: LLM_SUMMARY 优化配置\n  74 |         self.summary_cache = {}                # 缓存已有的摘要\n  75 |         self.llm_call_times = []               # 记录 LLM 调用时间（用于频率限制）\n  76 |         self.llm_call_limit = 10               # 每小时最多 10 次 LLM 调用\n  77 |         self.llm_call_window = 3600            # 时间窗口：1 小时（秒）\n  78 |         self.cache_max_size = 100              # 缓存最大条目数\n  79 | \n  80 |     async def compress(\n  81 |         self,\n  82 |         messages: List[Dict[str, Any]],\n  83 |         strategy: CompressionStrategy = None,\n  84 |         llm_summarizer_func: Optional[Callable] = None,\n  85 |         target_ratio: float = 0.3,\n  86 |         min_keep: int = 4,\n  87 |         existing_summary: str = \"\"\n  88 |     ) -> CompressionResult:\n  89 |         \"\"\"\n  90 |         执行压缩\n  91 | \n  92 |         Args:\n  93 |             messages: 待压缩的消息列表\n  94 |             strategy: 压缩策略（None 表示自动选择）\n  95 |             llm_summarizer_func: LLM 摘要函数（LLM_SUMMARY 策略需要）\n  96 |             target_ratio: 目标压缩比（保留消息的比例）\n  97 |             min_keep: 最少保留的消息数量\n  98 |             existing_summary: 已有的摘要文本\n  99 | \n 100 |         Returns:\n 101 |             CompressionResult: 压缩结果\n 102 |         \"\"\"\n 103 |         if not messages:\n 104 |             return CompressionResult(\n 105 |                 success=False,\n 106 |                 strategy=strategy or CompressionStrategy.SLIDING_WINDOW,\n 107 |                 compressed_messages=[],\n 108 |                 original_count=0,\n 109 |                 compressed_count=0\n 110 |             )\n 111 | \n 112 |         # 如...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T11:59:38.112032",
+  "updated_at": "2026-05-29T11:59:38.112032",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py",
+    "hashlib.md"
+  ],
+  "source_observation_ids": [
+    "obs_7a1bac11658a49d495af6d4fdd38170c"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_7a1bac11658a49d495af6d4fdd38170c",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T11:59:38.112032",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 930,
+        "path": "core/compression_engine.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/compression_engine.py (第 1 至 925 行，共 925 行) ---\n   1 | # core/compression_engine.py\n   2 | \"\"\"\n   3 | 多策略压缩引擎\n   4 | \n   5 | Phase 3 增强功能：\n   6 | - 支持多种压缩策略（LLM_SUMMARY/KEYFRAME/SLIDING_WINDOW/IMPORTANCE_FILTER）\n   7 | - 根据消息特征智能选择策略\n   8 | - 可配置压缩比\n   9 | \"\"\"\n  10 | \n  11 | from typing import List, Dict, Any, Optional, Callable\n  12 | from enum import Enum\n  13 | from dataclasses import dataclass\n  14 | import json\n  15 | import hashlib\n  16 | import time\n  17 | from datetime import datetime\n  18 | \n  19 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n  20 | from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2\n  21 | from core.turn_builder import TurnBuilder\n  22 | \n  23 | \n  24 | class CompressionStrategy(Enum):\n  25 |     \"\"\"压缩策略枚举\"\"\"\n  26 |     LLM_SUMMARY = \"llm_summary\"           # 调用 LLM 生成摘要\n  27 |     KEYFRAME = \"keyframe\"                # 提取关键帧（工具调用、错误消息）\n  28 |     SLIDING_WINDOW = \"sliding_window\"    # 滑动窗口保留最近消息\n  29 | \n  30 | \n  31 | @dataclass\n  32 | class CompressionResult:\n  33 |     \"\"\"压缩结果\"\"\"\n  34 |     success: bool\n  35 |     strategy: CompressionStrategy\n  36 |     compressed_messages: List[Dict[str, Any]]\n  37 |     summary: Optional[SessionSummary] = None\n  38 |     compression_ratio: float = 0.0\n  39 |     original_count: int = 0\n  40 |     compressed_count: int = 0\n  41 |     metadata: Dict[str, Any] = None\n  42 | \n  43 |     def __post_init__(self):\n  44 |         if self.metadata is None:\n  45 |             self.metadata = {}\n  46 | \n  47 | \n  48 | class CompressionEngine:\n  49 |     \"\"\"\n  50 |     多策略压缩引擎\n  51 | \n  52 |     支持 3 种压缩策略：\n  53 |     1. LLM_SUMMARY: 调用 LLM 生成结构化摘要\n  54 |     2. KEYFRAME: 提取关键帧（工具调用、错误消息）\n  55 |     3. SLIDING_WINDOW: 滑动窗口保留最近消息（默认、最可靠）\n  56 |     \"\"\"\n  57 | \n  58 |     def __init__(self, default_strategy: CompressionStrategy = None, plan_manager=None):\n  59 |         \"\"\"\n  60 |         初始化压缩引擎\n  61 | \n  62 |         Args:\n  63 |             default_strategy: 默认压缩策略（None 表示自动选择）\n  64 |             plan_manager: Plan 状态管理器（用于查询真实任务状态）\n  65 |         \"\"\"\n  66 |         self.default_strategy = default_strategy\n  67 |         self.plan_manager = plan_manager  # Plan 状态管理器\n  68 | \n  69 |         # 策略选择阈值\n  70 |         self.error_dense_threshold = 0.3      # 错误消息占比 > 30% → LLM_SUMMARY\n  71 |         self.tool_dense_threshold = 0.4       # 工具调用占比 > 40% → KEYFRAME\n  72 | \n  73 |         # 🔥🔥🔥 Phase 2: LLM_SUMMARY 优化配置\n  74 |         self.summary_cache = {}                # 缓存已有的摘要\n  75 |         self.llm_call_times = []               # 记录 LLM 调用时间（用于频率限制）\n  76 |         self.llm_call_limit = 10               # 每小时最多 10 次 LLM 调用\n  77 |         self.llm_call_window = 3600            # 时间窗口：1 小时（秒）\n  78 |         self.cache_max_size = 100              # 缓存最大条目数\n  79 | \n  80 |     async def compress(\n  81 |         self,\n  82 |         messages: List[Dict[str, Any]],\n  83 |         strategy: CompressionStrategy = None,\n  84 |         llm_summarizer_func: Optional[Callable] = None,\n  85 |         target_ratio: float = 0.3,\n  86 |         min_keep: int = 4,\n  87 |         existing_summary: str = \"\"\n  88 |     ) -> CompressionResult:\n  89 |         \"\"\"\n  90 |         执行压缩\n  91 | \n  92 |         Args:\n  93 |             messages: 待压缩的消息列表\n  94 |             strategy: 压缩策略（None 表示自动选择）\n  95 |             llm_summarizer_func: LLM 摘要函数（LLM_SUMMARY 策略需要）\n  96 |             target_ratio: 目标压缩比（保留消息的比例）\n  97 |             min_keep: 最少保留的消息数量\n  98 |             existing_summary: 已有的摘要文本\n  99 | \n 100 |         Returns:\n 101 |             CompressionResult: 压缩结果\n 102 |         \"\"\"\n 103 |         if not messages:\n 104 |             return CompressionResult(\n 105 |                 success=False,\n 106 |                 strategy=strategy or CompressionStrategy.SLIDING_WINDOW,\n 107 |                 compressed_messages=[],\n 108 |                 original_count=0,\n 109 |                 compressed_count=0\n 110 |             )\n 111 | \n 112 |         # 如...",
+      "files": [
+        "core/compression_engine.py",
+        "hashlib.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

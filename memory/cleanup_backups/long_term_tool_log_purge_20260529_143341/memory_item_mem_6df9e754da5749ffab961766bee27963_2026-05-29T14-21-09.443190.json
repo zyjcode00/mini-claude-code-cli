@@ -1,0 +1,59 @@
+{
+  "id": "mem_6df9e754da5749ffab961766bee27963",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "\n        working_max = max(self.working_memory.max_size, 1)\n        episodic_max = max(self.episodic_memory.max_size, 1)\n        return {\n            \"enabled\": True,\n            \"working_memory\": {\n                \"size\": len(self.working_memory),\n                \"max_size\": self.working_memory.max_size,\n                \"usage_rate\": len(self.working_memory) / working_max,\n            },\n            \"episodic_memory\": {\n                \"size\": len(self.episodic_memory),\n                \"max_size\": self.episodic_memory.max_size,\n                \"usage_rate\": len(self.episodic_memory) / episodic_max,\n            },\n            \"long_term_memory\": {\n                \"count\": len(self.long_term_memory),\n                \"summary_count\": len(self.long_term_memory.index),\n                \"item_count\": len(self.long_term_memory.item_index),\n                \"storage_dir\": str(self.long_term_memory.storage_dir),\n            },\n        }\n\n    def export_memories(\n        self,\n        session_summaries: Optional[List[SessionSummary]] = None,\n        history_summary: str = \"\",\n        include_memory_items: bool = False,\n    ) -> Dict[str, Any]:\n        \"\"\"\n        导出可写入 session 文件的会话局部记忆数据。\n\n        注意：长期 MemoryItem 已持久化在 memory/long_term 目录，并由 index.json 管理。\n        默认不再把所有长期 MemoryItem 嵌入每个 session JSON，否则会导致：\n        1. session 文件随长期记忆规模线性膨胀；\n        2. 启动恢复 session 时重复 store_item 写回几百/几千条长期记忆；\n        3. Windows 下反复写 index.json，显著拖慢启动。\n        \"\"\"\n        session_summaries = session_summaries or []\n        memory_items = []\n        if include_memory_items and self.enabled:\n            memory_items = [item.to_dict() for item in self.long_term_memory.get_all_items()]\n\n        if not self.enabled:\n            return {\n                \"working_memory\": [],\n                \"episodic_memory\": [],\n                \"memory_items\": memory_items,\n                \"session_summaries\": [s.to_dict() for s in session_summaries],\n                \"history_summary\": history_summary,\n            }\n\n        return {\n            \"working_memory\": self.working_memory.get_all(),\n            \"episodic_memory\": [s.to_dict() for s in self.episodic_memory.get_all()],\n            \"memory_items\": memory_items,\n            \"session_summaries\": [s.to_dict() for s in session_summaries],\n            \"history_summary\": history_summary,\n        }\n\n    def import_memories(self, data: Dict[str, Any], import_memory_items: bool = False) -> Dict[str, Any]:\n        \"\"\"\n        导入 session 文件中的会话局部记忆数据。\n\n        返回 Phase 1 兼容字段：history_summary 与 session_summaries。\n        默认跳过旧 session 内嵌的 memory_items，因为这些长期记忆已经在\n        memory/long_term/index.json 中加载；再次导入会造成启动期大量重复写盘。\n        \"\"\"\n        session_summaries: List[SessionSummary] = []\n        for s_dict in data.get(\"session_summaries\", []):\n            try:\n                session_summaries.append(SessionSummary.from_dict(s_dict))\n            except Exception as e:\n                print(f\"⚠️ 恢复会话摘要失败: {e}\")\n\n        if self.enabled:\n            self.working_memory.clear()\n            for msg in data.get(\"working_memory\", []):\n                self.working_memory.add(msg)\n\n            self.episodic_memory.clear()\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:21:09.443190",
+  "updated_at": "2026-05-29T14:21:09.443190",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "D:\\LLM\\mini-claude-code-cli\\core\\memory_manager.py",
+    "index.json",
+    "memory/long_term/index.json"
+  ],
+  "source_observation_ids": [
+    "obs_7db4806df2134a05883a1d776e557eba"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_7db4806df2134a05883a1d776e557eba",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:21:09.443190",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 410,
+        "path": "D:\\LLM\\mini-claude-code-cli\\core\\memory_manager.py",
+        "raw_mode": true,
+        "start_line": 330
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "\n        working_max = max(self.working_memory.max_size, 1)\n        episodic_max = max(self.episodic_memory.max_size, 1)\n        return {\n            \"enabled\": True,\n            \"working_memory\": {\n                \"size\": len(self.working_memory),\n                \"max_size\": self.working_memory.max_size,\n                \"usage_rate\": len(self.working_memory) / working_max,\n            },\n            \"episodic_memory\": {\n                \"size\": len(self.episodic_memory),\n                \"max_size\": self.episodic_memory.max_size,\n                \"usage_rate\": len(self.episodic_memory) / episodic_max,\n            },\n            \"long_term_memory\": {\n                \"count\": len(self.long_term_memory),\n                \"summary_count\": len(self.long_term_memory.index),\n                \"item_count\": len(self.long_term_memory.item_index),\n                \"storage_dir\": str(self.long_term_memory.storage_dir),\n            },\n        }\n\n    def export_memories(\n        self,\n        session_summaries: Optional[List[SessionSummary]] = None,\n        history_summary: str = \"\",\n        include_memory_items: bool = False,\n    ) -> Dict[str, Any]:\n        \"\"\"\n        导出可写入 session 文件的会话局部记忆数据。\n\n        注意：长期 MemoryItem 已持久化在 memory/long_term 目录，并由 index.json 管理。\n        默认不再把所有长期 MemoryItem 嵌入每个 session JSON，否则会导致：\n        1. session 文件随长期记忆规模线性膨胀；\n        2. 启动恢复 session 时重复 store_item 写回几百/几千条长期记忆；\n        3. Windows 下反复写 index.json，显著拖慢启动。\n        \"\"\"\n        session_summaries = session_summaries or []\n        memory_items = []\n        if include_memory_items and self.enabled:\n            memory_items = [item.to_dict() for item in self.long_term_memory.get_all_items()]\n\n        if not self.enabled:\n            return {\n                \"working_memory\": [],\n                \"episodic_memory\": [],\n                \"memory_items\": memory_items,\n                \"session_summaries\": [s.to_dict() for s in session_summaries],\n                \"history_summary\": history_summary,\n            }\n\n        return {\n            \"working_memory\": self.working_memory.get_all(),\n            \"episodic_memory\": [s.to_dict() for s in self.episodic_memory.get_all()],\n            \"memory_items\": memory_items,\n            \"session_summaries\": [s.to_dict() for s in session_summaries],\n            \"history_summary\": history_summary,\n        }\n\n    def import_memories(self, data: Dict[str, Any], import_memory_items: bool = False) -> Dict[str, Any]:\n        \"\"\"\n        导入 session 文件中的会话局部记忆数据。\n\n        返回 Phase 1 兼容字段：history_summary 与 session_summaries。\n        默认跳过旧 session 内嵌的 memory_items，因为这些长期记忆已经在\n        memory/long_term/index.json 中加载；再次导入会造成启动期大量重复写盘。\n        \"\"\"\n        session_summaries: List[SessionSummary] = []\n        for s_dict in data.get(\"session_summaries\", []):\n            try:\n                session_summaries.append(SessionSummary.from_dict(s_dict))\n            except Exception as e:\n                print(f\"⚠️ 恢复会话摘要失败: {e}\")\n\n        if self.enabled:\n            self.working_memory.clear()\n            for msg in data.get(\"working_memory\", []):\n                self.working_memory.add(msg)\n\n            self.episodic_memory.clear()\n",
+      "files": [
+        "D:\\LLM\\mini-claude-code-cli\\core\\memory_manager.py",
+        "index.json",
+        "memory/long_term/index.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

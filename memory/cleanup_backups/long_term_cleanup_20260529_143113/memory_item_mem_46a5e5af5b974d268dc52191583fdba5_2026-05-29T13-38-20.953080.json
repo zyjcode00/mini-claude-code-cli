@@ -1,0 +1,57 @@
+{
+  "id": "mem_46a5e5af5b974d268dc52191583fdba5",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/engine.py (第 68 至 340 行，共 775 行) ---\n  68 |     async def _call_llm(self, relevant_history: str = \"\", user_input: str = \"\"):\n  69 |         \"\"\"核心推理：改为异步调用\"\"\"\n  70 |         current_plan = self.plan_manager.get_formatted_plan()\n  71 | \n  72 |         # Phase 2/3: 获取三层记忆数据\n  73 |         episodic_memories = self.context.episodic_memory.get_all() if self.context._enable_memory_layers else []\n  74 |         session_summaries = self.context.session_summaries\n  75 | \n  76 |         # 🔥🔥🔥 跨会话长期记忆检索：从磁盘检索所有会话的长期记忆\n  77 |         long_term_memories = []\n  78 |         if self.context._enable_memory_layers and user_input:\n  79 |             try:\n  80 |                 # 从长期记忆中检索与当前任务相关的摘要（跨所有会话）\n  81 |                 long_term_memories = self.context.memory_manager.search_long_term(\n  82 |                     query=user_input,\n  83 |                     top_k=5  # 检索最相关的 5 条长期记忆\n  84 |                 )\n  85 |                 if long_term_memories:\n  86 |                     print(f\" [🧠] 检索到 {len(long_term_memories)} 条跨会话长期记忆\")\n  87 |             except Exception as e:\n  88 |                 print(f\" [⚠️] 长期记忆检索失败: {e}\")\n  89 | \n  90 |         # 🔥 新增：获取已完成任务列表\n  91 |         completed_goals = self.plan_manager.get_completed_goals()\n  92 | \n  93 |         system_ptr = get_system_prompt(\n  94 |             summary=self.context.history_summary,\n  95 |             plan=current_plan,\n  96 |             episodic_memories=episodic_memories,\n  97 |             session_summaries=session_summaries,\n  98 |             long_term_memories=long_term_memories,  # 🔥🔥🔥 新增参数：跨会话长期记忆\n  99 |             completed_goals=completed_goals,  # 🔥 新增参数\n 100 |             user_input=user_input  # 🔥 新增：用于 CLAUDE.md 按需注入\n 101 |         )\n 102 | \n 103 |         # Phase 5: ContextAssembler 统一预算化装配。\n 104 |         # get_system_prompt 仍负责生成兼容旧行为的基础 system prompt；主动召回的\n 105 |         # relevant_history 作为 memory layer 交给 assembler，避免直接无预算拼接。\n 106 |         messages_snapshot = await self.context.get_messages_snapshot()\n 107 |         assembled_context = self.context_assembler.assemble(\n 108 |             base_system_prompt=system_ptr,\n 109 |             memory_context=relevant_history,\n 110 |             compressed_state=self.context.history_summary,\n 111 |             messages=messages_snapshot,\n 112 |             provider=\"openai\" if self.is_openai_compat else \"anthropic\",\n 113 |             budget=ContextBudget(memory=self.memory_token_budget),\n 114 |         )\n 115 |         system_ptr = assembled_context.system_prompt\n 116 |         messages_snapshot = assembled_context.messages\n 117 | \n 118 |         if self.is_openai_compat:\n 119 |             oa_tools = [{\"type\": \"function\", \"function\": {\"name\": t[\"name\"], \"description\": t[\"description\"], \"parameters\": t[\"input_schema\"]}} for t in self.tool_specs]\n 120 | \n 121 |             # 使用 await 调用异步客户端\n 122 |             resp = await self.client.chat.completions.create(\n 123 |                 model=self.model,\n 124 |                 messages=[{\"role\": \"system\", \"content\": system_ptr}] + messages_snapshot,\n 125 |                 tools=oa_tools if oa_tools else None\n 126 |             )\n 127 | \n 128 |             msg = resp.choices[0].message\n 129 |             # 🔥 修复：转换为字典格式，避免后续 .get() 报错\n 130 |             # 🔥🔥🔥 DeepSeek 修复：保存 reasoning_content（思考模式必须回传）\n 131 |             self.last_oa_msg = {\n 132 |                 \"role\": \"assistant\",\n 133 |                 \"content\": msg.content or \"\",\n 134 |             }\n 135 |             # DeepSeek reasoning_content 回传：必须原样保存在消息历史中\n 136 |             if hasattr(msg, 'reasoning_content') and msg.reasoning_content:\n 137 |                 self.last_oa_msg[\"reasoning_content\"] = msg.reasoning_content\n 138 |             # 如果有工具调用，添加 tool_calls 字段\n 139 |             if msg.tool_calls:\n 140 |                 self.last_oa_msg[\"tool_calls\"] = [\n 141 |                     {\n 142 |                         \"id\": tc.id,\n 143 |                         \"type\": \"function\",\n 144 |     ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:38:20.953080",
+  "updated_at": "2026-05-29T13:38:20.953080",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/engine.py",
+    "CLAUDE.md"
+  ],
+  "source_observation_ids": [
+    "obs_8d4c4158b06b4c3982f699bc9e020eb0"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_8d4c4158b06b4c3982f699bc9e020eb0",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:38:20.953080",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 340,
+        "path": "core/engine.py",
+        "raw_mode": false,
+        "start_line": 68
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/engine.py (第 68 至 340 行，共 775 行) ---\n  68 |     async def _call_llm(self, relevant_history: str = \"\", user_input: str = \"\"):\n  69 |         \"\"\"核心推理：改为异步调用\"\"\"\n  70 |         current_plan = self.plan_manager.get_formatted_plan()\n  71 | \n  72 |         # Phase 2/3: 获取三层记忆数据\n  73 |         episodic_memories = self.context.episodic_memory.get_all() if self.context._enable_memory_layers else []\n  74 |         session_summaries = self.context.session_summaries\n  75 | \n  76 |         # 🔥🔥🔥 跨会话长期记忆检索：从磁盘检索所有会话的长期记忆\n  77 |         long_term_memories = []\n  78 |         if self.context._enable_memory_layers and user_input:\n  79 |             try:\n  80 |                 # 从长期记忆中检索与当前任务相关的摘要（跨所有会话）\n  81 |                 long_term_memories = self.context.memory_manager.search_long_term(\n  82 |                     query=user_input,\n  83 |                     top_k=5  # 检索最相关的 5 条长期记忆\n  84 |                 )\n  85 |                 if long_term_memories:\n  86 |                     print(f\" [🧠] 检索到 {len(long_term_memories)} 条跨会话长期记忆\")\n  87 |             except Exception as e:\n  88 |                 print(f\" [⚠️] 长期记忆检索失败: {e}\")\n  89 | \n  90 |         # 🔥 新增：获取已完成任务列表\n  91 |         completed_goals = self.plan_manager.get_completed_goals()\n  92 | \n  93 |         system_ptr = get_system_prompt(\n  94 |             summary=self.context.history_summary,\n  95 |             plan=current_plan,\n  96 |             episodic_memories=episodic_memories,\n  97 |             session_summaries=session_summaries,\n  98 |             long_term_memories=long_term_memories,  # 🔥🔥🔥 新增参数：跨会话长期记忆\n  99 |             completed_goals=completed_goals,  # 🔥 新增参数\n 100 |             user_input=user_input  # 🔥 新增：用于 CLAUDE.md 按需注入\n 101 |         )\n 102 | \n 103 |         # Phase 5: ContextAssembler 统一预算化装配。\n 104 |         # get_system_prompt 仍负责生成兼容旧行为的基础 system prompt；主动召回的\n 105 |         # relevant_history 作为 memory layer 交给 assembler，避免直接无预算拼接。\n 106 |         messages_snapshot = await self.context.get_messages_snapshot()\n 107 |         assembled_context = self.context_assembler.assemble(\n 108 |             base_system_prompt=system_ptr,\n 109 |             memory_context=relevant_history,\n 110 |             compressed_state=self.context.history_summary,\n 111 |             messages=messages_snapshot,\n 112 |             provider=\"openai\" if self.is_openai_compat else \"anthropic\",\n 113 |             budget=ContextBudget(memory=self.memory_token_budget),\n 114 |         )\n 115 |         system_ptr = assembled_context.system_prompt\n 116 |         messages_snapshot = assembled_context.messages\n 117 | \n 118 |         if self.is_openai_compat:\n 119 |             oa_tools = [{\"type\": \"function\", \"function\": {\"name\": t[\"name\"], \"description\": t[\"description\"], \"parameters\": t[\"input_schema\"]}} for t in self.tool_specs]\n 120 | \n 121 |             # 使用 await 调用异步客户端\n 122 |             resp = await self.client.chat.completions.create(\n 123 |                 model=self.model,\n 124 |                 messages=[{\"role\": \"system\", \"content\": system_ptr}] + messages_snapshot,\n 125 |                 tools=oa_tools if oa_tools else None\n 126 |             )\n 127 | \n 128 |             msg = resp.choices[0].message\n 129 |             # 🔥 修复：转换为字典格式，避免后续 .get() 报错\n 130 |             # 🔥🔥🔥 DeepSeek 修复：保存 reasoning_content（思考模式必须回传）\n 131 |             self.last_oa_msg = {\n 132 |                 \"role\": \"assistant\",\n 133 |                 \"content\": msg.content or \"\",\n 134 |             }\n 135 |             # DeepSeek reasoning_content 回传：必须原样保存在消息历史中\n 136 |             if hasattr(msg, 'reasoning_content') and msg.reasoning_content:\n 137 |                 self.last_oa_msg[\"reasoning_content\"] = msg.reasoning_content\n 138 |             # 如果有工具调用，添加 tool_calls 字段\n 139 |             if msg.tool_calls:\n 140 |                 self.last_oa_msg[\"tool_calls\"] = [\n 141 |                     {\n 142 |                         \"id\": tc.id,\n 143 |                         \"type\": \"function\",\n 144 |     ...",
+      "files": [
+        "core/engine.py",
+        "CLAUDE.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

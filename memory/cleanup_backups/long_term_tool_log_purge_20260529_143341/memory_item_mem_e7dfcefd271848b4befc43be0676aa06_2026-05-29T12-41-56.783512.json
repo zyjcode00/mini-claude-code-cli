@@ -1,0 +1,55 @@
+{
+  "id": "mem_e7dfcefd271848b4befc43be0676aa06",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "        item = MemoryItem(\n            kind=kind,\n            title=title or f\"{observation.event_type}: {observation.tool_name or observation.session_id or observation.id}\",\n            content=content,\n            project=observation.project,\n            concepts=[observation.event_type, observation.tool_name] if observation.tool_name else [observation.event_type],\n            files=observation.files,\n            source_observation_ids=[observation.id],\n            source_session_ids=[observation.session_id] if observation.session_id else [],\n            importance=importance,\n            confidence=confidence,\n            metadata={\"raw_observation\": observation.to_dict()},\n        )\n        self.save_memory_item(item)\n        return item\n\n    def recall(self, query: str, top_k: int = 5, include_summaries: bool = True) -> List[MemoryRecallResult]:\n        \"\"\"\n        统一召回长期记忆。\n\n        阶段4 起默认委托 MemoryRetriever.hybrid_recall，统一整合 MemoryItem 与\n        SessionSummary，并使用 BM25/关键词/元数据加权排序。\n        \"\"\"\n        if not self.enabled:\n            return []\n\n        return self.hybrid_recall(query=query, top_k=top_k, include_summaries=include_summaries)\n\n    def hybrid_recall(\n        self,\n        query: str = \"\",\n        top_k: int = 5,\n        file_path: Optional[str] = None,\n        error_type: Optional[str] = None,\n        kinds: Optional[List[str]] = None,\n        include_summaries: bool = True,\n        include_items: bool = True,\n    ) -> List[MemoryRecallResult]:\n        \"\"\"统一 Hybrid Recall 入口，返回标准 MemoryRecallResult。\"\"\"\n        if not self.enabled:\n            return []\n        return self.retriever.hybrid_recall(\n            query=query,\n            top_k=top_k,\n            file_path=file_path,\n            error_type=error_type,\n            kinds=kinds,\n            include_summaries=include_summaries,\n            include_items=include_items,\n        )\n\n    def retrieve_file_history(self, path: str, top_k: int = 5) -> List[MemoryRecallResult]:\n        \"\"\"按文件路径召回 MemoryItem 与 SessionSummary 历史。\"\"\"\n        if not self.enabled:\n            return []\n        return self.hybrid_recall(query=path, top_k=top_k, file_path=path)\n\n    def retrieve_error_history(self, error: str, top_k: int = 5) -> List[MemoryRecallResult]:\n        \"\"\"按错误类型/错误文本召回历史 Bug、测试失败与相关摘要。\"\"\"\n        if not self.enabled:\n            return []\n        return self.hybrid_recall(query=error, top_k=top_k, error_type=error)\n\n    def build_prompt_memory_context(\n        self,\n        query: str,\n        token_budget: int = 1500,\n        task_type: Optional[str] = None,\n        top_k: int = 8,\n        file_path: Optional[str] = None,\n        error_type: Optional[str] = None,\n        kinds: Optional[List[str]] = None,\n    ) -> str:\n        \"\"\"召回并构建受 token budget 限制的 prompt 记忆上下文。\"\"\"\n        if not self.enabled or not query:\n            return \"\"\n        results = self.hybrid_recall(\n            query=query,\n            top_k=max(top_k * 2, top_k),\n            file_path=file_path,\n            error_type=error_type,\n            kinds=kinds,\n            include_summaries=True,\n            include_items=True,\n        )\n        return self.context_builder.build(\n            query=query,\n            memories=results,\n            token_budget=token_budget,\n            task_type=task_type,\n            max_items=top_k,\n        )\n\n    def _summary_to_memory_item(self, summary: SessionSummary) -> MemoryItem:\n        \"\"\"把旧 SessionSummary 包装为 MemoryItem 召回结果。\"\"\"\n        return MemoryItem(\n            id=f\"summary_{summary.session_id}\",\n            kind=MemoryKind.SUMMARY.value,\n            title=summary.task_goal,\n            content=summary.summary_text,\n            created_at=summary.timestamp,\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:41:56.783512",
+  "updated_at": "2026-05-29T12:41:56.783512",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_manager.py"
+  ],
+  "source_observation_ids": [
+    "obs_88cf0fe3019b45b8bf776c9d5451f74e"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_88cf0fe3019b45b8bf776c9d5451f74e",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:41:56.783512",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 230,
+        "path": "core/memory_manager.py",
+        "raw_mode": true,
+        "start_line": 130
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "        item = MemoryItem(\n            kind=kind,\n            title=title or f\"{observation.event_type}: {observation.tool_name or observation.session_id or observation.id}\",\n            content=content,\n            project=observation.project,\n            concepts=[observation.event_type, observation.tool_name] if observation.tool_name else [observation.event_type],\n            files=observation.files,\n            source_observation_ids=[observation.id],\n            source_session_ids=[observation.session_id] if observation.session_id else [],\n            importance=importance,\n            confidence=confidence,\n            metadata={\"raw_observation\": observation.to_dict()},\n        )\n        self.save_memory_item(item)\n        return item\n\n    def recall(self, query: str, top_k: int = 5, include_summaries: bool = True) -> List[MemoryRecallResult]:\n        \"\"\"\n        统一召回长期记忆。\n\n        阶段4 起默认委托 MemoryRetriever.hybrid_recall，统一整合 MemoryItem 与\n        SessionSummary，并使用 BM25/关键词/元数据加权排序。\n        \"\"\"\n        if not self.enabled:\n            return []\n\n        return self.hybrid_recall(query=query, top_k=top_k, include_summaries=include_summaries)\n\n    def hybrid_recall(\n        self,\n        query: str = \"\",\n        top_k: int = 5,\n        file_path: Optional[str] = None,\n        error_type: Optional[str] = None,\n        kinds: Optional[List[str]] = None,\n        include_summaries: bool = True,\n        include_items: bool = True,\n    ) -> List[MemoryRecallResult]:\n        \"\"\"统一 Hybrid Recall 入口，返回标准 MemoryRecallResult。\"\"\"\n        if not self.enabled:\n            return []\n        return self.retriever.hybrid_recall(\n            query=query,\n            top_k=top_k,\n            file_path=file_path,\n            error_type=error_type,\n            kinds=kinds,\n            include_summaries=include_summaries,\n            include_items=include_items,\n        )\n\n    def retrieve_file_history(self, path: str, top_k: int = 5) -> List[MemoryRecallResult]:\n        \"\"\"按文件路径召回 MemoryItem 与 SessionSummary 历史。\"\"\"\n        if not self.enabled:\n            return []\n        return self.hybrid_recall(query=path, top_k=top_k, file_path=path)\n\n    def retrieve_error_history(self, error: str, top_k: int = 5) -> List[MemoryRecallResult]:\n        \"\"\"按错误类型/错误文本召回历史 Bug、测试失败与相关摘要。\"\"\"\n        if not self.enabled:\n            return []\n        return self.hybrid_recall(query=error, top_k=top_k, error_type=error)\n\n    def build_prompt_memory_context(\n        self,\n        query: str,\n        token_budget: int = 1500,\n        task_type: Optional[str] = None,\n        top_k: int = 8,\n        file_path: Optional[str] = None,\n        error_type: Optional[str] = None,\n        kinds: Optional[List[str]] = None,\n    ) -> str:\n        \"\"\"召回并构建受 token budget 限制的 prompt 记忆上下文。\"\"\"\n        if not self.enabled or not query:\n            return \"\"\n        results = self.hybrid_recall(\n            query=query,\n            top_k=max(top_k * 2, top_k),\n            file_path=file_path,\n            error_type=error_type,\n            kinds=kinds,\n            include_summaries=True,\n            include_items=True,\n        )\n        return self.context_builder.build(\n            query=query,\n            memories=results,\n            token_budget=token_budget,\n            task_type=task_type,\n            max_items=top_k,\n        )\n\n    def _summary_to_memory_item(self, summary: SessionSummary) -> MemoryItem:\n        \"\"\"把旧 SessionSummary 包装为 MemoryItem 召回结果。\"\"\"\n        return MemoryItem(\n            id=f\"summary_{summary.session_id}\",\n            kind=MemoryKind.SUMMARY.value,\n            title=summary.task_goal,\n            content=summary.summary_text,\n            created_at=summary.timestamp,\n",
+      "files": [
+        "core/memory_manager.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

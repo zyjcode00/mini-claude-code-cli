@@ -1,0 +1,54 @@
+{
+  "id": "mem_94ca2d1faef647f8918a74c6e2f741df",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 core/compression_engine.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T11:59:16.612622",
+  "updated_at": "2026-05-29T11:59:16.612622",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_8d3259a13d8a4b4ea73767c690ae2e4a"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_8d3259a13d8a4b4ea73767c690ae2e4a",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T11:59:16.612622",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "        target_count = max(min_keep, int(len(messages) * target_ratio))\n        compressed_messages = self._select_recent_complete_turn_messages(messages, target_count)\n\n        if len(compressed_messages) < min_keep and len(messages) <= min_keep:\n            compressed_messages = self._sanitize_openai_tool_pairs(messages[:])\n\n        print(f\"   [滑动窗口] 保留最近 {len(compressed_messages)} 条消息（基于完整 turn）\")\n\n        # 🔥 关键验证：检查最终的消息序列是否有效\n        is_valid = self._validate_message_ordering(compressed_messages)\n        if not is_valid:\n            print(f\"   ⚠️  警告: 压缩后的消息序列无效，执行安全清理\")\n            compressed_messages = self._sanitize_openai_tool_pairs(compressed_messages)",
+        "old_str": "        target_count = max(min_keep, int(len(messages) * target_ratio))\n\n        # 保留最近的消息\n        compressed_messages = messages[-target_count:]\n\n        # 🔥🔥🔥 关键修复：调整起始位置，确保不破坏工具调用对（双向修复）\n        # 问题1：当第一条消息是 tool，但没有对应的 assistant with tool_calls\n        # 问题2：当 assistant with tool_calls 但没有对应的 tool 消息（GPT-5.5 严格要求）\n        start_idx = 0\n        while start_idx < len(compressed_messages):\n            msg = compressed_messages[start_idx]\n\n            # 🔥 情况1：如果消息是 tool，需要找到对应的 assistant with tool_calls\n            if msg.get(\"role\") == \"tool\":\n                tool_call_id = msg.get(\"tool_call_id\")\n                found_matching_assistant = False\n\n                # 向前查找对应的 assistant\n                for back_idx in range(start_idx - 1, -1, -1):\n                    prev_msg = compressed_messages[back_idx]\n                    if prev_msg.get(\"role\") == \"assistant\" and \"tool_calls\" in prev_msg:\n                        for tc in prev_msg.get(\"tool_calls\", []):\n                            if tc.get(\"id\") == tool_call_id:\n                                found_matching_assistant = True\n                                break\n                    if found_matching_assistant:\n                        break\n\n                # 如果没找到对应的 assistant，删除这个孤立的 tool 消息\n                if not found_matching_assistant:\n                    print(f\"   [滑动窗口] 删除孤立 tool 消息 (index={start_idx}, tool_call_id={tool_call_id})\")\n                    compressed_messages.pop(start_idx)\n                    continue\n\n            # 🔥🔥🔥 情况2：如果消息是 assistant with tool_calls，需要确保后续有对应的 tool\n            # GPT-5.5 严格要求：每个 tool_call_id 都必须有对应的 tool 消息\n            elif msg.get(\"role\") == \"assistant\" and \"tool_calls\" in msg:\n                tool_calls = msg.get(\"tool_calls\", [])\n                all_tools_found = True\n\n                for tc in tool_calls:\n                    tool_call_id = tc.get(\"id\")\n                    found_tool = False\n\n                    # 向后查找对应的 tool 消息\n                    for after_idx in range(start_idx + 1, len(compressed_messages)):\n                        next_msg = compressed_messages[after_idx]\n                        if next_msg.get(\"role\") == \"tool\" and next_msg.get(\"tool_call_id\") == tool_call_id:\n                            found_tool = True\n                            break\n\n                    if not found_tool:\n                        all_tools_found = False\n                        print(f\"   [滑动窗口] Assistant 消息 (index={start_idx}) 的 tool_call_id={tool_call_id} 没有对应 tool\")\n                        break\n\n                # 🔥🔥🔥 如果 assistant 的 tool_calls 不完整，删除这条 assistant 消息\n                # GPT-5.5 严格要求：不允许孤立的 assistant with tool_calls\n                if not all_tools_found:\n                    print(f\"   [滑动窗口] 删除孤立 assistant 消息 (index={start_idx}, 有 {len(tool_calls)} 个 tool_calls)\")\n                    compressed_messages.pop(start_idx)\n                    continue\n\n            start_idx += 1\n\n        # 如果截断后数量太少，补充\n        if len(compressed_messages) < min_keep:\n            # 🔥 修复：当消息数量 < min_keep 时，避免切片问题\n            if len(messages) <= min_keep:\n                compressed_messages = messages[:]\n            else:\n                compressed_messages = messages[-min_keep:]\n                # 再次检查起始位置的工具调用完整性\n                start_idx = 0\n                while start_idx < len(compressed_messages):\n                    msg = compressed_messages[start_idx]\n                    if msg.get(\"role\") == \"tool\":\n                        tool_call_id = msg.get(\"tool_call_id\")\n                        found = any(\n                            compressed_messages[i].get(\"role\") == \"assistant\" and\n                            any(tc.get(\"id\") == tool_call_id for tc in compressed_messages[i].get(\"tool_calls\", []))\n                            for i in range(start_idx)\n                        )\n                        if not found:\n                            compressed_messages.pop(start_idx)\n                            continue\n                    start_idx += 1\n\n        print(f\"   [滑动窗口] 保留最近 {len(compressed_messages)} 条消息（已验证工具调用完整性）\")\n\n        # 🔥 关键验证：检查最终的消息序列是否有效\n        is_valid = self._validate_message_ordering(compressed_messages)\n        if not is_valid:\n            print(f\"   ⚠️  警告: 压缩后的消息序列无效，执行安全清理\")\n            compressed_messages = self._sanitize_openai_tool_pairs(compressed_messages)",
+        "path": "core/compression_engine.py"
+      },
+      "tool_output": "成功: 已更新 core/compression_engine.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

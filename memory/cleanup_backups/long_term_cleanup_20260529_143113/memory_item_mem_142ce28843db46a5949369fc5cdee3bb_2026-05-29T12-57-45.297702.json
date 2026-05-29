@@ -1,0 +1,94 @@
+{
+  "id": "mem_142ce28843db46a5949369fc5cdee3bb",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 442 处匹配，分布在 25 个文件中\n\n================================================================================\n\n[FILE] main.py (4 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       7 | from rich.panel import Panel\n       8 | from rich.markdown import Markdown\n>>>    9 | from rich.prompt import Prompt\n      10 | from core.plan import PlanManager  # 🔥 改为导入类而非全局实例\n      11 | \n    [上下文]\n     132 |         console.print(\"  [3] 退出 (手动处理后再启动)\")\n     133 | \n>>>  134 |         choice = Prompt.ask(\"请输入选项\", choices=[\"1\", \"2\", \"3\"], default=\"1\")\n     135 | \n     136 |         if choice == \"2\":\n    [上下文]\n     161 | \n     162 |             if user_input == \"/clear\":\n>>>  163 |                 engine.context.messages = []\n     164 |                 engine.context.history_summary = \"\"\n     165 |                 engine.plan_manager.clear_plan()  # 🔥 同时清除 Plan 状态\n    [上下文]\n     162 |             if user_input == \"/clear\":\n     163 |                 engine.context.messages = []\n>>>  164 |                 engine.context.history_summary = \"\"\n     165 |                 engine.plan_manager.clear_plan()  # 🔥 同时清除 Plan 状态\n     166 |                 engine.save_session()\n\n[FILE] core\\bm25_retriever.py (5 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     378 |         content: str,\n     379 |         query_terms: set,\n>>>  380 |         context_length: int = 50\n     381 |     ) -> List[str]:\n     382 |         \"\"\"\n    [上下文]\n     386 |             content: 文档内容\n     387 |             query_terms: 查询词项集合\n>>>  388 |             context_length: 上下文长度\n     389 | \n     390 |         Returns:\n    [上下文]\n     405 |             if any(term in sentence_lower for term in query_terms):\n     406 |                 # 截取适当长度\n>>>  407 |                 if len(sentence) > context_length * 2:\n     408 |                     # 找到第一个匹配词的位置\n     409 |                     for term in query_terms:\n    [上下文]\n     410 |                         pos = sentence_lower.find(term)\n     411 |                         if pos >= 0:\n>>>  412 |                             start = max(0, pos - context_length)\n     413 |                             end = min(len(sentence), pos + len(term) + context_length)\n     414 |                             highlights.append(sentence[start:end])\n    [上下文]\n     411 |                         if pos >= 0:\n     412 |                             start = max(0, pos - context_length)\n>>>  413 |                             end = min(len(sentence), pos + len(term) + context_length)\n     414 |                             highlights.append(sentence[start:end])\n     415 |                             break\n\n[FILE] core\\compression_engine.py (13 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      20 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n      21 | from core.memory_items import MemoryItem, MemoryKind\n>>>   22 | from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2\n      23 | from core.turn_builder import ConversationTurn, TurnBuilder\n      24 | \n    [上下文]\n      87 |         )\n      88 | \n>>>   89 |     def render_for_prompt(self) -> str:\n      90 |         \"\"\"Render structured state as a compact prompt section.\"\"\"\n      91 |         lines = [\n    [上下文]\n      88 | \n      89 |     def render_for_prompt(self) -> str:\n>>>   90 |         \"\"\"Render structured state as a compact prompt section.\"\"\"\n      91 |         lines = [\n      92 |             \"### 压缩后的会话状态\",\n    [上下文]\n     353 |                     \"cache_hit\": messages_hash,\n     354 |                     \"compressed_state\": compressed_state.to_dict(),\n>>>  355 |                     \"compressed_state_prompt\": compressed_state.render_for_prompt(),\n     356 |                 },\n     357 |                 compressed_state=compressed_state\n    [上下文]\n     364 | \n     365 |         # 生成摘要\n>>>  366 |         prompt = SUMMARY_...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:57:45.297702",
+  "updated_at": "2026-05-29T12:57:45.297702",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    ".",
+    "main.py",
+    "core\\bm25_retriever.py",
+    "core\\compression_engine.py",
+    "core\\context.py",
+    "core/context.py",
+    "core\\context_assembler.py",
+    "core/context_assembler.py",
+    "core\\engine.py",
+    "CLAUDE.md",
+    "core\\memory_context_builder.py",
+    "core\\memory_items.py",
+    "core\\memory_manager.py",
+    "core\\prompts.py",
+    "core\\turn_builder.py",
+    "core/turn_builder.py",
+    "tests\\test_compressed_session_state.py",
+    "tests\\test_compression_engine.py",
+    "tests\\test_context_assembly_budget.py",
+    "tests\\test_memory_items.py"
+  ],
+  "source_observation_ids": [
+    "obs_097f20cc31464a40a229da24d17e437a"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_097f20cc31464a40a229da24d17e437a",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:57:45.297702",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 2,
+        "file_pattern": "*.py",
+        "path": ".",
+        "pattern": "system_prompt|prompt|inject|memory_recall|context|CLAUDE\\.md"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 442 处匹配，分布在 25 个文件中\n\n================================================================================\n\n[FILE] main.py (4 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       7 | from rich.panel import Panel\n       8 | from rich.markdown import Markdown\n>>>    9 | from rich.prompt import Prompt\n      10 | from core.plan import PlanManager  # 🔥 改为导入类而非全局实例\n      11 | \n    [上下文]\n     132 |         console.print(\"  [3] 退出 (手动处理后再启动)\")\n     133 | \n>>>  134 |         choice = Prompt.ask(\"请输入选项\", choices=[\"1\", \"2\", \"3\"], default=\"1\")\n     135 | \n     136 |         if choice == \"2\":\n    [上下文]\n     161 | \n     162 |             if user_input == \"/clear\":\n>>>  163 |                 engine.context.messages = []\n     164 |                 engine.context.history_summary = \"\"\n     165 |                 engine.plan_manager.clear_plan()  # 🔥 同时清除 Plan 状态\n    [上下文]\n     162 |             if user_input == \"/clear\":\n     163 |                 engine.context.messages = []\n>>>  164 |                 engine.context.history_summary = \"\"\n     165 |                 engine.plan_manager.clear_plan()  # 🔥 同时清除 Plan 状态\n     166 |                 engine.save_session()\n\n[FILE] core\\bm25_retriever.py (5 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     378 |         content: str,\n     379 |         query_terms: set,\n>>>  380 |         context_length: int = 50\n     381 |     ) -> List[str]:\n     382 |         \"\"\"\n    [上下文]\n     386 |             content: 文档内容\n     387 |             query_terms: 查询词项集合\n>>>  388 |             context_length: 上下文长度\n     389 | \n     390 |         Returns:\n    [上下文]\n     405 |             if any(term in sentence_lower for term in query_terms):\n     406 |                 # 截取适当长度\n>>>  407 |                 if len(sentence) > context_length * 2:\n     408 |                     # 找到第一个匹配词的位置\n     409 |                     for term in query_terms:\n    [上下文]\n     410 |                         pos = sentence_lower.find(term)\n     411 |                         if pos >= 0:\n>>>  412 |                             start = max(0, pos - context_length)\n     413 |                             end = min(len(sentence), pos + len(term) + context_length)\n     414 |                             highlights.append(sentence[start:end])\n    [上下文]\n     411 |                         if pos >= 0:\n     412 |                             start = max(0, pos - context_length)\n>>>  413 |                             end = min(len(sentence), pos + len(term) + context_length)\n     414 |                             highlights.append(sentence[start:end])\n     415 |                             break\n\n[FILE] core\\compression_engine.py (13 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      20 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n      21 | from core.memory_items import MemoryItem, MemoryKind\n>>>   22 | from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2\n      23 | from core.turn_builder import ConversationTurn, TurnBuilder\n      24 | \n    [上下文]\n      87 |         )\n      88 | \n>>>   89 |     def render_for_prompt(self) -> str:\n      90 |         \"\"\"Render structured state as a compact prompt section.\"\"\"\n      91 |         lines = [\n    [上下文]\n      88 | \n      89 |     def render_for_prompt(self) -> str:\n>>>   90 |         \"\"\"Render structured state as a compact prompt section.\"\"\"\n      91 |         lines = [\n      92 |             \"### 压缩后的会话状态\",\n    [上下文]\n     353 |                     \"cache_hit\": messages_hash,\n     354 |                     \"compressed_state\": compressed_state.to_dict(),\n>>>  355 |                     \"compressed_state_prompt\": compressed_state.render_for_prompt(),\n     356 |                 },\n     357 |                 compressed_state=compressed_state\n    [上下文]\n     364 | \n     365 |         # 生成摘要\n>>>  366 |         prompt = SUMMARY_...",
+      "files": [
+        ".",
+        "main.py",
+        "core\\bm25_retriever.py",
+        "core\\compression_engine.py",
+        "core\\context.py",
+        "core/context.py",
+        "core\\context_assembler.py",
+        "core/context_assembler.py",
+        "core\\engine.py",
+        "CLAUDE.md",
+        "core\\memory_context_builder.py",
+        "core\\memory_items.py",
+        "core\\memory_manager.py",
+        "core\\prompts.py",
+        "core\\turn_builder.py",
+        "core/turn_builder.py",
+        "tests\\test_compressed_session_state.py",
+        "tests\\test_compression_engine.py",
+        "tests\\test_context_assembly_budget.py",
+        "tests\\test_memory_items.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

@@ -1,0 +1,59 @@
+{
+  "id": "mem_4311a33d78f3448a8f672ccd1182b449",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_manager.py (第 330 至 410 行，共 466 行) ---\n 330 | \n 331 |         working_max = max(self.working_memory.max_size, 1)\n 332 |         episodic_max = max(self.episodic_memory.max_size, 1)\n 333 |         return {\n 334 |             \"enabled\": True,\n 335 |             \"working_memory\": {\n 336 |                 \"size\": len(self.working_memory),\n 337 |                 \"max_size\": self.working_memory.max_size,\n 338 |                 \"usage_rate\": len(self.working_memory) / working_max,\n 339 |             },\n 340 |             \"episodic_memory\": {\n 341 |                 \"size\": len(self.episodic_memory),\n 342 |                 \"max_size\": self.episodic_memory.max_size,\n 343 |                 \"usage_rate\": len(self.episodic_memory) / episodic_max,\n 344 |             },\n 345 |             \"long_term_memory\": {\n 346 |                 \"count\": len(self.long_term_memory),\n 347 |                 \"summary_count\": len(self.long_term_memory.index),\n 348 |                 \"item_count\": len(self.long_term_memory.item_index),\n 349 |                 \"storage_dir\": str(self.long_term_memory.storage_dir),\n 350 |             },\n 351 |         }\n 352 | \n 353 |     def export_memories(\n 354 |         self,\n 355 |         session_summaries: Optional[List[SessionSummary]] = None,\n 356 |         history_summary: str = \"\",\n 357 |         include_memory_items: bool = False,\n 358 |     ) -> Dict[str, Any]:\n 359 |         \"\"\"\n 360 |         导出可写入 session 文件的会话局部记忆数据。\n 361 | \n 362 |         注意：长期 MemoryItem 已持久化在 memory/long_term 目录，并由 index.json 管理。\n 363 |         默认不再把所有长期 MemoryItem 嵌入每个 session JSON，否则会导致：\n 364 |         1. session 文件随长期记忆规模线性膨胀；\n 365 |         2. 启动恢复 session 时重复 store_item 写回几百/几千条长期记忆；\n 366 |         3. Windows 下反复写 index.json，显著拖慢启动。\n 367 |         \"\"\"\n 368 |         session_summaries = session_summaries or []\n 369 |         memory_items = []\n 370 |         if include_memory_items and self.enabled:\n 371 |             memory_items = [item.to_dict() for item in self.long_term_memory.get_all_items()]\n 372 | \n 373 |         if not self.enabled:\n 374 |             return {\n 375 |                 \"working_memory\": [],\n 376 |                 \"episodic_memory\": [],\n 377 |                 \"memory_items\": memory_items,\n 378 |                 \"session_summaries\": [s.to_dict() for s in session_summaries],\n 379 |                 \"history_summary\": history_summary,\n 380 |             }\n 381 | \n 382 |         return {\n 383 |             \"working_memory\": self.working_memory.get_all(),\n 384 |             \"episodic_memory\": [s.to_dict() for s in self.episodic_memory.get_all()],\n 385 |             \"memory_items\": memory_items,\n 386 |             \"session_summaries\": [s.to_dict() for s in session_summaries],\n 387 |             \"history_summary\": history_summary,\n 388 |         }\n 389 | \n 390 |     def import_memories(self, data: Dict[str, Any], import_memory_items: bool = False) -> Dict[str, Any]:\n 391 |         \"\"\"\n 392 |         导入 session 文件中的会话局部记忆数据。\n 393 | \n 394 |         返回 Phase 1 兼容字段：history_summary 与 session_summaries。\n 395 |         默认跳过旧 session 内嵌的 memory_items，因为这些长期记忆已经在\n 396 |         memory/long_term/index.json 中加载；再次导入会造成启动期大量重复写盘。\n 397 |         \"\"\"\n 398 |         session_summaries: List[SessionSummary] = []\n 399 |         for s_dict in data.get(\"session_summaries\", []):\n 400 |             try:\n 401 |                 session_summaries.append(SessionSummary.from_dict(s_dict))\n 402 |             except Exception as e:\n 403 |                 print(f\"⚠️ 恢复会话摘要失败: {e}\")\n 404 | \n 405 |         if self.enabled:\n 406 |             self.working_memory.clear()\n 407 |             for msg in data.get(\"working_memory\", []):\n 408 |                 self.working_memory.add(msg)\n 409 | \n 410 |             self.episodic_memory.clear()\n--- 读取完毕 ---",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:28:31.722840",
+  "updated_at": "2026-05-29T14:28:31.722840",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_manager.py",
+    "index.json",
+    "memory/long_term/index.json"
+  ],
+  "source_observation_ids": [
+    "obs_1ff8abd67e704625becf7c7708e4cb6b"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_1ff8abd67e704625becf7c7708e4cb6b",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:28:31.721853",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 410,
+        "path": "core/memory_manager.py",
+        "raw_mode": false,
+        "start_line": 330
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_manager.py (第 330 至 410 行，共 466 行) ---\n 330 | \n 331 |         working_max = max(self.working_memory.max_size, 1)\n 332 |         episodic_max = max(self.episodic_memory.max_size, 1)\n 333 |         return {\n 334 |             \"enabled\": True,\n 335 |             \"working_memory\": {\n 336 |                 \"size\": len(self.working_memory),\n 337 |                 \"max_size\": self.working_memory.max_size,\n 338 |                 \"usage_rate\": len(self.working_memory) / working_max,\n 339 |             },\n 340 |             \"episodic_memory\": {\n 341 |                 \"size\": len(self.episodic_memory),\n 342 |                 \"max_size\": self.episodic_memory.max_size,\n 343 |                 \"usage_rate\": len(self.episodic_memory) / episodic_max,\n 344 |             },\n 345 |             \"long_term_memory\": {\n 346 |                 \"count\": len(self.long_term_memory),\n 347 |                 \"summary_count\": len(self.long_term_memory.index),\n 348 |                 \"item_count\": len(self.long_term_memory.item_index),\n 349 |                 \"storage_dir\": str(self.long_term_memory.storage_dir),\n 350 |             },\n 351 |         }\n 352 | \n 353 |     def export_memories(\n 354 |         self,\n 355 |         session_summaries: Optional[List[SessionSummary]] = None,\n 356 |         history_summary: str = \"\",\n 357 |         include_memory_items: bool = False,\n 358 |     ) -> Dict[str, Any]:\n 359 |         \"\"\"\n 360 |         导出可写入 session 文件的会话局部记忆数据。\n 361 | \n 362 |         注意：长期 MemoryItem 已持久化在 memory/long_term 目录，并由 index.json 管理。\n 363 |         默认不再把所有长期 MemoryItem 嵌入每个 session JSON，否则会导致：\n 364 |         1. session 文件随长期记忆规模线性膨胀；\n 365 |         2. 启动恢复 session 时重复 store_item 写回几百/几千条长期记忆；\n 366 |         3. Windows 下反复写 index.json，显著拖慢启动。\n 367 |         \"\"\"\n 368 |         session_summaries = session_summaries or []\n 369 |         memory_items = []\n 370 |         if include_memory_items and self.enabled:\n 371 |             memory_items = [item.to_dict() for item in self.long_term_memory.get_all_items()]\n 372 | \n 373 |         if not self.enabled:\n 374 |             return {\n 375 |                 \"working_memory\": [],\n 376 |                 \"episodic_memory\": [],\n 377 |                 \"memory_items\": memory_items,\n 378 |                 \"session_summaries\": [s.to_dict() for s in session_summaries],\n 379 |                 \"history_summary\": history_summary,\n 380 |             }\n 381 | \n 382 |         return {\n 383 |             \"working_memory\": self.working_memory.get_all(),\n 384 |             \"episodic_memory\": [s.to_dict() for s in self.episodic_memory.get_all()],\n 385 |             \"memory_items\": memory_items,\n 386 |             \"session_summaries\": [s.to_dict() for s in session_summaries],\n 387 |             \"history_summary\": history_summary,\n 388 |         }\n 389 | \n 390 |     def import_memories(self, data: Dict[str, Any], import_memory_items: bool = False) -> Dict[str, Any]:\n 391 |         \"\"\"\n 392 |         导入 session 文件中的会话局部记忆数据。\n 393 | \n 394 |         返回 Phase 1 兼容字段：history_summary 与 session_summaries。\n 395 |         默认跳过旧 session 内嵌的 memory_items，因为这些长期记忆已经在\n 396 |         memory/long_term/index.json 中加载；再次导入会造成启动期大量重复写盘。\n 397 |         \"\"\"\n 398 |         session_summaries: List[SessionSummary] = []\n 399 |         for s_dict in data.get(\"session_summaries\", []):\n 400 |             try:\n 401 |                 session_summaries.append(SessionSummary.from_dict(s_dict))\n 402 |             except Exception as e:\n 403 |                 print(f\"⚠️ 恢复会话摘要失败: {e}\")\n 404 | \n 405 |         if self.enabled:\n 406 |             self.working_memory.clear()\n 407 |             for msg in data.get(\"working_memory\", []):\n 408 |                 self.working_memory.add(msg)\n 409 | \n 410 |             self.episodic_memory.clear()\n--- 读取完毕 ---",
+      "files": [
+        "core/memory_manager.py",
+        "index.json",
+        "memory/long_term/index.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

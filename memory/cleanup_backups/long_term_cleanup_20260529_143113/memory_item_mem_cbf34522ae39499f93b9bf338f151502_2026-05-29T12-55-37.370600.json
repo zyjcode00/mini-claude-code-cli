@@ -1,0 +1,57 @@
+{
+  "id": "mem_cbf34522ae39499f93b9bf338f151502",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_layers.py (第 1 至 260 行，共 570 行) ---\n   1 | \"\"\"\n   2 | 三层记忆架构实现\n   3 | \n   4 | 实现 WorkingMemory / EpisodicMemory / LongTermMemory 三层记忆系统。\n   5 | \"\"\"\n   6 | \n   7 | import json\n   8 | import os\n   9 | from datetime import datetime\n  10 | from pathlib import Path\n  11 | from typing import Any, Dict, List, Optional, Tuple\n  12 | \n  13 | from .memory_models import SessionSummary\n  14 | from .memory_items import MemoryItem, MemoryKind, MemoryRecallResult, MemoryStatus\n  15 | \n  16 | \n  17 | class WorkingMemory:\n  18 |     \"\"\"\n  19 |     工作记忆层：存储最近 10-20 条消息\n  20 | \n  21 |     特点：\n  22 |     - FIFO 淘汰策略\n  23 |     - 快速访问\n  24 |     - 用于当前对话上下文\n  25 |     \"\"\"\n  26 | \n  27 |     def __init__(self, max_size: int = 20):\n  28 |         \"\"\"\n  29 |         初始化工作记忆\n  30 | \n  31 |         Args:\n  32 |             max_size: 最大消息数量（默认 20）\n  33 |         \"\"\"\n  34 |         self.max_size = max_size\n  35 |         self.data: List[Dict[str, Any]] = []\n  36 | \n  37 |     def add(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:\n  38 |         \"\"\"\n  39 |         添加消息到工作记忆\n  40 | \n  41 |         Args:\n  42 |             message: 消息字典\n  43 | \n  44 |         Returns:\n  45 |             如果满了，返回被淘汰的消息；否则返回 None\n  46 |         \"\"\"\n  47 |         self.data.append(message)\n  48 | \n  49 |         # 如果超过最大大小，淘汰最旧的消息（FIFO）\n  50 |         if len(self.data) > self.max_size:\n  51 |             evicted = self.data.pop(0)\n  52 |             return evicted\n  53 | \n  54 |         return None\n  55 | \n  56 |     def get_all(self) -> List[Dict[str, Any]]:\n  57 |         \"\"\"获取所有消息\"\"\"\n  58 |         return self.data.copy()\n  59 | \n  60 |     def get_recent(self, n: int = 10) -> List[Dict[str, Any]]:\n  61 |         \"\"\"获取最近 n 条消息\"\"\"\n  62 |         return self.data[-n:] if n < len(self.data) else self.data.copy()\n  63 | \n  64 |     def clear(self):\n  65 |         \"\"\"清空工作记忆\"\"\"\n  66 |         self.data.clear()\n  67 | \n  68 |     def __len__(self) -> int:\n  69 |         return len(self.data)\n  70 | \n  71 |     def __repr__(self) -> str:\n  72 |         return f\"WorkingMemory(size={len(self.data)}/{self.max_size})\"\n  73 | \n  74 | \n  75 | class EpisodicMemory:\n  76 |     \"\"\"\n  77 |     情景记忆层：存储结构化摘要\n  78 | \n  79 |     特点：\n  80 |     - 基于重要性淘汰（低重要性优先淘汰）\n  81 |     - 支持关键词检索\n  82 |     - 用于存储历史会话摘要\n  83 |     \"\"\"\n  84 | \n  85 |     def __init__(self, max_size: int = 50):\n  86 |         \"\"\"\n  87 |         初始化情景记忆\n  88 | \n  89 |         Args:\n  90 |             max_size: 最大摘要数量（默认 50）\n  91 |         \"\"\"\n  92 |         self.max_size = max_size\n  93 |         self.data: List[SessionSummary] = []\n  94 | \n  95 |     def add(self, summary: SessionSummary) -> Optional[SessionSummary]:\n  96 |         \"\"\"\n  97 |         添加摘要到情景记忆\n  98 | \n  99 |         Args:\n 100 |             summary: 会话摘要\n 101 | \n 102 |         Returns:\n 103 |             如果满了，返回被淘汰的摘要；否则返回 None\n 104 |         \"\"\"\n 105 |         self.data.append(summary)\n 106 | \n 107 |         # 如果超过最大大小，淘汰重要性最低的摘要\n 108 |         if len(self.data) > self.max_size:\n 109 |             # 找到重要性最低的摘要（如果重要性相同，淘汰最旧的）\n 110 |             min_importance = min(s.importance for s in self.data)\n 111 |             for i, s in enumerate(self.data):\n 112 |                 if s.importance == min_importance:\n 113 |                     evicted = self.data.pop(i)\n 114 |                     return evicted\n 115 | \n 116 |         return None\n 117 | \n 118 |     def search(self, query: str, top_k: int = 5) -> List[SessionSummary]:\n 119 |         \"\"\"\n 120 |         关键词检索摘要\n 121 | \n 122 |         Args:\n 123 |             query: 查询关键词\n 124 |             top_k: 返回结果数量\n 125 | \n 126 |         Returns:\n 127 |             匹配的摘要列表\n 128 |         \"\"\"\n 129 |         results = []\n 130 |         query_lower = query.lower()\n 131 | \n 132 |         for summary in self.data:\n 133 |             # 在摘要文本、任务目标、关键词中搜索\n 134 |             if (query_lower in summary.summary_text.lower() or\n 135 |                 query_lower in summary.task_goal.lower() or\n 136 ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:55:37.370600",
+  "updated_at": "2026-05-29T12:55:37.370600",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py",
+    "index.json"
+  ],
+  "source_observation_ids": [
+    "obs_346e1d1afde940089333cfcd085675eb"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_346e1d1afde940089333cfcd085675eb",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:55:37.370600",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 260,
+        "path": "core/memory_layers.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_layers.py (第 1 至 260 行，共 570 行) ---\n   1 | \"\"\"\n   2 | 三层记忆架构实现\n   3 | \n   4 | 实现 WorkingMemory / EpisodicMemory / LongTermMemory 三层记忆系统。\n   5 | \"\"\"\n   6 | \n   7 | import json\n   8 | import os\n   9 | from datetime import datetime\n  10 | from pathlib import Path\n  11 | from typing import Any, Dict, List, Optional, Tuple\n  12 | \n  13 | from .memory_models import SessionSummary\n  14 | from .memory_items import MemoryItem, MemoryKind, MemoryRecallResult, MemoryStatus\n  15 | \n  16 | \n  17 | class WorkingMemory:\n  18 |     \"\"\"\n  19 |     工作记忆层：存储最近 10-20 条消息\n  20 | \n  21 |     特点：\n  22 |     - FIFO 淘汰策略\n  23 |     - 快速访问\n  24 |     - 用于当前对话上下文\n  25 |     \"\"\"\n  26 | \n  27 |     def __init__(self, max_size: int = 20):\n  28 |         \"\"\"\n  29 |         初始化工作记忆\n  30 | \n  31 |         Args:\n  32 |             max_size: 最大消息数量（默认 20）\n  33 |         \"\"\"\n  34 |         self.max_size = max_size\n  35 |         self.data: List[Dict[str, Any]] = []\n  36 | \n  37 |     def add(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:\n  38 |         \"\"\"\n  39 |         添加消息到工作记忆\n  40 | \n  41 |         Args:\n  42 |             message: 消息字典\n  43 | \n  44 |         Returns:\n  45 |             如果满了，返回被淘汰的消息；否则返回 None\n  46 |         \"\"\"\n  47 |         self.data.append(message)\n  48 | \n  49 |         # 如果超过最大大小，淘汰最旧的消息（FIFO）\n  50 |         if len(self.data) > self.max_size:\n  51 |             evicted = self.data.pop(0)\n  52 |             return evicted\n  53 | \n  54 |         return None\n  55 | \n  56 |     def get_all(self) -> List[Dict[str, Any]]:\n  57 |         \"\"\"获取所有消息\"\"\"\n  58 |         return self.data.copy()\n  59 | \n  60 |     def get_recent(self, n: int = 10) -> List[Dict[str, Any]]:\n  61 |         \"\"\"获取最近 n 条消息\"\"\"\n  62 |         return self.data[-n:] if n < len(self.data) else self.data.copy()\n  63 | \n  64 |     def clear(self):\n  65 |         \"\"\"清空工作记忆\"\"\"\n  66 |         self.data.clear()\n  67 | \n  68 |     def __len__(self) -> int:\n  69 |         return len(self.data)\n  70 | \n  71 |     def __repr__(self) -> str:\n  72 |         return f\"WorkingMemory(size={len(self.data)}/{self.max_size})\"\n  73 | \n  74 | \n  75 | class EpisodicMemory:\n  76 |     \"\"\"\n  77 |     情景记忆层：存储结构化摘要\n  78 | \n  79 |     特点：\n  80 |     - 基于重要性淘汰（低重要性优先淘汰）\n  81 |     - 支持关键词检索\n  82 |     - 用于存储历史会话摘要\n  83 |     \"\"\"\n  84 | \n  85 |     def __init__(self, max_size: int = 50):\n  86 |         \"\"\"\n  87 |         初始化情景记忆\n  88 | \n  89 |         Args:\n  90 |             max_size: 最大摘要数量（默认 50）\n  91 |         \"\"\"\n  92 |         self.max_size = max_size\n  93 |         self.data: List[SessionSummary] = []\n  94 | \n  95 |     def add(self, summary: SessionSummary) -> Optional[SessionSummary]:\n  96 |         \"\"\"\n  97 |         添加摘要到情景记忆\n  98 | \n  99 |         Args:\n 100 |             summary: 会话摘要\n 101 | \n 102 |         Returns:\n 103 |             如果满了，返回被淘汰的摘要；否则返回 None\n 104 |         \"\"\"\n 105 |         self.data.append(summary)\n 106 | \n 107 |         # 如果超过最大大小，淘汰重要性最低的摘要\n 108 |         if len(self.data) > self.max_size:\n 109 |             # 找到重要性最低的摘要（如果重要性相同，淘汰最旧的）\n 110 |             min_importance = min(s.importance for s in self.data)\n 111 |             for i, s in enumerate(self.data):\n 112 |                 if s.importance == min_importance:\n 113 |                     evicted = self.data.pop(i)\n 114 |                     return evicted\n 115 | \n 116 |         return None\n 117 | \n 118 |     def search(self, query: str, top_k: int = 5) -> List[SessionSummary]:\n 119 |         \"\"\"\n 120 |         关键词检索摘要\n 121 | \n 122 |         Args:\n 123 |             query: 查询关键词\n 124 |             top_k: 返回结果数量\n 125 | \n 126 |         Returns:\n 127 |             匹配的摘要列表\n 128 |         \"\"\"\n 129 |         results = []\n 130 |         query_lower = query.lower()\n 131 | \n 132 |         for summary in self.data:\n 133 |             # 在摘要文本、任务目标、关键词中搜索\n 134 |             if (query_lower in summary.summary_text.lower() or\n 135 |                 query_lower in summary.task_goal.lower() or\n 136 ...",
+      "files": [
+        "core/memory_layers.py",
+        "index.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

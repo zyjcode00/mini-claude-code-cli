@@ -1,0 +1,57 @@
+{
+  "id": "mem_3fa49b65a7bb483fa6c834d97dcc7436",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "\n    def _load_index(self):\n        \"\"\"从磁盘加载索引\"\"\"\n        index_file = self.storage_dir / \"index.json\"\n        if index_file.exists():\n            try:\n                with open(index_file, 'r', encoding='utf-8') as f:\n                    data = json.load(f)\n                    self.index = {k: Path(v) for k, v in data.get(\"index\", {}).items()}\n                    self.item_index = {k: Path(v) for k, v in data.get(\"item_index\", {}).items()}\n                    self.inverted_index = data.get(\"inverted_index\", {})\n                    self.item_inverted_index = data.get(\"item_inverted_index\", {})\n            except Exception as e:\n                # 如果加载失败，重建索引\n                print(f\"⚠️ 加载索引失败，将重建索引: {e}\")\n                self._rebuild_index()\n\n    def _save_index(self):\n        \"\"\"保存索引到磁盘\"\"\"\n        index_file = self.storage_dir / \"index.json\"\n        try:\n            with open(index_file, 'w', encoding='utf-8') as f:\n                json.dump({\n                    \"index\": {k: str(v) for k, v in self.index.items()},\n                    \"item_index\": {k: str(v) for k, v in self.item_index.items()},\n                    \"inverted_index\": self.inverted_index,\n                    \"item_inverted_index\": self.item_inverted_index\n                }, f, ensure_ascii=False, indent=2)\n        except Exception as e:\n            print(f\"⚠️ 保存索引失败: {e}\")\n\n    def _rebuild_index(self):\n        \"\"\"重建索引\"\"\"\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:18:35.667577",
+  "updated_at": "2026-05-29T13:18:35.667577",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py",
+    "index.json"
+  ],
+  "source_observation_ids": [
+    "obs_b8a10d6b5ea0474abd324831a6b4529f"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_b8a10d6b5ea0474abd324831a6b4529f",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:18:35.667577",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 230,
+        "path": "core/memory_layers.py",
+        "raw_mode": true,
+        "start_line": 198
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "\n    def _load_index(self):\n        \"\"\"从磁盘加载索引\"\"\"\n        index_file = self.storage_dir / \"index.json\"\n        if index_file.exists():\n            try:\n                with open(index_file, 'r', encoding='utf-8') as f:\n                    data = json.load(f)\n                    self.index = {k: Path(v) for k, v in data.get(\"index\", {}).items()}\n                    self.item_index = {k: Path(v) for k, v in data.get(\"item_index\", {}).items()}\n                    self.inverted_index = data.get(\"inverted_index\", {})\n                    self.item_inverted_index = data.get(\"item_inverted_index\", {})\n            except Exception as e:\n                # 如果加载失败，重建索引\n                print(f\"⚠️ 加载索引失败，将重建索引: {e}\")\n                self._rebuild_index()\n\n    def _save_index(self):\n        \"\"\"保存索引到磁盘\"\"\"\n        index_file = self.storage_dir / \"index.json\"\n        try:\n            with open(index_file, 'w', encoding='utf-8') as f:\n                json.dump({\n                    \"index\": {k: str(v) for k, v in self.index.items()},\n                    \"item_index\": {k: str(v) for k, v in self.item_index.items()},\n                    \"inverted_index\": self.inverted_index,\n                    \"item_inverted_index\": self.item_inverted_index\n                }, f, ensure_ascii=False, indent=2)\n        except Exception as e:\n            print(f\"⚠️ 保存索引失败: {e}\")\n\n    def _rebuild_index(self):\n        \"\"\"重建索引\"\"\"\n",
+      "files": [
+        "core/memory_layers.py",
+        "index.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

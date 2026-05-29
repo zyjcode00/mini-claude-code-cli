@@ -1,0 +1,91 @@
+{
+  "id": "mem_4a3f3a2b28b0471ea6c3413820a8c126",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: memory_file_history",
+  "content": "📁 文件历史 core/compression_engine.py 命中 3 条：\n\n1. [task] 任务完成: 旧的记忆系统还需要吗，可不可以去掉呢\n   ID: mem_02032f952493485499c939a4b4d6b9fe\n   相关度: 10.132 | 来源: long_term_items | 原因: 匹配关键词/文本相关 8.92; 重要性 0.26; 时间 0.20; 文件匹配 0.75\n   内容: 旧的记忆系统还需要吗，可不可以去掉呢\n   文件: core/context.py, core/engine.py, core/prompts.py, core/memory_manager.py, tests/test_memory_persistence.py, tests/test_compression_engine.py, tests/test_memory_manager.py, core/memory_layers.py, core/memory_retrieval.py, core/keyword_indexer.py, core/bm25_retriever.py, tools/retrieval_tool.py, tools/memory_tool.py, tests/test_memory_phase3.py, tests/test_memory_phase4.py, tests/test_memory_phase5.py, prompts.py, engine.py, retrieval_tool.py\n   概念: session_end, text, SearchMemoryTool, BM25Retriever, KeywordIndexer, history_summary, session_summaries, SessionSummary, LongTermMemory, summary_, json, python, context, core, engine, prompts, memory_manager, tests, test_memory_persistence, test_compression_engine, get_system_prompt\n\n2. [workflow] 工具执行成功: search_code\n   ID: mem_e5b949e8045e471e8343724dbe063cc7\n   相关度: 10.121 | 来源: long_term_items | 原因: 匹配关键词/文本相关 8.96; 重要性 0.21; 时间 0.20; 文件匹配 0.75\n   内容: [SEARCH] 搜索结果: 共找到 24 处匹配，分布在 5 个文件中\n\n================================================================================\n\n[FILE] core\\bm25_retriever.py (3 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      23 | \n      24 | \n>>>   25 | class BM25Retriever:\n      26 |     \"\"\"\n      27 |     BM25 检索器\n    [上下文]\n     438 |     def __repr__(self) -> str:\n     439 |         return (\n>>>  440 |             f\"BM25Retriever(docs={self.total_docs}, \"\n     44...\n   文件: ., core\\bm25_retriever.py, core\\engine.py, core\\keyword_indexer.py, tests\\test_memory_phase4.py, tools/retrieval_tool.py, tools\\retrieval_tool.py\n   概念: post_tool_use, search_code\n\n3. [bug] 工具执行失败: read_file\n   ID: mem_0044380df51949c09e76fcd418b851b7\n   相关度: 9.978 | 来源: long_term_items | 原因: 匹配关键词/文本相关 8.75; 重要性 0.28; 时间 0.20; 文件匹配 0.75\n   内容: \"\"\"阶段5：Prompt 注入、Token Budget、自动历史召回与统计工具测试。\"\"\"\n\nimport asyncio\nimport tempfile\n\nimport pytest\n\nfrom core.memory_context_builder import MemoryContextBuilder\nfrom core.memory_items import MemoryItem, MemoryKind\nfrom core.memory_manager import MemoryManager\nfrom tools import get_default_tools\nfrom tools.memory_tool import MemoryStatsTool\nfrom core.engine import AgentEngine\n\n\nclass _FakePlanManager:\n    current_goal = \"\"\n\n    def __init__(self, plan_id=None):\n        self.plan_id = plan_id\n\n    def...\n   文件: tests/test_memory_phase5.py, core/a.py, tests/test_a.py, engine.py, core/engine.py\n   概念: tool_failure, read_file",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T11:56:11.540097",
+  "updated_at": "2026-05-29T11:56:11.540097",
+  "concepts": [
+    "tool_failure",
+    "memory_file_history"
+  ],
+  "files": [
+    "core/compression_engine.py",
+    "core/context.py",
+    "core/engine.py",
+    "core/prompts.py",
+    "core/memory_manager.py",
+    "tests/test_memory_persistence.py",
+    "tests/test_compression_engine.py",
+    "tests/test_memory_manager.py",
+    "core/memory_layers.py",
+    "core/memory_retrieval.py",
+    "core/keyword_indexer.py",
+    "core/bm25_retriever.py",
+    "tools/retrieval_tool.py",
+    "tools/memory_tool.py",
+    "tests/test_memory_phase3.py",
+    "tests/test_memory_phase4.py",
+    "tests/test_memory_phase5.py",
+    "prompts.py",
+    "engine.py",
+    "retrieval_tool.py"
+  ],
+  "source_observation_ids": [
+    "obs_4e5e7b19b0b64179b8ba7f126cfcbabd"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_4e5e7b19b0b64179b8ba7f126cfcbabd",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T11:56:11.540097",
+      "event_type": "tool_failure",
+      "tool_name": "memory_file_history",
+      "tool_input": {
+        "path": "core/compression_engine.py",
+        "top_k": 3
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "📁 文件历史 core/compression_engine.py 命中 3 条：\n\n1. [task] 任务完成: 旧的记忆系统还需要吗，可不可以去掉呢\n   ID: mem_02032f952493485499c939a4b4d6b9fe\n   相关度: 10.132 | 来源: long_term_items | 原因: 匹配关键词/文本相关 8.92; 重要性 0.26; 时间 0.20; 文件匹配 0.75\n   内容: 旧的记忆系统还需要吗，可不可以去掉呢\n   文件: core/context.py, core/engine.py, core/prompts.py, core/memory_manager.py, tests/test_memory_persistence.py, tests/test_compression_engine.py, tests/test_memory_manager.py, core/memory_layers.py, core/memory_retrieval.py, core/keyword_indexer.py, core/bm25_retriever.py, tools/retrieval_tool.py, tools/memory_tool.py, tests/test_memory_phase3.py, tests/test_memory_phase4.py, tests/test_memory_phase5.py, prompts.py, engine.py, retrieval_tool.py\n   概念: session_end, text, SearchMemoryTool, BM25Retriever, KeywordIndexer, history_summary, session_summaries, SessionSummary, LongTermMemory, summary_, json, python, context, core, engine, prompts, memory_manager, tests, test_memory_persistence, test_compression_engine, get_system_prompt\n\n2. [workflow] 工具执行成功: search_code\n   ID: mem_e5b949e8045e471e8343724dbe063cc7\n   相关度: 10.121 | 来源: long_term_items | 原因: 匹配关键词/文本相关 8.96; 重要性 0.21; 时间 0.20; 文件匹配 0.75\n   内容: [SEARCH] 搜索结果: 共找到 24 处匹配，分布在 5 个文件中\n\n================================================================================\n\n[FILE] core\\bm25_retriever.py (3 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      23 | \n      24 | \n>>>   25 | class BM25Retriever:\n      26 |     \"\"\"\n      27 |     BM25 检索器\n    [上下文]\n     438 |     def __repr__(self) -> str:\n     439 |         return (\n>>>  440 |             f\"BM25Retriever(docs={self.total_docs}, \"\n     44...\n   文件: ., core\\bm25_retriever.py, core\\engine.py, core\\keyword_indexer.py, tests\\test_memory_phase4.py, tools/retrieval_tool.py, tools\\retrieval_tool.py\n   概念: post_tool_use, search_code\n\n3. [bug] 工具执行失败: read_file\n   ID: mem_0044380df51949c09e76fcd418b851b7\n   相关度: 9.978 | 来源: long_term_items | 原因: 匹配关键词/文本相关 8.75; 重要性 0.28; 时间 0.20; 文件匹配 0.75\n   内容: \"\"\"阶段5：Prompt 注入、Token Budget、自动历史召回与统计工具测试。\"\"\"\n\nimport asyncio\nimport tempfile\n\nimport pytest\n\nfrom core.memory_context_builder import MemoryContextBuilder\nfrom core.memory_items import MemoryItem, MemoryKind\nfrom core.memory_manager import MemoryManager\nfrom tools import get_default_tools\nfrom tools.memory_tool import MemoryStatsTool\nfrom core.engine import AgentEngine\n\n\nclass _FakePlanManager:\n    current_goal = \"\"\n\n    def __init__(self, plan_id=None):\n        self.plan_id = plan_id\n\n    def...\n   文件: tests/test_memory_phase5.py, core/a.py, tests/test_a.py, engine.py, core/engine.py\n   概念: tool_failure, read_file",
+      "files": [
+        "core/compression_engine.py",
+        "core/context.py",
+        "core/engine.py",
+        "core/prompts.py",
+        "core/memory_manager.py",
+        "tests/test_memory_persistence.py",
+        "tests/test_compression_engine.py",
+        "tests/test_memory_manager.py",
+        "core/memory_layers.py",
+        "core/memory_retrieval.py",
+        "core/keyword_indexer.py",
+        "core/bm25_retriever.py",
+        "tools/retrieval_tool.py",
+        "tools/memory_tool.py",
+        "tests/test_memory_phase3.py",
+        "tests/test_memory_phase4.py",
+        "tests/test_memory_phase5.py",
+        "prompts.py",
+        "engine.py",
+        "retrieval_tool.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

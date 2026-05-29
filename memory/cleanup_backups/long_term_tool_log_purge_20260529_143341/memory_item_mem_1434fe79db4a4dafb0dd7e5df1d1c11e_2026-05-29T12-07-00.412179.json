@@ -1,0 +1,54 @@
+{
+  "id": "mem_1434fe79db4a4dafb0dd7e5df1d1c11e",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 core/compression_engine.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:07:00.412179",
+  "updated_at": "2026-05-29T12:07:00.412179",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_240002978e98411a82f8ac174ea47b59"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_240002978e98411a82f8ac174ea47b59",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:07:00.412179",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "        target_count = max(min_keep, int(len(messages) * target_ratio))\n        builder = TurnBuilder()\n        turns = builder.complete_turns_only(builder.build(messages))\n        selected_turns = self._select_keyframe_turns(turns, target_count, min_keep)\n        compressed_messages = builder.flatten(selected_turns)\n\n        # 确保至少保留 min_keep 条消息。补齐时仍按完整 turn 选择，避免切断 tool pair。\n        if len(compressed_messages) < min_keep:\n            if len(messages) <= min_keep:\n                compressed_messages = self._sanitize_openai_tool_pairs(messages[:])\n            else:\n                recent_messages = self._select_recent_complete_turn_messages(messages, min_keep)\n                merged = compressed_messages + [msg for msg in recent_messages if msg not in compressed_messages]\n                compressed_messages = self._sanitize_openai_tool_pairs(merged)\n\n        print(f\"   [关键帧提取] 提取了 {len(compressed_messages)} 条关键消息（基于 turn 元数据）\")\n\n        # 🔥 关键验证：检查最终的消息序列是否有效\n        is_valid = self._validate_message_ordering(compressed_messages)\n        if not is_valid:\n            print(f\"   ⚠️  警告: 关键帧提取后消息序列无效，降级到 SLIDING_WINDOW\")\n            # 降级到 SLIDING_WINDOW 策略\n            return self._compress_with_sliding_window(messages, 0.3, min_keep)\n\n        selected_ids = {turn.id for turn in selected_turns}\n        selected_categories = sorted({category for turn in selected_turns for category in turn.categories})\n        avg_importance = (\n            sum(turn.importance for turn in selected_turns) / len(selected_turns)\n            if selected_turns else 0.5\n        )\n\n        # 生成简化版摘要\n        summary = self._generate_summary_from_messages(\n            compressed_messages, CompressionStrategy.KEYFRAME, avg_importance\n        )\n\n        return CompressionResult(\n            success=True,\n            strategy=CompressionStrategy.KEYFRAME,\n            compressed_messages=compressed_messages,\n            summary=summary,\n            compression_ratio=len(compressed_messages) / len(messages) if messages else 0,\n            original_count=len(messages),\n            compressed_count=len(compressed_messages),\n            metadata={\n                \"keyframe_count\": len(compressed_messages),\n                \"selected_turn_ids\": list(selected_ids),\n                \"selected_categories\": selected_categories,\n                \"avg_turn_importance\": avg_importance,\n                \"user_messages\": sum(1 for msg in compressed_messages if msg.get(\"role\") == \"user\"),\n                \"error_messages\": sum(1 for turn in selected_turns if \"error\" in turn.categories),\n                \"tool_messages\": sum(1 for msg in compressed_messages if msg.get(\"role\") == \"tool\"),\n                \"files_touched\": sorted({path for turn in selected_turns for path in turn.files_touched})[:20],\n            }\n        )\n",
+        "old_str": "        target_count = max(min_keep, int(len(messages) * target_ratio))\n        keyframes = []\n        keyframe_indices = set()\n\n        # 1. 提取用户消息（不超过目标数量的 40%）\n        user_target = int(target_count * 0.4)\n        user_count = 0\n        for i, msg in enumerate(messages):\n            if msg.get(\"role\") == \"user\" and user_count < user_target:\n                keyframes.append(msg)\n                keyframe_indices.add(i)\n                user_count += 1\n\n        # 2. 提取错误消息（不超过目标数量的 20%）\n        error_target = int(target_count * 0.2)\n        error_count = 0\n        for i, msg in enumerate(messages):\n            if i in keyframe_indices:\n                continue\n            content = str(msg.get(\"content\", \"\"))\n            if any(keyword in content for keyword in [\"Error\", \"错误\", \"Exception\", \"失败\", \"Traceback\"]) and error_count < error_target:\n                keyframes.append(msg)\n                keyframe_indices.add(i)\n                error_count += 1\n\n        # 3. 提取工具调用（不超过目标数量的 30%）\n        tool_target = int(target_count * 0.3)\n        tool_count = 0\n        for i, msg in enumerate(messages):\n            if i in keyframe_indices or tool_count >= tool_target:\n                continue\n            if msg.get(\"role\") == \"assistant\" and msg.get(\"tool_calls\"):\n                tool_call_ids = {tc.get(\"id\") for tc in msg.get(\"tool_calls\", []) if tc.get(\"id\")}\n                pair_indices = [i]\n                j = i + 1\n                while j < len(messages) and messages[j].get(\"role\") == \"tool\":\n                    if messages[j].get(\"tool_call_id\") in tool_call_ids:\n                        pair_indices.append(j)\n                    j += 1\n                found_ids = {messages[idx].get(\"tool_call_id\") for idx in pair_indices[1:]}\n                if tool_call_ids and tool_call_ids.issubset(found_ids):\n                    for idx in pair_indices:\n                        keyframes.append(messages[idx])\n                        keyframe_indices.add(idx)\n                    tool_count += len(pair_indices)\n\n        # 4. 如果还有空间，按消息新鲜度补充（保留最新的非工具调用消息）\n        if len(keyframes) < target_count:\n            remaining_indices = [i for i in range(len(messages)) if i not in keyframe_indices]\n\n            # 按索引降序（最新的消息优先）\n            remaining_indices.sort(reverse=True)\n\n            # 补充到目标数量\n            for i in remaining_indices:\n                if len(keyframes) >= target_count:\n                    break\n                if self._is_tool_call_start(messages[i]):\n                    continue\n                keyframes.append(messages[i])\n                keyframe_indices.add(i)\n\n        # 按原始顺序排序\n        keyframe_indices_sorted = sorted(keyframe_indices)\n        compressed_messages = self._sanitize_openai_tool_pairs([messages[i] for i in keyframe_indices_sorted])\n\n        # 确保至少保留 min_keep 条消息\n        if len(compressed_messages) < min_keep:\n            # 🔥 修复：当消息数量 < min_keep 时，避免切片问题\n            if len(messages) <= min_keep:\n                compressed_messages = messages[:]\n            else:\n                compressed_messages = messages[-min_keep:]\n\n        print(f\"   [关键帧提取] 提取了 {len(compressed_messages)} 条关键消息\")\n\n        # 🔥 关键验证：检查最终的消息序列是否有效\n        is_valid = self._validate_message_ordering(compressed_messages)\n        if not is_valid:\n            print(f\"   ⚠️  警告: 关键帧提取后消息序列无效，降级到 SLIDING_WINDOW\")\n            # 降级到 SLIDING_WINDOW 策略\n            return self._compress_with_sliding_window(messages, 0.3, min_keep)\n\n        # 生成简化版摘要\n        summary = self._generate_summary_from_messages(\n            compressed_messages, CompressionStrategy.KEYFRAME, 0.5\n        )\n\n        return CompressionResult(\n            success=True,\n            strategy=CompressionStrategy.KEYFRAME,\n            compressed_messages=compressed_messages,\n            summary=summary,\n            compression_ratio=len(compressed_messages) / len(messages) if messages else 0,\n            original_count=len(messages),\n            compressed_count=len(compressed_messages),\n            metadata={\n                \"keyframe_count\": len(keyframe_indices),\n                \"user_messages\": sum(1 for i in keyframe_indices if messages[i].get(\"role\") == \"user\"),\n                \"error_messages\": sum(1 for i in keyframe_indices if \"Error\" in str(messages[i].get(\"content\", \"\"))),\n                \"tool_messages\": sum(1 for i in keyframe_indices if messages[i].get(\"role\") == \"tool\")\n            }\n        )\n",
+        "path": "core/compression_engine.py"
+      },
+      "tool_output": "成功: 已更新 core/compression_engine.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

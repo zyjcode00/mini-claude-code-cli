@@ -1,0 +1,77 @@
+{
+  "id": "mem_0023a67b8bed46c0bbe8202de5089b16",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: list_all_symbols",
+  "content": "📊 项目符号索引 (共 107 个定义)\n\n================================================================================\n\n\n📁 __init__.py\n--------------------------------------------------------------------------------\n⚡   get_default_tools (L12-L49)\n\n📁 base.py\n--------------------------------------------------------------------------------\n📦   BaseTool (L12-L27)\n⚡   BaseTool.run (L18-L19)\n⚡   BaseTool.to_anthropic_spec (L21-L27)\n    💬 转换为 Anthropic/OpenAI 工具调用协议格式\n\n📁 bash_tool.py\n--------------------------------------------------------------------------------\n📦   BashArgs (L9-L10)\n📦   BashTool (L12-L55)\n⚡   BashTool.run (L17-L55)\n\n📁 file_tool.py\n--------------------------------------------------------------------------------\n📦   ReadArgs (L6-L10)\n📦   FileTreeArgs (L12-L14)\n    💬 递归列出文件的参数模型（无参数）\n📦   ReadTool (L16-L47)\n⚡   ReadTool.run (L21-L47)\n📦   EditArgs (L50-L53)\n📦   FileEditTool (L55-L101)\n⚡   FileEditTool._normalize_text (L61-L68)\n    💬 归一化文本：统一换行符 + 移除行尾空格\n⚡   FileEditTool.run (L70-L101)\n📦   WriteFullFileArgs (L104-L106)\n📦   WriteFullFileTool (L108-L125)\n⚡   WriteFullFileTool.run (L113-L125)\n📦   FileTreeTool (L128-L152)\n⚡   FileTreeTool.run (L133-L152)\n\n📁 git_tool.py\n--------------------------------------------------------------------------------\n📦   GitStatusArgs (L14-L16)\n    💬 获取 Git 状态的参数\n📦   GitCommitArgs (L19-L21)\n    💬 提交快照的参数\n📦   GitRollbackArgs (L24-L26)\n    💬 回滚代码的参数\n📦   GitStatusTool (L31-L117)\n⚡   GitStatusTool.run (L36-L117)\n    💬 检查 Git 状态\n📦   GitCommitTool (L122-L181)\n⚡   GitCommitTool.run (L127-L181)\n    💬 创建快照提交\n📦   GitRollbackTool (L186-L237)\n⚡   GitRollbackTool.run (L191-L237)\n    💬 回滚到指定提交\n⚡   get_git_status_dict (L242-L258)\n    💬 获取 Git 状态的字典格式（供外部调用）\n⚡   has_uncommitted_changes (L261-L270)\n    💬 快速检查是否有未提交的修改\n⚡   create_snapshot (L273-L277)\n    💬 创建快照的简化接口（供外部调用）\n⚡   rollback_to (L280-L284)\n    💬 回滚的简化接口（供外部调用）\n⚡   start_plan_branch (L289-L334)\n    💬 创建并切换到 Plan 级别的影子分支\n    💬 \n⚡   finalize_plan (L337-L458)\n    💬 将 Plan 影子分支 squash merge 回主分支，生成一条干净的提交记录\n    💬 \n⚡   start_task_branch (L461-L506)\n    💬 创建并切换到影子分支，实现任务级别的分支隔离\n    💬 \n⚡   finalize_task (L509-L630)\n    💬 将影子分支 squash merge 回主分支，生成一条干净的提交记录\n    💬 \n\n📁 memory_tool.py\n--------------------------------------------------------------------------------\n📦   MemorySaveArgs (L14-L23)\n📦   MemoryRecallArgs (L26-L29)\n📦   MemoryFileHistoryArgs (L32-L34)\n📦   MemoryErrorHistoryArgs (L37-L39)\n📦   MemoryStatsArgs (L42-L43)\n📦   MemorySaveTool (L46-L117)\n⚡   MemorySaveTool.__init__ (L51-L52)\n⚡   MemorySaveTool.create_item (L54-L76)\n⚡   MemorySaveTool.run (L78-L117)\n📦   _MemoryResultFormatter (L120-L142)\n⚡   _MemoryResultFormatter.format_results (L122-L142)\n📦   MemoryRecallTool (L145-L162)\n⚡   MemoryRecallTool.__init__ (L150-L151)\n⚡   MemoryRecallTool.run (L153-L162)\n📦   MemoryFileHistoryTool (L165-L182)\n⚡   MemoryFileHistoryTool.__init__ (L170-L171)\n⚡   MemoryFileHistoryTool.run (L173-L182)\n📦   MemoryErrorHistoryTool (L185-L202)\n⚡   MemoryErrorHistoryTool.__init__ (L190-L191)\n⚡   MemoryErrorHistoryTool.run (L193-L202)\n📦   MemoryStatsTool (L205-L229)\n⚡   MemoryStatsTool.__init__ (L210-L211)\n⚡   MemoryStatsTool.run (L213-L229)\n\n📁 plan_tool.py\n--------------------------------------------------------------------------------\n📦   PlanArgs (L5-L7)\n📦   UpdatePlanTool (L9-L67)\n⚡   UpdatePlanTool.__init__ (L20-L22)\n⚡   UpdatePlanTool.run (L24-L67)\n📦   MarkDoneArgs (L71-L72)\n📦   MarkDoneTool (L74-L109)\n⚡   MarkDoneTool.__init__ (L85-L87)\n⚡   MarkDoneTool.run (L89-L109)\n\n📁 pytest_tool.py\n--------------------------------------------------------------------------------\n📦   PytestArgs (L5-L6)\n📦   PytestTool (L8-L29)\n⚡   PytestTool.run (L13-L29)\n\n📁 retrieval_tool.py\n--------------------------------------------------------------------------------\n📦   SearchInput (L23-L30)\n    💬 检索工具输入参数\n📦   SearchResult (L33-L38)\n    💬 单个检索结果\n📦   SearchOutput (L41-L47)\n    💬 检索工具输出\n📦   SearchKeywordTool (L50-L115)\n    💬 关键词检索工具\n⚡   SearchKeywordTool.__init__ (L57-L65)\n    💬 初始化关键词检索工具\n    💬 \n⚡   SearchKeywordTo...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:44:21.100605",
+  "updated_at": "2026-05-29T13:44:21.100605",
+  "concepts": [
+    "tool_failure",
+    "list_all_symbols"
+  ],
+  "files": [
+    "tools",
+    "__init__.py",
+    "base.py",
+    "bash_tool.py",
+    "file_tool.py",
+    "git_tool.py",
+    "memory_tool.py",
+    "plan_tool.py",
+    "pytest_tool.py",
+    "retrieval_tool.py",
+    "search_tool.py",
+    "session_tool.py",
+    "symbol_tool.py"
+  ],
+  "source_observation_ids": [
+    "obs_03964e02be9a412c8b5d4cf54f8880a1"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_03964e02be9a412c8b5d4cf54f8880a1",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:44:21.100605",
+      "event_type": "tool_failure",
+      "tool_name": "list_all_symbols",
+      "tool_input": {
+        "path": "tools",
+        "symbol_type": "all"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "📊 项目符号索引 (共 107 个定义)\n\n================================================================================\n\n\n📁 __init__.py\n--------------------------------------------------------------------------------\n⚡   get_default_tools (L12-L49)\n\n📁 base.py\n--------------------------------------------------------------------------------\n📦   BaseTool (L12-L27)\n⚡   BaseTool.run (L18-L19)\n⚡   BaseTool.to_anthropic_spec (L21-L27)\n    💬 转换为 Anthropic/OpenAI 工具调用协议格式\n\n📁 bash_tool.py\n--------------------------------------------------------------------------------\n📦   BashArgs (L9-L10)\n📦   BashTool (L12-L55)\n⚡   BashTool.run (L17-L55)\n\n📁 file_tool.py\n--------------------------------------------------------------------------------\n📦   ReadArgs (L6-L10)\n📦   FileTreeArgs (L12-L14)\n    💬 递归列出文件的参数模型（无参数）\n📦   ReadTool (L16-L47)\n⚡   ReadTool.run (L21-L47)\n📦   EditArgs (L50-L53)\n📦   FileEditTool (L55-L101)\n⚡   FileEditTool._normalize_text (L61-L68)\n    💬 归一化文本：统一换行符 + 移除行尾空格\n⚡   FileEditTool.run (L70-L101)\n📦   WriteFullFileArgs (L104-L106)\n📦   WriteFullFileTool (L108-L125)\n⚡   WriteFullFileTool.run (L113-L125)\n📦   FileTreeTool (L128-L152)\n⚡   FileTreeTool.run (L133-L152)\n\n📁 git_tool.py\n--------------------------------------------------------------------------------\n📦   GitStatusArgs (L14-L16)\n    💬 获取 Git 状态的参数\n📦   GitCommitArgs (L19-L21)\n    💬 提交快照的参数\n📦   GitRollbackArgs (L24-L26)\n    💬 回滚代码的参数\n📦   GitStatusTool (L31-L117)\n⚡   GitStatusTool.run (L36-L117)\n    💬 检查 Git 状态\n📦   GitCommitTool (L122-L181)\n⚡   GitCommitTool.run (L127-L181)\n    💬 创建快照提交\n📦   GitRollbackTool (L186-L237)\n⚡   GitRollbackTool.run (L191-L237)\n    💬 回滚到指定提交\n⚡   get_git_status_dict (L242-L258)\n    💬 获取 Git 状态的字典格式（供外部调用）\n⚡   has_uncommitted_changes (L261-L270)\n    💬 快速检查是否有未提交的修改\n⚡   create_snapshot (L273-L277)\n    💬 创建快照的简化接口（供外部调用）\n⚡   rollback_to (L280-L284)\n    💬 回滚的简化接口（供外部调用）\n⚡   start_plan_branch (L289-L334)\n    💬 创建并切换到 Plan 级别的影子分支\n    💬 \n⚡   finalize_plan (L337-L458)\n    💬 将 Plan 影子分支 squash merge 回主分支，生成一条干净的提交记录\n    💬 \n⚡   start_task_branch (L461-L506)\n    💬 创建并切换到影子分支，实现任务级别的分支隔离\n    💬 \n⚡   finalize_task (L509-L630)\n    💬 将影子分支 squash merge 回主分支，生成一条干净的提交记录\n    💬 \n\n📁 memory_tool.py\n--------------------------------------------------------------------------------\n📦   MemorySaveArgs (L14-L23)\n📦   MemoryRecallArgs (L26-L29)\n📦   MemoryFileHistoryArgs (L32-L34)\n📦   MemoryErrorHistoryArgs (L37-L39)\n📦   MemoryStatsArgs (L42-L43)\n📦   MemorySaveTool (L46-L117)\n⚡   MemorySaveTool.__init__ (L51-L52)\n⚡   MemorySaveTool.create_item (L54-L76)\n⚡   MemorySaveTool.run (L78-L117)\n📦   _MemoryResultFormatter (L120-L142)\n⚡   _MemoryResultFormatter.format_results (L122-L142)\n📦   MemoryRecallTool (L145-L162)\n⚡   MemoryRecallTool.__init__ (L150-L151)\n⚡   MemoryRecallTool.run (L153-L162)\n📦   MemoryFileHistoryTool (L165-L182)\n⚡   MemoryFileHistoryTool.__init__ (L170-L171)\n⚡   MemoryFileHistoryTool.run (L173-L182)\n📦   MemoryErrorHistoryTool (L185-L202)\n⚡   MemoryErrorHistoryTool.__init__ (L190-L191)\n⚡   MemoryErrorHistoryTool.run (L193-L202)\n📦   MemoryStatsTool (L205-L229)\n⚡   MemoryStatsTool.__init__ (L210-L211)\n⚡   MemoryStatsTool.run (L213-L229)\n\n📁 plan_tool.py\n--------------------------------------------------------------------------------\n📦   PlanArgs (L5-L7)\n📦   UpdatePlanTool (L9-L67)\n⚡   UpdatePlanTool.__init__ (L20-L22)\n⚡   UpdatePlanTool.run (L24-L67)\n📦   MarkDoneArgs (L71-L72)\n📦   MarkDoneTool (L74-L109)\n⚡   MarkDoneTool.__init__ (L85-L87)\n⚡   MarkDoneTool.run (L89-L109)\n\n📁 pytest_tool.py\n--------------------------------------------------------------------------------\n📦   PytestArgs (L5-L6)\n📦   PytestTool (L8-L29)\n⚡   PytestTool.run (L13-L29)\n\n📁 retrieval_tool.py\n--------------------------------------------------------------------------------\n📦   SearchInput (L23-L30)\n    💬 检索工具输入参数\n📦   SearchResult (L33-L38)\n    💬 单个检索结果\n📦   SearchOutput (L41-L47)\n    💬 检索工具输出\n📦   SearchKeywordTool (L50-L115)\n    💬 关键词检索工具\n⚡   SearchKeywordTool.__init__ (L57-L65)\n    💬 初始化关键词检索工具\n    💬 \n⚡   SearchKeywordTo...",
+      "files": [
+        "tools",
+        "__init__.py",
+        "base.py",
+        "bash_tool.py",
+        "file_tool.py",
+        "git_tool.py",
+        "memory_tool.py",
+        "plan_tool.py",
+        "pytest_tool.py",
+        "retrieval_tool.py",
+        "search_tool.py",
+        "session_tool.py",
+        "symbol_tool.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

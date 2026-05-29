@@ -1,0 +1,59 @@
+{
+  "id": "mem_8d0e3d1a341f49488dd9340d19ad7823",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "    engine.context.memory_manager.save_memory_item(MemoryItem(\n        kind=MemoryKind.BUG.value,\n        title=\"AssertionError 历史\",\n        content=\"遇到 AssertionError 时先读取失败断言附近代码。\",\n        concepts=[\"AssertionError\"],\n    ))\n\n    file_context = engine._build_pre_tool_memory_context(\"edit_file\", {\"path\": \"core/engine.py\"})\n    error_context = engine._build_post_tool_failure_memory_context(\"run_pytest\", \"❌ 测试失败 AssertionError: boom\")\n\n    assert \"自动文件历史召回\" in file_context\n    assert \"编辑 engine.py 前注意\" in file_context\n    assert \"自动错误历史召回\" in error_context\n    assert \"AssertionError 历史\" in error_context\n\n\ndef test_agent_engine_initializes_current_plan_branch_and_starts_plan_branch(tmp_path, monkeypatch):\n    monkeypatch.chdir(tmp_path)\n    engine = AgentEngine(\n        tools=[_DummyTool()],\n        model=\"fake-model\",\n        plan_manager=_FakePlanManager(plan_id=\"abc123\"),\n        base_url=\"http://example.invalid\",\n        api_key=\"x\",\n        session_id=\"plan_branch_regression\",\n    )\n\n    assert hasattr(engine, \"current_plan_branch\")\n    assert engine.current_plan_branch is None\n\n    calls = []\n\n    def fake_start_plan_branch(plan_id):\n        calls.append(plan_id)\n        return True, \"created\"\n\n    async def fake_compress_messages():\n        return None\n\n    async def fake_call_llm(relevant_history=\"\", user_input=\"\"):\n        return [{\"type\": \"text\", \"text\": \"done\"}], \"end_turn\"\n\n    monkeypatch.setattr(\"core.engine.start_plan_branch\", fake_start_plan_branch)\n    monkeypatch.setattr(engine, \"compress_messages\", fake_compress_messages)\n    monkeypatch.setattr(engine, \"_call_llm\", fake_call_llm)\n\n    result = asyncio.run(engine.execute_query(\"制定一个 plan\"))\n\n    assert result == \"done\"\n    assert calls == [\"abc123\"]\n    assert engine.current_plan_branch == \"abc123\"\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T18:55:59.437282",
+  "updated_at": "2026-05-28T18:55:59.437282",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "tests/test_memory_phase5.py",
+    "core/engine.py",
+    "engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_fa7b768853084c5fb9979a6e250151c1"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_fa7b768853084c5fb9979a6e250151c1",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T18:55:59.437282",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 260,
+        "path": "tests/test_memory_phase5.py",
+        "raw_mode": true,
+        "start_line": 120
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "    engine.context.memory_manager.save_memory_item(MemoryItem(\n        kind=MemoryKind.BUG.value,\n        title=\"AssertionError 历史\",\n        content=\"遇到 AssertionError 时先读取失败断言附近代码。\",\n        concepts=[\"AssertionError\"],\n    ))\n\n    file_context = engine._build_pre_tool_memory_context(\"edit_file\", {\"path\": \"core/engine.py\"})\n    error_context = engine._build_post_tool_failure_memory_context(\"run_pytest\", \"❌ 测试失败 AssertionError: boom\")\n\n    assert \"自动文件历史召回\" in file_context\n    assert \"编辑 engine.py 前注意\" in file_context\n    assert \"自动错误历史召回\" in error_context\n    assert \"AssertionError 历史\" in error_context\n\n\ndef test_agent_engine_initializes_current_plan_branch_and_starts_plan_branch(tmp_path, monkeypatch):\n    monkeypatch.chdir(tmp_path)\n    engine = AgentEngine(\n        tools=[_DummyTool()],\n        model=\"fake-model\",\n        plan_manager=_FakePlanManager(plan_id=\"abc123\"),\n        base_url=\"http://example.invalid\",\n        api_key=\"x\",\n        session_id=\"plan_branch_regression\",\n    )\n\n    assert hasattr(engine, \"current_plan_branch\")\n    assert engine.current_plan_branch is None\n\n    calls = []\n\n    def fake_start_plan_branch(plan_id):\n        calls.append(plan_id)\n        return True, \"created\"\n\n    async def fake_compress_messages():\n        return None\n\n    async def fake_call_llm(relevant_history=\"\", user_input=\"\"):\n        return [{\"type\": \"text\", \"text\": \"done\"}], \"end_turn\"\n\n    monkeypatch.setattr(\"core.engine.start_plan_branch\", fake_start_plan_branch)\n    monkeypatch.setattr(engine, \"compress_messages\", fake_compress_messages)\n    monkeypatch.setattr(engine, \"_call_llm\", fake_call_llm)\n\n    result = asyncio.run(engine.execute_query(\"制定一个 plan\"))\n\n    assert result == \"done\"\n    assert calls == [\"abc123\"]\n    assert engine.current_plan_branch == \"abc123\"\n",
+      "files": [
+        "tests/test_memory_phase5.py",
+        "core/engine.py",
+        "engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

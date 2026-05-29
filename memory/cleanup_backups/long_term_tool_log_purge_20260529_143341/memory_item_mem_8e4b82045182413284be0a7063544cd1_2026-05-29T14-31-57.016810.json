@@ -1,0 +1,48 @@
+{
+  "id": "mem_8e4b82045182413284be0a7063544cd1",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nitems 697\r\nsummaries 2\r\ntmp 0\r\npending False\r\nbackups ['long_term_cleanup_20260529_143113']\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:31:57.016810",
+  "updated_at": "2026-05-29T14:31:57.016810",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_9bc1d411322b4930836d89da70e5a2ba"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_9bc1d411322b4930836d89da70e5a2ba",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:31:57.016810",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "del tmp_cleanup_long_term.py tmp_rebuild_long_term_index.py 2>nul & python -c \"from pathlib import Path; base=Path('memory/long_term'); print('items', len(list(base.glob('memory_item_*.json')))); print('summaries', len(list(base.glob('summary_*.json')))); print('tmp', len(list(base.glob('index.*.tmp')))); print('pending', (base/'index.pending.json').exists()); print('backups', sorted(p.name for p in Path('memory/cleanup_backups').glob('long_term_cleanup_*'))[-3:])\""
+      },
+      "tool_output": "STDOUT:\nitems 697\r\nsummaries 2\r\ntmp 0\r\npending False\r\nbackups ['long_term_cleanup_20260529_143113']\r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

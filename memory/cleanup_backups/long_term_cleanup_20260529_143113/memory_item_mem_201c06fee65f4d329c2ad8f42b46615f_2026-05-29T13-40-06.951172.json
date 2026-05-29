@@ -1,0 +1,55 @@
+{
+  "id": "mem_201c06fee65f4d329c2ad8f42b46615f",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/compression_engine.py (第 1110 至 1554 行，共 1554 行) ---\n1110 | \n1111 |     def _is_low_information_user_message(self, content: str) -> bool:\n1112 |         normalized = re.sub(r\"[\\s。！？!,.，、~～]+\", \"\", content).lower()\n1113 |         low_info = {\n1114 |             \"你好\", \"您好\", \"hello\", \"hi\", \"hey\", \"在吗\", \"ok\", \"好的\", \"好\", \"嗯\", \"继续\", \"接着\", \"goon\", \"thanks\", \"谢谢\",\n1115 |         }\n1116 |         return normalized in low_info or len(normalized) <= 1\n1117 | \n1118 |     def _infer_current_status(self, turns: List[ConversationTurn]) -> str:\n1119 |         text = \"\\n\".join(self._turn_text(turn) for turn in turns[-6:]).lower()\n1120 |         if any(keyword in text for keyword in [\"traceback\", \"failed\", \"失败\", \"错误\", \"❌\"]):\n1121 |             if not any(keyword in text for keyword in [\"passed\", \"测试通过\", \"修复\", \"✅\"]):\n1122 |                 return \"failed\"\n1123 |         if any(keyword in text for keyword in [\"全部完成\", \"任务完成\", \"已完成\", \"done\", \"completed\"]):\n1124 |             return \"completed\"\n1125 |         return \"in_progress\"\n1126 | \n1127 |     def _turn_text(self, turn: ConversationTurn) -> str:\n1128 |         return \"\\n\".join(str(msg.get(\"content\", \"\")) for msg in turn.messages if isinstance(msg, dict))\n1129 | \n1130 |     def _collect_steps(self, text: str, completed: List[str], pending: List[str]) -> None:\n1131 |         for line in text.splitlines():\n1132 |             clean = line.strip(\" -\\t\")[:220]\n1133 |             if not clean:\n1134 |                 continue\n1135 |             lowered = clean.lower()\n1136 |             if any(marker in clean for marker in [\"✅\", \"已完成\", \"完成:\", \"完成：\"]) or lowered.startswith((\"done\", \"completed\")):\n1137 |                 completed.append(clean)\n1138 |             if any(marker in clean for marker in [\"⏳\", \"未完成\", \"待办\", \"下一步\", \"todo\"]):\n1139 |                 pending.append(clean)\n1140 | \n1141 |     def _collect_decisions(self, text: str, decisions: List[str]) -> None:\n1142 |         keywords = [\"决定\", \"决策\", \"选择\", \"采用\", \"建议\", \"注意\", \"必须\", \"保持\", \"不要\"]\n1143 |         for line in text.splitlines():\n1144 |             clean = line.strip(\" -\\t\")\n1145 |             if 8 <= len(clean) <= 260 and any(keyword in clean for keyword in keywords):\n1146 |                 decisions.append(clean[:260])\n1147 | \n1148 |     def _collect_preferences(self, text: str, preferences: List[str]) -> None:\n1149 |         for line in text.splitlines():\n1150 |             clean = line.strip(\" -\\t\")\n1151 |             if any(keyword in clean for keyword in [\"用户偏好\", \"prefer\", \"preference\", \"希望\", \"要求\"]):\n1152 |                 preferences.append(clean[:220])\n1153 | \n1154 |     def _collect_files_read(self, turn: ConversationTurn, files_read: List[Dict[str, Any]]) -> None:\n1155 |         for assistant in turn.assistant_messages:\n1156 |             for tool_call in assistant.get(\"tool_calls\", []) or []:\n1157 |                 function = tool_call.get(\"function\", {}) if isinstance(tool_call, dict) else {}\n1158 |                 if function.get(\"name\") != \"read_file\":\n1159 |                     continue\n1160 |                 args = self._parse_tool_arguments(function.get(\"arguments\", {}))\n1161 |                 path = args.get(\"path\") or args.get(\"file_path\") or args.get(\"filename\")\n1162 |                 if not isinstance(path, str) or not path.strip():\n1163 |                     continue\n1164 |                 start_line = args.get(\"start_line\") or args.get(\"start\")\n1165 |                 end_line = args.get(\"end_line\") or args.get(\"end\")\n1166 |                 line_range = self._format_line_range(start_line, end_line)\n1167 |                 files_read.append({\n1168 |                     \"path\": path.replace(\"\\\\\", \"/\"),\n1169 |                     \"line_range\": line_range,\n1170 |                     \"read_count\": 1,\n1171 |                     \"source_turn_id\": turn.id,\n1172 |                 })\n1173 | \n1174 |     def _parse_tool_arguments(self, arguments: Any) -> Dict[str, Any]:\n1175 |         if isinstance(arguments, dict):\n1176 ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:40:06.951172",
+  "updated_at": "2026-05-29T13:40:06.951172",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_7623383b6cc24b0891e54cc96d65da2b"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_7623383b6cc24b0891e54cc96d65da2b",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:40:06.951172",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 1554,
+        "path": "core/compression_engine.py",
+        "raw_mode": false,
+        "start_line": 1110
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/compression_engine.py (第 1110 至 1554 行，共 1554 行) ---\n1110 | \n1111 |     def _is_low_information_user_message(self, content: str) -> bool:\n1112 |         normalized = re.sub(r\"[\\s。！？!,.，、~～]+\", \"\", content).lower()\n1113 |         low_info = {\n1114 |             \"你好\", \"您好\", \"hello\", \"hi\", \"hey\", \"在吗\", \"ok\", \"好的\", \"好\", \"嗯\", \"继续\", \"接着\", \"goon\", \"thanks\", \"谢谢\",\n1115 |         }\n1116 |         return normalized in low_info or len(normalized) <= 1\n1117 | \n1118 |     def _infer_current_status(self, turns: List[ConversationTurn]) -> str:\n1119 |         text = \"\\n\".join(self._turn_text(turn) for turn in turns[-6:]).lower()\n1120 |         if any(keyword in text for keyword in [\"traceback\", \"failed\", \"失败\", \"错误\", \"❌\"]):\n1121 |             if not any(keyword in text for keyword in [\"passed\", \"测试通过\", \"修复\", \"✅\"]):\n1122 |                 return \"failed\"\n1123 |         if any(keyword in text for keyword in [\"全部完成\", \"任务完成\", \"已完成\", \"done\", \"completed\"]):\n1124 |             return \"completed\"\n1125 |         return \"in_progress\"\n1126 | \n1127 |     def _turn_text(self, turn: ConversationTurn) -> str:\n1128 |         return \"\\n\".join(str(msg.get(\"content\", \"\")) for msg in turn.messages if isinstance(msg, dict))\n1129 | \n1130 |     def _collect_steps(self, text: str, completed: List[str], pending: List[str]) -> None:\n1131 |         for line in text.splitlines():\n1132 |             clean = line.strip(\" -\\t\")[:220]\n1133 |             if not clean:\n1134 |                 continue\n1135 |             lowered = clean.lower()\n1136 |             if any(marker in clean for marker in [\"✅\", \"已完成\", \"完成:\", \"完成：\"]) or lowered.startswith((\"done\", \"completed\")):\n1137 |                 completed.append(clean)\n1138 |             if any(marker in clean for marker in [\"⏳\", \"未完成\", \"待办\", \"下一步\", \"todo\"]):\n1139 |                 pending.append(clean)\n1140 | \n1141 |     def _collect_decisions(self, text: str, decisions: List[str]) -> None:\n1142 |         keywords = [\"决定\", \"决策\", \"选择\", \"采用\", \"建议\", \"注意\", \"必须\", \"保持\", \"不要\"]\n1143 |         for line in text.splitlines():\n1144 |             clean = line.strip(\" -\\t\")\n1145 |             if 8 <= len(clean) <= 260 and any(keyword in clean for keyword in keywords):\n1146 |                 decisions.append(clean[:260])\n1147 | \n1148 |     def _collect_preferences(self, text: str, preferences: List[str]) -> None:\n1149 |         for line in text.splitlines():\n1150 |             clean = line.strip(\" -\\t\")\n1151 |             if any(keyword in clean for keyword in [\"用户偏好\", \"prefer\", \"preference\", \"希望\", \"要求\"]):\n1152 |                 preferences.append(clean[:220])\n1153 | \n1154 |     def _collect_files_read(self, turn: ConversationTurn, files_read: List[Dict[str, Any]]) -> None:\n1155 |         for assistant in turn.assistant_messages:\n1156 |             for tool_call in assistant.get(\"tool_calls\", []) or []:\n1157 |                 function = tool_call.get(\"function\", {}) if isinstance(tool_call, dict) else {}\n1158 |                 if function.get(\"name\") != \"read_file\":\n1159 |                     continue\n1160 |                 args = self._parse_tool_arguments(function.get(\"arguments\", {}))\n1161 |                 path = args.get(\"path\") or args.get(\"file_path\") or args.get(\"filename\")\n1162 |                 if not isinstance(path, str) or not path.strip():\n1163 |                     continue\n1164 |                 start_line = args.get(\"start_line\") or args.get(\"start\")\n1165 |                 end_line = args.get(\"end_line\") or args.get(\"end\")\n1166 |                 line_range = self._format_line_range(start_line, end_line)\n1167 |                 files_read.append({\n1168 |                     \"path\": path.replace(\"\\\\\", \"/\"),\n1169 |                     \"line_range\": line_range,\n1170 |                     \"read_count\": 1,\n1171 |                     \"source_turn_id\": turn.id,\n1172 |                 })\n1173 | \n1174 |     def _parse_tool_arguments(self, arguments: Any) -> Dict[str, Any]:\n1175 |         if isinstance(arguments, dict):\n1176 ...",
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

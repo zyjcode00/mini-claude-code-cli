@@ -1,0 +1,55 @@
+{
+  "id": "mem_f1c1aca87a0841a28e59b31046da4da6",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "--- 文件: core/turn_builder.py (第 238 至 351 行，共 351 行) ---\n 238 |     def _estimate_tokens(self, messages: List[Dict[str, Any]]) -> int:\n 239 |         # Lightweight approximation: four chars per token, minimum one token.\n 240 |         return max(1, sum(len(str(msg)) for msg in messages) // 4)\n 241 | \n 242 |     def _estimate_importance(\n 243 |         self,\n 244 |         messages: List[Dict[str, Any]],\n 245 |         categories: List[str],\n 246 |         is_tool_pair_complete: bool,\n 247 |         token_estimate: int,\n 248 |         files_touched: List[str],\n 249 |         errors: List[str],\n 250 |         tests: List[str],\n 251 |     ) -> float:\n 252 |         score = 0.08\n 253 |         text = self._messages_text(messages).lower()\n 254 | \n 255 |         if any(msg.get(\"role\") == \"user\" for msg in messages):\n 256 |             score += 0.22\n 257 |         if any(msg.get(\"tool_calls\") for msg in messages):\n 258 |             score += 0.10\n 259 |         if files_touched:\n 260 |             score += min(0.20, 0.06 * len(files_touched))\n 261 |         if errors or \"error\" in categories:\n 262 |             score += 0.30\n 263 |         if tests or \"test\" in categories:\n 264 |             score += 0.20\n 265 |         if \"planning\" in categories:\n 266 |             score += 0.16\n 267 |         if \"code_edit\" in categories:\n 268 |             score += 0.22\n 269 |         if \"command\" in categories:\n 270 |             score += 0.08\n 271 |         if any(keyword in text for keyword in self.SUCCESS_KEYWORDS):\n 272 |             score += 0.06\n 273 |         if any(keyword in text for keyword in self.FAILURE_KEYWORDS):\n 274 |             score += 0.08\n 275 |         if \"bulk_output\" in categories:\n 276 |             score -= 0.20\n 277 |         if not is_tool_pair_complete:\n 278 |             score -= 0.25\n 279 | \n 280 |         # Very large turns are often file dumps/stdout; keep their metadata but\n 281 |         # avoid letting size alone dominate keyframe selection.\n 282 |         if token_estimate > 1200 and not ({\"error\", \"test\", \"code_edit\"} & set(categories)):\n 283 |             score -= 0.12\n 284 | \n 285 |         return max(0.0, min(1.0, round(score, 4)))\n 286 | \n 287 |     def _categorize(self, messages: List[Dict[str, Any]]) -> List[str]:\n 288 |         text = self._messages_text(messages).lower()\n 289 |         categories: List[str] = []\n 290 | \n 291 |         if any(msg.get(\"tool_calls\") or msg.get(\"role\") == \"tool\" for msg in messages):\n 292 |             categories.append(\"tool\")\n 293 |         if any(keyword in text for keyword in self.ERROR_KEYWORDS):\n 294 |             categories.append(\"error\")\n 295 |         if any(keyword in text for keyword in self.TEST_KEYWORDS):\n 296 |             categories.append(\"test\")\n 297 |         if any(keyword in text for keyword in self.PLAN_KEYWORDS):\n 298 |             categories.append(\"planning\")\n 299 |         if any(keyword in text for keyword in self.FILE_EDIT_KEYWORDS):\n 300 |             categories.append(\"code_edit\")\n 301 |         if any(keyword in text for keyword in self.FILE_READ_KEYWORDS):\n 302 |             categories.append(\"file_read\")\n 303 |         if any(keyword in text for keyword in self.SEARCH_KEYWORDS):\n 304 |             categories.append(\"search\")\n 305 |         if any(keyword in text for keyword in self.COMMAND_KEYWORDS):\n 306 |             categories.append(\"command\")\n 307 |         if self._looks_like_bulk_output(text):\n 308 |             categories.append(\"bulk_output\")\n 309 | \n 310 |         return categories\n 311 | \n 312 |     def _extract_files(self, messages: List[Dict[str, Any]]) -> List[str]:\n 313 |         files: List[str] = []\n 314 |         for msg in messages:\n 315 |             self._extract_files_from_obj(msg, files)\n 316 |         normalized = [path.replace(\"\\\\\", \"/\").strip(\"`'\\\"(),:;[]{}<>\") for path in files]\n 317 |         return list(dict.fromkeys(path for path in normalized if path))[:20]\n 318 | \n 319 |     def _extract_files_from_obj(self...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:55:01.921237",
+  "updated_at": "2026-05-29T12:55:01.921237",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_5cab82663b034036a169f1d1bed005d3"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_5cab82663b034036a169f1d1bed005d3",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:55:01.921237",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 351,
+        "path": "core/turn_builder.py",
+        "raw_mode": false,
+        "start_line": 238
+      },
+      "tool_output": "--- 文件: core/turn_builder.py (第 238 至 351 行，共 351 行) ---\n 238 |     def _estimate_tokens(self, messages: List[Dict[str, Any]]) -> int:\n 239 |         # Lightweight approximation: four chars per token, minimum one token.\n 240 |         return max(1, sum(len(str(msg)) for msg in messages) // 4)\n 241 | \n 242 |     def _estimate_importance(\n 243 |         self,\n 244 |         messages: List[Dict[str, Any]],\n 245 |         categories: List[str],\n 246 |         is_tool_pair_complete: bool,\n 247 |         token_estimate: int,\n 248 |         files_touched: List[str],\n 249 |         errors: List[str],\n 250 |         tests: List[str],\n 251 |     ) -> float:\n 252 |         score = 0.08\n 253 |         text = self._messages_text(messages).lower()\n 254 | \n 255 |         if any(msg.get(\"role\") == \"user\" for msg in messages):\n 256 |             score += 0.22\n 257 |         if any(msg.get(\"tool_calls\") for msg in messages):\n 258 |             score += 0.10\n 259 |         if files_touched:\n 260 |             score += min(0.20, 0.06 * len(files_touched))\n 261 |         if errors or \"error\" in categories:\n 262 |             score += 0.30\n 263 |         if tests or \"test\" in categories:\n 264 |             score += 0.20\n 265 |         if \"planning\" in categories:\n 266 |             score += 0.16\n 267 |         if \"code_edit\" in categories:\n 268 |             score += 0.22\n 269 |         if \"command\" in categories:\n 270 |             score += 0.08\n 271 |         if any(keyword in text for keyword in self.SUCCESS_KEYWORDS):\n 272 |             score += 0.06\n 273 |         if any(keyword in text for keyword in self.FAILURE_KEYWORDS):\n 274 |             score += 0.08\n 275 |         if \"bulk_output\" in categories:\n 276 |             score -= 0.20\n 277 |         if not is_tool_pair_complete:\n 278 |             score -= 0.25\n 279 | \n 280 |         # Very large turns are often file dumps/stdout; keep their metadata but\n 281 |         # avoid letting size alone dominate keyframe selection.\n 282 |         if token_estimate > 1200 and not ({\"error\", \"test\", \"code_edit\"} & set(categories)):\n 283 |             score -= 0.12\n 284 | \n 285 |         return max(0.0, min(1.0, round(score, 4)))\n 286 | \n 287 |     def _categorize(self, messages: List[Dict[str, Any]]) -> List[str]:\n 288 |         text = self._messages_text(messages).lower()\n 289 |         categories: List[str] = []\n 290 | \n 291 |         if any(msg.get(\"tool_calls\") or msg.get(\"role\") == \"tool\" for msg in messages):\n 292 |             categories.append(\"tool\")\n 293 |         if any(keyword in text for keyword in self.ERROR_KEYWORDS):\n 294 |             categories.append(\"error\")\n 295 |         if any(keyword in text for keyword in self.TEST_KEYWORDS):\n 296 |             categories.append(\"test\")\n 297 |         if any(keyword in text for keyword in self.PLAN_KEYWORDS):\n 298 |             categories.append(\"planning\")\n 299 |         if any(keyword in text for keyword in self.FILE_EDIT_KEYWORDS):\n 300 |             categories.append(\"code_edit\")\n 301 |         if any(keyword in text for keyword in self.FILE_READ_KEYWORDS):\n 302 |             categories.append(\"file_read\")\n 303 |         if any(keyword in text for keyword in self.SEARCH_KEYWORDS):\n 304 |             categories.append(\"search\")\n 305 |         if any(keyword in text for keyword in self.COMMAND_KEYWORDS):\n 306 |             categories.append(\"command\")\n 307 |         if self._looks_like_bulk_output(text):\n 308 |             categories.append(\"bulk_output\")\n 309 | \n 310 |         return categories\n 311 | \n 312 |     def _extract_files(self, messages: List[Dict[str, Any]]) -> List[str]:\n 313 |         files: List[str] = []\n 314 |         for msg in messages:\n 315 |             self._extract_files_from_obj(msg, files)\n 316 |         normalized = [path.replace(\"\\\\\", \"/\").strip(\"`'\\\"(),:;[]{}<>\") for path in files]\n 317 |         return list(dict.fromkeys(path for path in normalized if path))[:20]\n 318 | \n 319 |     def _extract_files_from_obj(self...",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

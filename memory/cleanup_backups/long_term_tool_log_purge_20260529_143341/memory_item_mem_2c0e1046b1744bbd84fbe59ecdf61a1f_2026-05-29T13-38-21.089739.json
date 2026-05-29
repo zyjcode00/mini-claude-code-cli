@@ -1,0 +1,53 @@
+{
+  "id": "mem_2c0e1046b1744bbd84fbe59ecdf61a1f",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: write_full_file",
+  "content": "成功: 已写入 tmp_startup_probe.py",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:38:21.089739",
+  "updated_at": "2026-05-29T13:38:21.089739",
+  "concepts": [
+    "post_tool_use",
+    "write_full_file"
+  ],
+  "files": [
+    "tmp_startup_probe.py"
+  ],
+  "source_observation_ids": [
+    "obs_1fe6264613f6406590c29a82468c935f"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_1fe6264613f6406590c29a82468c935f",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:38:21.089739",
+      "event_type": "post_tool_use",
+      "tool_name": "write_full_file",
+      "tool_input": {
+        "content": "\"\"\"临时启动性能探针：测量 main.py 启动链路中的关键初始化耗时。\"\"\"\nfrom __future__ import annotations\n\nimport json\nimport os\nimport time\nfrom pathlib import Path\n\n\ndef timed(label, func):\n    start = time.perf_counter()\n    result = func()\n    elapsed = (time.perf_counter() - start) * 1000\n    print(f\"{label:<38} {elapsed:9.2f} ms\")\n    return result, elapsed\n\n\ndef main():\n    print(\"=== mini-claude-code-cli startup probe ===\")\n    print(f\"cwd: {Path.cwd()}\")\n\n    _, import_core_ms = timed(\"import PlanManager/MemoryManager\", lambda: __import__(\"core.memory_manager\"))\n\n    from core.plan import PlanManager\n    from core.memory_manager import MemoryManager\n    from core.engine import AgentEngine\n    from tools import get_default_tools\n\n    session_id = os.environ.get(\"PROBE_SESSION\", \"default\")\n    session_path = Path(\"sessions\") / f\"{session_id}.json\"\n    if session_path.exists():\n        print(f\"session file: {session_path} ({session_path.stat().st_size / 1024:.1f} KB)\")\n        def load_session_json():\n            with session_path.open(\"r\", encoding=\"utf-8\") as f:\n                return json.load(f)\n        data, _ = timed(\"raw json.load(session)\", load_session_json)\n        memories = data.get(\"memories\", {})\n        print(\"session counts:\", {\n            \"messages\": len(data.get(\"messages\", [])),\n            \"working_memory\": len(memories.get(\"working_memory\", [])),\n            \"episodic_memory\": len(memories.get(\"episodic_memory\", [])),\n            \"memory_items_embedded\": len(memories.get(\"memory_items\", [])),\n            \"session_summaries\": len(memories.get(\"session_summaries\", [])),\n        })\n    else:\n        print(f\"session file missing: {session_path}\")\n\n    index_path = Path(\"memory/long_term/index.json\")\n    if index_path.exists():\n        print(f\"long-term index: {index_path} ({index_path.stat().st_size / 1024:.1f} KB)\")\n        timed(\"raw json.load(index.json)\", lambda: json.loads(index_path.read_text(encoding=\"utf-8\")))\n\n    plan_manager, _ = timed(\"PlanManager()\", lambda: PlanManager())\n    memory_manager, _ = timed(\"MemoryManager()\", lambda: MemoryManager(plan_manager=plan_manager))\n    tools, _ = timed(\"get_default_tools(shared memory)\", lambda: get_default_tools(plan_manager=plan_manager, memory_manager=memory_manager))\n\n    def make_engine():\n        return AgentEngine(\n            tools=tools,\n            model=\"gpt-5.5\",\n            plan_manager=plan_manager,\n            session_id=session_id,\n            base_url=\"http://example.invalid/v1\",\n            api_key=\"probe-key\",\n            max_history=150,\n            min_keep=8,\n            memory_manager=memory_manager,\n        )\n\n    engine, _ = timed(\"AgentEngine(...)+load_session\", make_engine)\n    print(\"loaded counts:\", {\n        \"messages\": len(engine.context.messages),\n        \"working_memory\": len(engine.context.working_memory),\n        \"episodic_memory\": len(engine.context.episodic_memory.get_all()),\n        \"session_summaries\": len(engine.context.session_summaries),\n        \"long_term_item_index\": len(engine.context.long_term_memory.item_index),\n    })\n\n\nif __name__ == \"__main__\":\n    main()\n",
+        "path": "tmp_startup_probe.py"
+      },
+      "tool_output": "成功: 已写入 tmp_startup_probe.py",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tmp_startup_probe.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

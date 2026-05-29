@@ -1,0 +1,55 @@
+{
+  "id": "mem_35294ba656d642ad93b4cf33d1c0c666",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/turn_builder.py (第 1 至 351 行，共 351 行) ---\n   1 | # core/turn_builder.py\n   2 | \"\"\"Conversation turn builder for provider-safe context compression.\n   3 | \n   4 | This module converts a flat provider message list into semantic turns.  The\n   5 | important invariant is that OpenAI-style ``assistant.tool_calls`` plus their\n   6 | immediately following ``tool`` responses are represented as one atomic turn so\n   7 | compression strategies can avoid cutting the pair in half.\n   8 | \"\"\"\n   9 | \n  10 | from __future__ import annotations\n  11 | \n  12 | from dataclasses import dataclass, field\n  13 | import re\n  14 | from typing import Any, Dict, Iterable, List, Optional, Set\n  15 | \n  16 | \n  17 | @dataclass\n  18 | class ConversationTurn:\n  19 |     \"\"\"A semantic, provider-safe unit of conversation history.\"\"\"\n  20 | \n  21 |     id: str\n  22 |     start_index: int\n  23 |     end_index: int\n  24 |     messages: List[Dict[str, Any]] = field(default_factory=list)\n  25 |     user_message: Optional[Dict[str, Any]] = None\n  26 |     assistant_messages: List[Dict[str, Any]] = field(default_factory=list)\n  27 |     tool_messages: List[Dict[str, Any]] = field(default_factory=list)\n  28 |     has_tool_calls: bool = False\n  29 |     is_tool_pair_complete: bool = True\n  30 |     missing_tool_call_ids: List[str] = field(default_factory=list)\n  31 |     orphan_tool_call_ids: List[str] = field(default_factory=list)\n  32 |     token_estimate: int = 0\n  33 |     importance: float = 0.0\n  34 |     categories: List[str] = field(default_factory=list)\n  35 |     files_touched: List[str] = field(default_factory=list)\n  36 |     errors: List[str] = field(default_factory=list)\n  37 |     tests: List[str] = field(default_factory=list)\n  38 | \n  39 |     @property\n  40 |     def is_valid_openai_tool_turn(self) -> bool:\n  41 |         \"\"\"Whether this turn can be sent to OpenAI-compatible APIs as-is.\"\"\"\n  42 |         return self.is_tool_pair_complete and not self.orphan_tool_call_ids\n  43 | \n  44 | \n  45 | class TurnBuilder:\n  46 |     \"\"\"Build complete conversation turns from a flat message list.\n  47 | \n  48 |     Rules implemented for OpenAI-compatible tool calls:\n  49 |     - an ``assistant`` message with ``tool_calls`` starts an atomic tool turn;\n  50 |     - only immediately following contiguous ``tool`` messages can satisfy that\n  51 |       assistant's tool calls;\n  52 |     - missing tool responses mark the turn incomplete;\n  53 |     - ``tool`` messages without an immediately preceding assistant tool-call\n  54 |       turn are emitted as orphan/incomplete turns instead of being attached to\n  55 |       unrelated context.\n  56 |     \"\"\"\n  57 | \n  58 |     ERROR_KEYWORDS = (\"error\", \"exception\", \"traceback\", \"failed\", \"failure\", \"失败\", \"错误\", \"报错\")\n  59 |     TEST_KEYWORDS = (\"pytest\", \"unittest\", \"test\", \"测试\", \"passed\", \"failed\", \"assertionerror\")\n  60 |     PLAN_KEYWORDS = (\"plan\", \"todo\", \"步骤\", \"继续\", \"完成\", \"已完成\", \"待办\")\n  61 |     FILE_EDIT_KEYWORDS = (\"edit_file\", \"write_full_file\", \"created\", \"modified\", \"deleted\", \"创建\", \"修改\", \"删除\")\n  62 |     FILE_READ_KEYWORDS = (\"read_file\", \"cat \", \"读取\", \"查看文件\")\n  63 |     SEARCH_KEYWORDS = (\"search_code\", \"grep\", \"ripgrep\", \"搜索\")\n  64 |     COMMAND_KEYWORDS = (\"execute_bash\", \"pytest\", \"python \", \"npm \", \"命令\", \"运行\")\n  65 |     SUCCESS_KEYWORDS = (\"passed\", \"success\", \"成功\", \"测试通过\", \"✅\")\n  66 |     FAILURE_KEYWORDS = (\"failed\", \"failure\", \"error\", \"traceback\", \"失败\", \"错误\", \"❌\")\n  67 | \n  68 |     FILE_PATTERN = re.compile(\n  69 |         r\"(?<![\\w.-])(?:[A-Za-z]:)?[\\w.@+-]+(?:[/\\\\][\\w.@+-]+)+\\.[A-Za-z0-9]{1,8}(?![\\w.-])\"\n  70 |         r\"|(?<![\\w.-])[\\w.@+-]+\\.(?:py|js|ts|tsx|jsx|json|md|txt|yaml|yml|toml|ini|cfg|java|cpp|c|h|rs|go|sh|bat|ps1)(?![\\w.-])\"\n  71 |     )\n  72 | \n  73 |     def build(self, messages: List[Dict[str, Any]]) -> List[ConversationTurn]:\n  74 |         \"\"\"Return semantic turns while preserving original message order.\"\"\"\n  75 |         turns: List[ConversationTurn] = []\n  76 |       ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:04:51.815250",
+  "updated_at": "2026-05-29T13:04:51.815250",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_1b9f39d559a94c59a5a2a0ddbf41cd37"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_1b9f39d559a94c59a5a2a0ddbf41cd37",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:04:51.815250",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 360,
+        "path": "core/turn_builder.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/turn_builder.py (第 1 至 351 行，共 351 行) ---\n   1 | # core/turn_builder.py\n   2 | \"\"\"Conversation turn builder for provider-safe context compression.\n   3 | \n   4 | This module converts a flat provider message list into semantic turns.  The\n   5 | important invariant is that OpenAI-style ``assistant.tool_calls`` plus their\n   6 | immediately following ``tool`` responses are represented as one atomic turn so\n   7 | compression strategies can avoid cutting the pair in half.\n   8 | \"\"\"\n   9 | \n  10 | from __future__ import annotations\n  11 | \n  12 | from dataclasses import dataclass, field\n  13 | import re\n  14 | from typing import Any, Dict, Iterable, List, Optional, Set\n  15 | \n  16 | \n  17 | @dataclass\n  18 | class ConversationTurn:\n  19 |     \"\"\"A semantic, provider-safe unit of conversation history.\"\"\"\n  20 | \n  21 |     id: str\n  22 |     start_index: int\n  23 |     end_index: int\n  24 |     messages: List[Dict[str, Any]] = field(default_factory=list)\n  25 |     user_message: Optional[Dict[str, Any]] = None\n  26 |     assistant_messages: List[Dict[str, Any]] = field(default_factory=list)\n  27 |     tool_messages: List[Dict[str, Any]] = field(default_factory=list)\n  28 |     has_tool_calls: bool = False\n  29 |     is_tool_pair_complete: bool = True\n  30 |     missing_tool_call_ids: List[str] = field(default_factory=list)\n  31 |     orphan_tool_call_ids: List[str] = field(default_factory=list)\n  32 |     token_estimate: int = 0\n  33 |     importance: float = 0.0\n  34 |     categories: List[str] = field(default_factory=list)\n  35 |     files_touched: List[str] = field(default_factory=list)\n  36 |     errors: List[str] = field(default_factory=list)\n  37 |     tests: List[str] = field(default_factory=list)\n  38 | \n  39 |     @property\n  40 |     def is_valid_openai_tool_turn(self) -> bool:\n  41 |         \"\"\"Whether this turn can be sent to OpenAI-compatible APIs as-is.\"\"\"\n  42 |         return self.is_tool_pair_complete and not self.orphan_tool_call_ids\n  43 | \n  44 | \n  45 | class TurnBuilder:\n  46 |     \"\"\"Build complete conversation turns from a flat message list.\n  47 | \n  48 |     Rules implemented for OpenAI-compatible tool calls:\n  49 |     - an ``assistant`` message with ``tool_calls`` starts an atomic tool turn;\n  50 |     - only immediately following contiguous ``tool`` messages can satisfy that\n  51 |       assistant's tool calls;\n  52 |     - missing tool responses mark the turn incomplete;\n  53 |     - ``tool`` messages without an immediately preceding assistant tool-call\n  54 |       turn are emitted as orphan/incomplete turns instead of being attached to\n  55 |       unrelated context.\n  56 |     \"\"\"\n  57 | \n  58 |     ERROR_KEYWORDS = (\"error\", \"exception\", \"traceback\", \"failed\", \"failure\", \"失败\", \"错误\", \"报错\")\n  59 |     TEST_KEYWORDS = (\"pytest\", \"unittest\", \"test\", \"测试\", \"passed\", \"failed\", \"assertionerror\")\n  60 |     PLAN_KEYWORDS = (\"plan\", \"todo\", \"步骤\", \"继续\", \"完成\", \"已完成\", \"待办\")\n  61 |     FILE_EDIT_KEYWORDS = (\"edit_file\", \"write_full_file\", \"created\", \"modified\", \"deleted\", \"创建\", \"修改\", \"删除\")\n  62 |     FILE_READ_KEYWORDS = (\"read_file\", \"cat \", \"读取\", \"查看文件\")\n  63 |     SEARCH_KEYWORDS = (\"search_code\", \"grep\", \"ripgrep\", \"搜索\")\n  64 |     COMMAND_KEYWORDS = (\"execute_bash\", \"pytest\", \"python \", \"npm \", \"命令\", \"运行\")\n  65 |     SUCCESS_KEYWORDS = (\"passed\", \"success\", \"成功\", \"测试通过\", \"✅\")\n  66 |     FAILURE_KEYWORDS = (\"failed\", \"failure\", \"error\", \"traceback\", \"失败\", \"错误\", \"❌\")\n  67 | \n  68 |     FILE_PATTERN = re.compile(\n  69 |         r\"(?<![\\w.-])(?:[A-Za-z]:)?[\\w.@+-]+(?:[/\\\\][\\w.@+-]+)+\\.[A-Za-z0-9]{1,8}(?![\\w.-])\"\n  70 |         r\"|(?<![\\w.-])[\\w.@+-]+\\.(?:py|js|ts|tsx|jsx|json|md|txt|yaml|yml|toml|ini|cfg|java|cpp|c|h|rs|go|sh|bat|ps1)(?![\\w.-])\"\n  71 |     )\n  72 | \n  73 |     def build(self, messages: List[Dict[str, Any]]) -> List[ConversationTurn]:\n  74 |         \"\"\"Return semantic turns while preserving original message order.\"\"\"\n  75 |         turns: List[ConversationTurn] = []\n  76 |       ...",
+      "files": [
+        "core/turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

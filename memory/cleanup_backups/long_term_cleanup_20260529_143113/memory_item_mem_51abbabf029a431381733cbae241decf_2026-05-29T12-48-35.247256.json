@@ -1,0 +1,58 @@
+{
+  "id": "mem_51abbabf029a431381733cbae241decf",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 1 处匹配，分布在 1 个文件中\n\n================================================================================\n\n[FILE] engine.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      10 | from core.prompts import get_system_prompt\n      11 | from core.context import ContextManager  # <--- 导入新管家\n>>>   12 | from core.compression_engine import CompressionEngine  # OpenAI tool pair sanitizer\n      13 | from core.context_assembler import ContextAssembler, ContextBudget\n      14 | from core.memory_items import MemoryKind, ObservationType, RawObservation\n\n================================================================================\n[DONE] 搜索完成: 1 处匹配，1 个文件，共搜索 1 个文件",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:48:35.247256",
+  "updated_at": "2026-05-29T12:48:35.247256",
+  "concepts": [
+    "post_tool_use",
+    "search_code"
+  ],
+  "files": [
+    "core",
+    "engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_30aa334185824575a6b3eb501169846f"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_30aa334185824575a6b3eb501169846f",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:48:35.247256",
+      "event_type": "post_tool_use",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": true,
+        "context": 2,
+        "file_pattern": "engine.py",
+        "path": "core",
+        "pattern": "CompressionEngine"
+      },
+      "tool_output": "[SEARCH] 搜索结果: 共找到 1 处匹配，分布在 1 个文件中\n\n================================================================================\n\n[FILE] engine.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      10 | from core.prompts import get_system_prompt\n      11 | from core.context import ContextManager  # <--- 导入新管家\n>>>   12 | from core.compression_engine import CompressionEngine  # OpenAI tool pair sanitizer\n      13 | from core.context_assembler import ContextAssembler, ContextBudget\n      14 | from core.memory_items import MemoryKind, ObservationType, RawObservation\n\n================================================================================\n[DONE] 搜索完成: 1 处匹配，1 个文件，共搜索 1 个文件",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core",
+        "engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

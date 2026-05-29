@@ -1,0 +1,80 @@
+{
+  "id": "mem_e780c4a9f1424866b58085f1225d92cf",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 35 处匹配，分布在 9 个文件中\n\n================================================================================\n\n[FILE] compression_engine.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n    1176 |             return arguments\n    1177 |         if isinstance(arguments, str) and arguments.strip():\n    1178 |             try:\n>>> 1179 |                 parsed = json.loads(arguments)\n    1180 |                 return parsed if isinstance(parsed, dict) else {}\n    1181 |             except Exception:\n    1182 |                 return {}\n    [上下文]\n    1483 |                 return None\n    1484 | \n    1485 |             json_str = summary_text[json_start:json_end]\n>>> 1486 |             data = json.loads(json_str)\n    1487 | \n    1488 |             # 辅助函数：安全地转换错误记录\n    1489 |             def convert_error(er):\n\n[FILE] context.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     341 |                 return None\n     342 | \n     343 |             # 解析 JSON\n>>>  344 |             data = json.loads(json_str)\n     345 | \n     346 |             # 验证必需字段\n     347 |             required_fields = [\"task_goal\", \"task_status\", \"summary_text\"]\n\n[FILE] engine.py (4 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     156 |                 for tc in msg.tool_calls:\n     157 |                     content_blocks.append({\n     158 |                         \"type\": \"tool_use\", \"id\": tc.id, \"name\": tc.function.name,\n>>>  159 |                         \"input\": json.loads(tc.function.arguments)\n     160 |                     })\n     161 |             return content_blocks, \"tool_use\" if msg.tool_calls else \"end_turn\"\n     162 | \n    [上下文]\n     580 |             # 🔥 新增：保存三层记忆数据（Phase 2/3）\n     581 |             \"memories\": self.context.export_memories()\n     582 |         }\n>>>  583 |         with open(self.session_path, \"w\", encoding=\"utf-8\") as f:\n     584 |             json.dump(data, f, ensure_ascii=False, indent=2)\n     585 |         # print(f\" [💾] 会话已存档: {self.session_id}\")\n     586 | \n    [上下文]\n     588 |         \"\"\"恢复记忆和计划状态，以及三层记忆数据\"\"\"\n     589 |         if os.path.exists(self.session_path):\n     590 |             try:\n>>>  591 |                 with open(self.session_path, \"r\", encoding=\"utf-8\") as f:\n     592 |                     data = json.load(f)\n     593 |                     self.context.history_summary = data.get(\"history_summary\", \"\")\n     594 |                     self.context.messages = data.get(\"messages\", [])\n    [上下文]\n     589 |         if os.path.exists(self.session_path):\n     590 |             try:\n     591 |                 with open(self.session_path, \"r\", encoding=\"utf-8\") as f:\n>>>  592 |                     data = json.load(f)\n     593 |                     self.context.history_summary = data.get(\"history_summary\", \"\")\n     594 |                     self.context.messages = data.get(\"messages\", [])\n     595 |                     # 🔥 新增：恢复计划状态\n\n[FILE] memory_items.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     145 | \n     146 |     @classmethod\n     147 |     def from_json(cls, json_str: str) -> \"RawObservation\":\n>>>  148 |         return cls.from_dict(json.loads(json_str))\n     149 | \n     150 | \n     151 | @dataclass\n    [上下文]\n     230 | \n     231 |     @classmethod\n     232 |     def from_json(cls, json_str: str) -> \"MemoryItem\":\n>>>  233 |         return cls.from_dict(json.loads(json_str))\n     234 | \n     235 |     def searchable_text(self) -> str:\n     236 |         \"\"\"返回用于关键词检索的文本。\"\"\"\n\n[FILE] memory_layers.py (16 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     202 |         index_file = self.storage_dir / \"index.json\"\n     203 |         if index_file.exists():\n     204 |             try:\n>>>  205 |                 with open(index_file, 'r', enc...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:36:43.051892",
+  "updated_at": "2026-05-29T13:36:43.051892",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    "core",
+    "compression_engine.py",
+    "context.py",
+    "engine.py",
+    "memory_items.py",
+    "memory_layers.py",
+    "index.json",
+    "memory_manager.py",
+    "memory_items.json",
+    "memory_statistics.json",
+    "memory_models.py",
+    "prompts.py",
+    "session_manager.py"
+  ],
+  "source_observation_ids": [
+    "obs_d737d42219a647a6a9a994614c3d6d3a"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_d737d42219a647a6a9a994614c3d6d3a",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:36:43.051892",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 3,
+        "file_pattern": "*.py",
+        "path": "core",
+        "pattern": "glob\\(|rglob\\(|os\\.listdir|read_text\\(|json\\.load|open\\("
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 35 处匹配，分布在 9 个文件中\n\n================================================================================\n\n[FILE] compression_engine.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n    1176 |             return arguments\n    1177 |         if isinstance(arguments, str) and arguments.strip():\n    1178 |             try:\n>>> 1179 |                 parsed = json.loads(arguments)\n    1180 |                 return parsed if isinstance(parsed, dict) else {}\n    1181 |             except Exception:\n    1182 |                 return {}\n    [上下文]\n    1483 |                 return None\n    1484 | \n    1485 |             json_str = summary_text[json_start:json_end]\n>>> 1486 |             data = json.loads(json_str)\n    1487 | \n    1488 |             # 辅助函数：安全地转换错误记录\n    1489 |             def convert_error(er):\n\n[FILE] context.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     341 |                 return None\n     342 | \n     343 |             # 解析 JSON\n>>>  344 |             data = json.loads(json_str)\n     345 | \n     346 |             # 验证必需字段\n     347 |             required_fields = [\"task_goal\", \"task_status\", \"summary_text\"]\n\n[FILE] engine.py (4 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     156 |                 for tc in msg.tool_calls:\n     157 |                     content_blocks.append({\n     158 |                         \"type\": \"tool_use\", \"id\": tc.id, \"name\": tc.function.name,\n>>>  159 |                         \"input\": json.loads(tc.function.arguments)\n     160 |                     })\n     161 |             return content_blocks, \"tool_use\" if msg.tool_calls else \"end_turn\"\n     162 | \n    [上下文]\n     580 |             # 🔥 新增：保存三层记忆数据（Phase 2/3）\n     581 |             \"memories\": self.context.export_memories()\n     582 |         }\n>>>  583 |         with open(self.session_path, \"w\", encoding=\"utf-8\") as f:\n     584 |             json.dump(data, f, ensure_ascii=False, indent=2)\n     585 |         # print(f\" [💾] 会话已存档: {self.session_id}\")\n     586 | \n    [上下文]\n     588 |         \"\"\"恢复记忆和计划状态，以及三层记忆数据\"\"\"\n     589 |         if os.path.exists(self.session_path):\n     590 |             try:\n>>>  591 |                 with open(self.session_path, \"r\", encoding=\"utf-8\") as f:\n     592 |                     data = json.load(f)\n     593 |                     self.context.history_summary = data.get(\"history_summary\", \"\")\n     594 |                     self.context.messages = data.get(\"messages\", [])\n    [上下文]\n     589 |         if os.path.exists(self.session_path):\n     590 |             try:\n     591 |                 with open(self.session_path, \"r\", encoding=\"utf-8\") as f:\n>>>  592 |                     data = json.load(f)\n     593 |                     self.context.history_summary = data.get(\"history_summary\", \"\")\n     594 |                     self.context.messages = data.get(\"messages\", [])\n     595 |                     # 🔥 新增：恢复计划状态\n\n[FILE] memory_items.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     145 | \n     146 |     @classmethod\n     147 |     def from_json(cls, json_str: str) -> \"RawObservation\":\n>>>  148 |         return cls.from_dict(json.loads(json_str))\n     149 | \n     150 | \n     151 | @dataclass\n    [上下文]\n     230 | \n     231 |     @classmethod\n     232 |     def from_json(cls, json_str: str) -> \"MemoryItem\":\n>>>  233 |         return cls.from_dict(json.loads(json_str))\n     234 | \n     235 |     def searchable_text(self) -> str:\n     236 |         \"\"\"返回用于关键词检索的文本。\"\"\"\n\n[FILE] memory_layers.py (16 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     202 |         index_file = self.storage_dir / \"index.json\"\n     203 |         if index_file.exists():\n     204 |             try:\n>>>  205 |                 with open(index_file, 'r', enc...",
+      "files": [
+        "core",
+        "compression_engine.py",
+        "context.py",
+        "engine.py",
+        "memory_items.py",
+        "memory_layers.py",
+        "index.json",
+        "memory_manager.py",
+        "memory_items.json",
+        "memory_statistics.json",
+        "memory_models.py",
+        "prompts.py",
+        "session_manager.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

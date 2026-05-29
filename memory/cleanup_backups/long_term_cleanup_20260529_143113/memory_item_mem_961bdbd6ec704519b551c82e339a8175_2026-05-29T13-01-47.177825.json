@@ -1,0 +1,55 @@
+{
+  "id": "mem_961bdbd6ec704519b551c82e339a8175",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/engine.py (第 320 至 429 行，共 767 行) ---\n 320 |                     self.context.add_message({\"role\": \"user\", \"content\": tool_results_content})\n 321 | \n 322 |                 # 延后写入记忆提示，避免 OpenAI assistant(tool_calls) 与 tool 响应之间夹入非 tool 消息。\n 323 |                 for memory_context in deferred_memory_contexts:\n 324 |                     self.context.add_message({\"role\": \"user\", \"content\": memory_context})\n 325 | \n 326 |                 # ========== 自动回滚逻辑 ==========\n 327 |                 if should_rollback:\n 328 |                     print(f\"\\n [🚨] 触发自动回滚: {rollback_reason}\")\n 329 |                     success, msg = rollback_to(\"HEAD~1\")\n 330 |                     if success:\n 331 |                         print(f\" [✅] {msg}\")\n 332 |                         self.context.add_message({\n 333 |                             \"role\": \"user\", \"content\": f\"⚠️ 系统已自动回滚代码，原因: {rollback_reason}。请重新思考解决方案。\"\n 334 |                         })\n 335 |                     else:\n 336 |                         print(f\" [❌] 回滚失败: {msg}\")\n 337 |                 # ================================\n 338 | \n 339 |             self.save_session()\n 340 | \n 341 |         return \"任务达到最大思考步数限制。\"\n 342 | \n 343 |     def _build_relevant_memory_context(self, query: str, top_k: int = None) -> str:\n 344 |         \"\"\"召回与当前输入相关的长期记忆，并按 token budget 格式化为 prompt 注入文本。\"\"\"\n 345 |         if not query or not getattr(self.context, \"_enable_memory_layers\", False):\n 346 |             return \"\"\n 347 | \n 348 |         try:\n 349 |             context = self.context.memory_manager.build_prompt_memory_context(\n 350 |                 query=query,\n 351 |                 token_budget=self.memory_token_budget,\n 352 |                 task_type=None,\n 353 |                 top_k=top_k or self.memory_recall_top_k,\n 354 |             )\n 355 |         except Exception as e:\n 356 |             print(f\" [⚠️] 主动记忆召回失败: {e}\")\n 357 |             return \"\"\n 358 | \n 359 |         if context:\n 360 |             print(\" [🧠] 已按预算注入长期记忆上下文\")\n 361 |         return context\n 362 | \n 363 |     def _build_pre_tool_memory_context(self, tool_name: str, tool_input: Dict[str, Any]) -> str:\n 364 |         \"\"\"在文件编辑/写入前自动召回文件历史。\"\"\"\n 365 |         if tool_name not in {\"edit_file\", \"write_full_file\"} or not getattr(self.context, \"_enable_memory_layers\", False):\n 366 |             return \"\"\n 367 |         path = (tool_input or {}).get(\"path\") or (tool_input or {}).get(\"file_path\")\n 368 |         if not path:\n 369 |             return \"\"\n 370 |         try:\n 371 |             context = self.context.memory_manager.build_prompt_memory_context(\n 372 |                 query=str(path),\n 373 |                 token_budget=500,\n 374 |                 task_type=\"code_edit\",\n 375 |                 top_k=4,\n 376 |                 file_path=str(path),\n 377 |             )\n 378 |         except Exception as e:\n 379 |             print(f\" [⚠️] 文件历史自动召回失败: {e}\")\n 380 |             return \"\"\n 381 |         if not context:\n 382 |             return \"\"\n 383 |         return f\"\\n[自动文件历史召回: {path}]\\n{context}\"\n 384 | \n 385 |     def _build_post_tool_failure_memory_context(self, tool_name: str, result_text: str) -> str:\n 386 |         \"\"\"测试或工具失败后自动召回错误历史。\"\"\"\n 387 |         if not self._is_failure_result(result_text) or not getattr(self.context, \"_enable_memory_layers\", False):\n 388 |             return \"\"\n 389 |         if tool_name not in {\"run_pytest\", \"execute_bash\", \"edit_file\", \"write_full_file\"}:\n 390 |             return \"\"\n 391 |         error_query = self._extract_error_query(result_text)\n 392 |         try:\n 393 |             context = self.context.memory_manager.build_prompt_memory_context(\n 394 |                 query=error_query,\n 395 |                 token_budget=600,\n 396 |                 task_type=\"test_failure\" if tool_name == \"run_pytest\" else None,\n 397 |                 top_k=4,\n 398 |                 error_type=error_query,\n 399 |             )\n 400 |         except Exception as e:\n 401 |           ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:01:47.177825",
+  "updated_at": "2026-05-29T13:01:47.177825",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_4fda36cb18cc484c846a08e67ae1d0b9"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_4fda36cb18cc484c846a08e67ae1d0b9",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:01:47.177825",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 429,
+        "path": "core/engine.py",
+        "raw_mode": false,
+        "start_line": 320
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/engine.py (第 320 至 429 行，共 767 行) ---\n 320 |                     self.context.add_message({\"role\": \"user\", \"content\": tool_results_content})\n 321 | \n 322 |                 # 延后写入记忆提示，避免 OpenAI assistant(tool_calls) 与 tool 响应之间夹入非 tool 消息。\n 323 |                 for memory_context in deferred_memory_contexts:\n 324 |                     self.context.add_message({\"role\": \"user\", \"content\": memory_context})\n 325 | \n 326 |                 # ========== 自动回滚逻辑 ==========\n 327 |                 if should_rollback:\n 328 |                     print(f\"\\n [🚨] 触发自动回滚: {rollback_reason}\")\n 329 |                     success, msg = rollback_to(\"HEAD~1\")\n 330 |                     if success:\n 331 |                         print(f\" [✅] {msg}\")\n 332 |                         self.context.add_message({\n 333 |                             \"role\": \"user\", \"content\": f\"⚠️ 系统已自动回滚代码，原因: {rollback_reason}。请重新思考解决方案。\"\n 334 |                         })\n 335 |                     else:\n 336 |                         print(f\" [❌] 回滚失败: {msg}\")\n 337 |                 # ================================\n 338 | \n 339 |             self.save_session()\n 340 | \n 341 |         return \"任务达到最大思考步数限制。\"\n 342 | \n 343 |     def _build_relevant_memory_context(self, query: str, top_k: int = None) -> str:\n 344 |         \"\"\"召回与当前输入相关的长期记忆，并按 token budget 格式化为 prompt 注入文本。\"\"\"\n 345 |         if not query or not getattr(self.context, \"_enable_memory_layers\", False):\n 346 |             return \"\"\n 347 | \n 348 |         try:\n 349 |             context = self.context.memory_manager.build_prompt_memory_context(\n 350 |                 query=query,\n 351 |                 token_budget=self.memory_token_budget,\n 352 |                 task_type=None,\n 353 |                 top_k=top_k or self.memory_recall_top_k,\n 354 |             )\n 355 |         except Exception as e:\n 356 |             print(f\" [⚠️] 主动记忆召回失败: {e}\")\n 357 |             return \"\"\n 358 | \n 359 |         if context:\n 360 |             print(\" [🧠] 已按预算注入长期记忆上下文\")\n 361 |         return context\n 362 | \n 363 |     def _build_pre_tool_memory_context(self, tool_name: str, tool_input: Dict[str, Any]) -> str:\n 364 |         \"\"\"在文件编辑/写入前自动召回文件历史。\"\"\"\n 365 |         if tool_name not in {\"edit_file\", \"write_full_file\"} or not getattr(self.context, \"_enable_memory_layers\", False):\n 366 |             return \"\"\n 367 |         path = (tool_input or {}).get(\"path\") or (tool_input or {}).get(\"file_path\")\n 368 |         if not path:\n 369 |             return \"\"\n 370 |         try:\n 371 |             context = self.context.memory_manager.build_prompt_memory_context(\n 372 |                 query=str(path),\n 373 |                 token_budget=500,\n 374 |                 task_type=\"code_edit\",\n 375 |                 top_k=4,\n 376 |                 file_path=str(path),\n 377 |             )\n 378 |         except Exception as e:\n 379 |             print(f\" [⚠️] 文件历史自动召回失败: {e}\")\n 380 |             return \"\"\n 381 |         if not context:\n 382 |             return \"\"\n 383 |         return f\"\\n[自动文件历史召回: {path}]\\n{context}\"\n 384 | \n 385 |     def _build_post_tool_failure_memory_context(self, tool_name: str, result_text: str) -> str:\n 386 |         \"\"\"测试或工具失败后自动召回错误历史。\"\"\"\n 387 |         if not self._is_failure_result(result_text) or not getattr(self.context, \"_enable_memory_layers\", False):\n 388 |             return \"\"\n 389 |         if tool_name not in {\"run_pytest\", \"execute_bash\", \"edit_file\", \"write_full_file\"}:\n 390 |             return \"\"\n 391 |         error_query = self._extract_error_query(result_text)\n 392 |         try:\n 393 |             context = self.context.memory_manager.build_prompt_memory_context(\n 394 |                 query=error_query,\n 395 |                 token_budget=600,\n 396 |                 task_type=\"test_failure\" if tool_name == \"run_pytest\" else None,\n 397 |                 top_k=4,\n 398 |                 error_type=error_query,\n 399 |             )\n 400 |         except Exception as e:\n 401 |           ...",
+      "files": [
+        "core/engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

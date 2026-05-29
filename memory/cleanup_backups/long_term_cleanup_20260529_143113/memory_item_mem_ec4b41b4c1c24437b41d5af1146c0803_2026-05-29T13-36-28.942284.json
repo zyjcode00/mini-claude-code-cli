@@ -1,0 +1,55 @@
+{
+  "id": "mem_ec4b41b4c1c24437b41d5af1146c0803",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: tools/__init__.py (第 1 至 40 行，共 49 行) ---\n   1 | # tools/__init__.py\n   2 | from .bash_tool import BashTool\n   3 | from .file_tool import ReadTool, FileEditTool, FileTreeTool, WriteFullFileTool\n   4 | from .plan_tool import UpdatePlanTool, MarkDoneTool\n   5 | from .session_tool import SessionCleanerTool\n   6 | from .pytest_tool import PytestTool\n   7 | from .search_tool import SearchTool\n   8 | from .symbol_tool import ListSymbolsTool, FindSymbolTool\n   9 | from .git_tool import GitStatusTool, GitCommitTool, GitRollbackTool\n  10 | from .memory_tool import MemorySaveTool, MemoryRecallTool, MemoryFileHistoryTool, MemoryErrorHistoryTool, MemoryStatsTool\n  11 | \n  12 | def get_default_tools(plan_manager=None, memory_manager=None, memory_storage_dir=\"memory/long_term\"):\n  13 |     shared_memory_manager = memory_manager\n  14 |     memory_save_tool = MemorySaveTool(memory_manager=shared_memory_manager, long_term_storage_dir=memory_storage_dir)\n  15 |     shared_memory_manager = memory_save_tool.memory_manager\n  16 |     memory_recall_tool = MemoryRecallTool(memory_manager=shared_memory_manager)\n  17 |     memory_file_history_tool = MemoryFileHistoryTool(memory_manager=shared_memory_manager)\n  18 |     memory_error_history_tool = MemoryErrorHistoryTool(memory_manager=shared_memory_manager)\n  19 |     memory_stats_tool = MemoryStatsTool(memory_manager=shared_memory_manager)\n  20 | \n  21 |     tools = [\n  22 |         BashTool(),\n  23 |         ReadTool(),\n  24 |         FileEditTool(),\n  25 |         WriteFullFileTool(),  # 新增：全量写入工具\n  26 |         FileTreeTool(),\n  27 |         SearchTool(),  # 新增：代码搜索工具\n  28 |         ListSymbolsTool(),  # 新增：符号索引工具\n  29 |         FindSymbolTool(),  # 新增：符号查找工具\n  30 |         PytestTool(),\n  31 |         SessionCleanerTool(),\n  32 |         # Git 自动化工具\n  33 |         GitStatusTool(),\n  34 |         GitCommitTool(),\n  35 |         GitRollbackTool(),\n  36 |         # 长期记忆工具\n  37 |         memory_save_tool,\n  38 |         memory_recall_tool,\n  39 |         memory_file_history_tool,\n  40 |         memory_error_history_tool,\n--- 读取完毕 ---",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:36:28.942284",
+  "updated_at": "2026-05-29T13:36:28.942284",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "tools/__init__.py"
+  ],
+  "source_observation_ids": [
+    "obs_c1d9fc4cea1d4a549ab3e48759968a81"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_c1d9fc4cea1d4a549ab3e48759968a81",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:36:28.942284",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 40,
+        "path": "tools/__init__.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: tools/__init__.py (第 1 至 40 行，共 49 行) ---\n   1 | # tools/__init__.py\n   2 | from .bash_tool import BashTool\n   3 | from .file_tool import ReadTool, FileEditTool, FileTreeTool, WriteFullFileTool\n   4 | from .plan_tool import UpdatePlanTool, MarkDoneTool\n   5 | from .session_tool import SessionCleanerTool\n   6 | from .pytest_tool import PytestTool\n   7 | from .search_tool import SearchTool\n   8 | from .symbol_tool import ListSymbolsTool, FindSymbolTool\n   9 | from .git_tool import GitStatusTool, GitCommitTool, GitRollbackTool\n  10 | from .memory_tool import MemorySaveTool, MemoryRecallTool, MemoryFileHistoryTool, MemoryErrorHistoryTool, MemoryStatsTool\n  11 | \n  12 | def get_default_tools(plan_manager=None, memory_manager=None, memory_storage_dir=\"memory/long_term\"):\n  13 |     shared_memory_manager = memory_manager\n  14 |     memory_save_tool = MemorySaveTool(memory_manager=shared_memory_manager, long_term_storage_dir=memory_storage_dir)\n  15 |     shared_memory_manager = memory_save_tool.memory_manager\n  16 |     memory_recall_tool = MemoryRecallTool(memory_manager=shared_memory_manager)\n  17 |     memory_file_history_tool = MemoryFileHistoryTool(memory_manager=shared_memory_manager)\n  18 |     memory_error_history_tool = MemoryErrorHistoryTool(memory_manager=shared_memory_manager)\n  19 |     memory_stats_tool = MemoryStatsTool(memory_manager=shared_memory_manager)\n  20 | \n  21 |     tools = [\n  22 |         BashTool(),\n  23 |         ReadTool(),\n  24 |         FileEditTool(),\n  25 |         WriteFullFileTool(),  # 新增：全量写入工具\n  26 |         FileTreeTool(),\n  27 |         SearchTool(),  # 新增：代码搜索工具\n  28 |         ListSymbolsTool(),  # 新增：符号索引工具\n  29 |         FindSymbolTool(),  # 新增：符号查找工具\n  30 |         PytestTool(),\n  31 |         SessionCleanerTool(),\n  32 |         # Git 自动化工具\n  33 |         GitStatusTool(),\n  34 |         GitCommitTool(),\n  35 |         GitRollbackTool(),\n  36 |         # 长期记忆工具\n  37 |         memory_save_tool,\n  38 |         memory_recall_tool,\n  39 |         memory_file_history_tool,\n  40 |         memory_error_history_tool,\n--- 读取完毕 ---",
+      "files": [
+        "tools/__init__.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

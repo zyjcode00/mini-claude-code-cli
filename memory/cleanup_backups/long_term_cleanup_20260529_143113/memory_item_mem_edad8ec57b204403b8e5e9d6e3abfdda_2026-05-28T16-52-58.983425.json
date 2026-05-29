@@ -1,0 +1,68 @@
+{
+  "id": "mem_edad8ec57b204403b8e5e9d6e3abfdda",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 73 处匹配，分布在 6 个文件中\n\n================================================================================\n\n[FILE] context.py (31 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      37 | \n      38 |     Phase 1 增强功能：\n>>>   39 |     - 结构化摘要存储（session_summaries）\n      40 |     - 兼容旧版纯文本摘要（history_summary）\n      41 | \n    [上下文]\n      38 |     Phase 1 增强功能：\n      39 |     - 结构化摘要存储（session_summaries）\n>>>   40 |     - 兼容旧版纯文本摘要（history_summary）\n      41 | \n      42 |     Phase 2 增强功能：\n    [上下文]\n      56 | \n      57 |         # 旧版摘要（纯文本，向后兼容）\n>>>   58 |         self.history_summary = \"\"\n      59 | \n      60 |         # Phase 1: 结构化摘要列表（将被 Phase 2 替代，但保持向后兼容）\n    [上下文]\n      59 | \n      60 |         # Phase 1: 结构化摘要列表（将被 Phase 2 替代，但保持向后兼容）\n>>>   61 |         self.session_summaries: List[SessionSummary] = []\n      62 | \n      63 |         # Phase 2: 三层记忆架构统一由 MemoryManager 编排\n    [上下文]\n     167 |                 self.long_term_memory.store(evicted_summary)\n     168 | \n>>>  169 |             # 兼容：添加到 session_summaries\n     170 |             self.session_summaries.append(summary)\n     171 | \n    [上下文]\n     168 | \n     169 |             # 兼容：添加到 session_summaries\n>>>  170 |             self.session_summaries.append(summary)\n     171 | \n     172 |             return True\n    [上下文]\n     191 |         # 生成提示词\n     192 |         prompt = SUMMARY_PROMPT_TEMPLATE_V2.format(\n>>>  193 |             existing_summary=self.history_summary or \"无\",\n     194 |             messages_to_summarize=str(messages)\n     195 |         )\n    [上下文]\n     261 |             llm_summarizer_func=llm_summarizer_func,\n     262 |             min_keep=self.min_keep,\n>>>  263 |             existing_summary=self.history_summary\n     264 |         )\n     265 | \n    [上下文]\n     286 |                 print(f\"   [Phase 2] 摘要已添加到情景记忆: {result.summary.session_id}\")\n     287 | \n>>>  288 |             # 兼容 Phase 1: 存储到 session_summaries\n     289 |             self.session_summaries.append(result.summary)\n     290 | \n    [上下文]\n     287 | \n     288 |             # 兼容 Phase 1: 存储到 session_summaries\n>>>  289 |             self.session_summaries.append(result.summary)\n     290 | \n     291 |             # 兼容旧版：也更新纯文本摘要\n    [上下文]\n     290 | \n     291 |             # 兼容旧版：也更新纯文本摘要\n>>>  292 |             self.history_summary = result.summary.summary_text\n     293 |             print(f\"   [Phase 3] 结构化摘要已保存: {result.summary.session_id}\")\n     294 |             print(f\"   [Phase 3] 压缩比: {result.compression_ratio:.2%}\")\n    [上下文]\n     436 |     # ==================== Phase 1 新增方法 ====================\n     437 | \n>>>  438 |     def get_structured_summaries(self) -> List[SessionSummary]:\n     439 |         \"\"\"获取所有结构化摘要\"\"\"\n     440 |         return self.session_summaries\n    [上下文]\n     438 |     def get_structured_summaries(self) -> List[SessionSummary]:\n     439 |         \"\"\"获取所有结构化摘要\"\"\"\n>>>  440 |         return self.session_summaries\n     441 | \n     442 |     def get_recent_files(self, limit: int = 10) -> List[str]:\n    [上下文]\n     451 |         \"\"\"\n     452 |         all_files = []\n>>>  453 |         for summary in reversed(self.session_summaries):\n     454 |             all_files.extend(summary.get_file_paths())\n     455 |             if len(all_files) >= limit:\n    [上下文]\n     477 |         \"\"\"\n     478 |         all_errors = []\n>>>  479 |         for summary in reversed(self.session_summaries):\n     480 |             all_errors.extend(summary.errors_encountered)\n     481 |             if len(all_errors) >= limit:\n    [上下文]\n     497 |         keyword_lower = keyword.lower()\n     498 | \n>>>  499 |         for summary in self.session_summaries:\n     500 |             # 搜索摘要文本\n     501 |             if keyword_lower in summary.summary_text.lower():\n    [上下文]\n     529 |             统计信息字典\n     530 |         \"\"\"\n>>>  531 |         if not self.session_summaries:\n     532 |             return {\n     533 |                 \"total_summarie...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T16:52:58.983425",
+  "updated_at": "2026-05-28T16:52:58.983425",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    "core",
+    "context.py",
+    "engine.py",
+    "memory_manager.py",
+    "memory_retrieval.py",
+    "prompts.py",
+    "session_manager.py"
+  ],
+  "source_observation_ids": [
+    "obs_b7e71386f88b4d118d2369220eaa961c"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_b7e71386f88b4d118d2369220eaa961c",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T16:52:58.983425",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "pattern": "history_summary|session_summaries|search_long_term|search_all_memories|get_structured_summaries|format_session_summaries|format_episodic_memory|LongTermMemory\\.store\\(|LongTermMemory\\.search\\(",
+        "path": "core",
+        "file_pattern": "*.py",
+        "context": 2,
+        "case_sensitive": true
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 73 处匹配，分布在 6 个文件中\n\n================================================================================\n\n[FILE] context.py (31 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      37 | \n      38 |     Phase 1 增强功能：\n>>>   39 |     - 结构化摘要存储（session_summaries）\n      40 |     - 兼容旧版纯文本摘要（history_summary）\n      41 | \n    [上下文]\n      38 |     Phase 1 增强功能：\n      39 |     - 结构化摘要存储（session_summaries）\n>>>   40 |     - 兼容旧版纯文本摘要（history_summary）\n      41 | \n      42 |     Phase 2 增强功能：\n    [上下文]\n      56 | \n      57 |         # 旧版摘要（纯文本，向后兼容）\n>>>   58 |         self.history_summary = \"\"\n      59 | \n      60 |         # Phase 1: 结构化摘要列表（将被 Phase 2 替代，但保持向后兼容）\n    [上下文]\n      59 | \n      60 |         # Phase 1: 结构化摘要列表（将被 Phase 2 替代，但保持向后兼容）\n>>>   61 |         self.session_summaries: List[SessionSummary] = []\n      62 | \n      63 |         # Phase 2: 三层记忆架构统一由 MemoryManager 编排\n    [上下文]\n     167 |                 self.long_term_memory.store(evicted_summary)\n     168 | \n>>>  169 |             # 兼容：添加到 session_summaries\n     170 |             self.session_summaries.append(summary)\n     171 | \n    [上下文]\n     168 | \n     169 |             # 兼容：添加到 session_summaries\n>>>  170 |             self.session_summaries.append(summary)\n     171 | \n     172 |             return True\n    [上下文]\n     191 |         # 生成提示词\n     192 |         prompt = SUMMARY_PROMPT_TEMPLATE_V2.format(\n>>>  193 |             existing_summary=self.history_summary or \"无\",\n     194 |             messages_to_summarize=str(messages)\n     195 |         )\n    [上下文]\n     261 |             llm_summarizer_func=llm_summarizer_func,\n     262 |             min_keep=self.min_keep,\n>>>  263 |             existing_summary=self.history_summary\n     264 |         )\n     265 | \n    [上下文]\n     286 |                 print(f\"   [Phase 2] 摘要已添加到情景记忆: {result.summary.session_id}\")\n     287 | \n>>>  288 |             # 兼容 Phase 1: 存储到 session_summaries\n     289 |             self.session_summaries.append(result.summary)\n     290 | \n    [上下文]\n     287 | \n     288 |             # 兼容 Phase 1: 存储到 session_summaries\n>>>  289 |             self.session_summaries.append(result.summary)\n     290 | \n     291 |             # 兼容旧版：也更新纯文本摘要\n    [上下文]\n     290 | \n     291 |             # 兼容旧版：也更新纯文本摘要\n>>>  292 |             self.history_summary = result.summary.summary_text\n     293 |             print(f\"   [Phase 3] 结构化摘要已保存: {result.summary.session_id}\")\n     294 |             print(f\"   [Phase 3] 压缩比: {result.compression_ratio:.2%}\")\n    [上下文]\n     436 |     # ==================== Phase 1 新增方法 ====================\n     437 | \n>>>  438 |     def get_structured_summaries(self) -> List[SessionSummary]:\n     439 |         \"\"\"获取所有结构化摘要\"\"\"\n     440 |         return self.session_summaries\n    [上下文]\n     438 |     def get_structured_summaries(self) -> List[SessionSummary]:\n     439 |         \"\"\"获取所有结构化摘要\"\"\"\n>>>  440 |         return self.session_summaries\n     441 | \n     442 |     def get_recent_files(self, limit: int = 10) -> List[str]:\n    [上下文]\n     451 |         \"\"\"\n     452 |         all_files = []\n>>>  453 |         for summary in reversed(self.session_summaries):\n     454 |             all_files.extend(summary.get_file_paths())\n     455 |             if len(all_files) >= limit:\n    [上下文]\n     477 |         \"\"\"\n     478 |         all_errors = []\n>>>  479 |         for summary in reversed(self.session_summaries):\n     480 |             all_errors.extend(summary.errors_encountered)\n     481 |             if len(all_errors) >= limit:\n    [上下文]\n     497 |         keyword_lower = keyword.lower()\n     498 | \n>>>  499 |         for summary in self.session_summaries:\n     500 |             # 搜索摘要文本\n     501 |             if keyword_lower in summary.summary_text.lower():\n    [上下文]\n     529 |             统计信息字典\n     530 |         \"\"\"\n>>>  531 |         if not self.session_summaries:\n     532 |             return {\n     533 |                 \"total_summarie...",
+      "files": [
+        "core",
+        "context.py",
+        "engine.py",
+        "memory_manager.py",
+        "memory_retrieval.py",
+        "prompts.py",
+        "session_manager.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

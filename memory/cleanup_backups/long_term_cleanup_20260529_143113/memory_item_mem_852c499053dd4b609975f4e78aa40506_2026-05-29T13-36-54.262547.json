@@ -1,0 +1,55 @@
+{
+  "id": "mem_852c499053dd4b609975f4e78aa40506",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_manager.py (第 330 至 410 行，共 446 行) ---\n 330 | \n 331 |         working_max = max(self.working_memory.max_size, 1)\n 332 |         episodic_max = max(self.episodic_memory.max_size, 1)\n 333 |         return {\n 334 |             \"enabled\": True,\n 335 |             \"working_memory\": {\n 336 |                 \"size\": len(self.working_memory),\n 337 |                 \"max_size\": self.working_memory.max_size,\n 338 |                 \"usage_rate\": len(self.working_memory) / working_max,\n 339 |             },\n 340 |             \"episodic_memory\": {\n 341 |                 \"size\": len(self.episodic_memory),\n 342 |                 \"max_size\": self.episodic_memory.max_size,\n 343 |                 \"usage_rate\": len(self.episodic_memory) / episodic_max,\n 344 |             },\n 345 |             \"long_term_memory\": {\n 346 |                 \"count\": len(self.long_term_memory),\n 347 |                 \"summary_count\": len(self.long_term_memory.index),\n 348 |                 \"item_count\": len(self.long_term_memory.item_index),\n 349 |                 \"storage_dir\": str(self.long_term_memory.storage_dir),\n 350 |             },\n 351 |         }\n 352 | \n 353 |     def export_memories(self, session_summaries: Optional[List[SessionSummary]] = None, history_summary: str = \"\") -> Dict[str, Any]:\n 354 |         \"\"\"导出可写入 session 文件的记忆数据。\"\"\"\n 355 |         session_summaries = session_summaries or []\n 356 |         if not self.enabled:\n 357 |             return {\n 358 |                 \"working_memory\": [],\n 359 |                 \"episodic_memory\": [],\n 360 |                 \"memory_items\": [],\n 361 |                 \"session_summaries\": [s.to_dict() for s in session_summaries],\n 362 |                 \"history_summary\": history_summary,\n 363 |             }\n 364 | \n 365 |         return {\n 366 |             \"working_memory\": self.working_memory.get_all(),\n 367 |             \"episodic_memory\": [s.to_dict() for s in self.episodic_memory.get_all()],\n 368 |             \"memory_items\": [item.to_dict() for item in self.long_term_memory.get_all_items()],\n 369 |             \"session_summaries\": [s.to_dict() for s in session_summaries],\n 370 |             \"history_summary\": history_summary,\n 371 |         }\n 372 | \n 373 |     def import_memories(self, data: Dict[str, Any]) -> Dict[str, Any]:\n 374 |         \"\"\"\n 375 |         导入 session 文件中的记忆数据。\n 376 | \n 377 |         返回 Phase 1 兼容字段：history_summary 与 session_summaries。\n 378 |         \"\"\"\n 379 |         session_summaries: List[SessionSummary] = []\n 380 |         for s_dict in data.get(\"session_summaries\", []):\n 381 |             try:\n 382 |                 session_summaries.append(SessionSummary.from_dict(s_dict))\n 383 |             except Exception as e:\n 384 |                 print(f\"⚠️ 恢复会话摘要失败: {e}\")\n 385 | \n 386 |         if self.enabled:\n 387 |             self.working_memory.clear()\n 388 |             for msg in data.get(\"working_memory\", []):\n 389 |                 self.working_memory.add(msg)\n 390 | \n 391 |             self.episodic_memory.clear()\n 392 |             for s_dict in data.get(\"episodic_memory\", []):\n 393 |                 try:\n 394 |                     self.episodic_memory.add(SessionSummary.from_dict(s_dict))\n 395 |                 except Exception as e:\n 396 |                     print(f\"⚠️ 恢复情景记忆失败: {e}\")\n 397 | \n 398 |             for item_dict in data.get(\"memory_items\", []):\n 399 |                 try:\n 400 |                     self.long_term_memory.store_item(MemoryItem.from_dict(item_dict))\n 401 |                 except Exception as e:\n 402 |                     print(f\"⚠️ 恢复 MemoryItem 失败: {e}\")\n 403 | \n 404 |         return {\n 405 |             \"history_summary\": data.get(\"history_summary\", \"\"),\n 406 |             \"session_summaries\": session_summaries,\n 407 |         }\n 408 | \n 409 |     def export_to_files(self, output_dir: str = \"memory/export\") -> Dict[str, str]:\n 410 |         \"\"\"导出情景记忆和统计信息到独立文件，返回文件路径。\"\"\"\n--- 读取完毕 ---",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:36:54.262547",
+  "updated_at": "2026-05-29T13:36:54.262547",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_manager.py"
+  ],
+  "source_observation_ids": [
+    "obs_8a596f3a83fd409d9ebd4ae8153c00d1"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_8a596f3a83fd409d9ebd4ae8153c00d1",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:36:54.261551",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 410,
+        "path": "core/memory_manager.py",
+        "raw_mode": false,
+        "start_line": 330
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_manager.py (第 330 至 410 行，共 446 行) ---\n 330 | \n 331 |         working_max = max(self.working_memory.max_size, 1)\n 332 |         episodic_max = max(self.episodic_memory.max_size, 1)\n 333 |         return {\n 334 |             \"enabled\": True,\n 335 |             \"working_memory\": {\n 336 |                 \"size\": len(self.working_memory),\n 337 |                 \"max_size\": self.working_memory.max_size,\n 338 |                 \"usage_rate\": len(self.working_memory) / working_max,\n 339 |             },\n 340 |             \"episodic_memory\": {\n 341 |                 \"size\": len(self.episodic_memory),\n 342 |                 \"max_size\": self.episodic_memory.max_size,\n 343 |                 \"usage_rate\": len(self.episodic_memory) / episodic_max,\n 344 |             },\n 345 |             \"long_term_memory\": {\n 346 |                 \"count\": len(self.long_term_memory),\n 347 |                 \"summary_count\": len(self.long_term_memory.index),\n 348 |                 \"item_count\": len(self.long_term_memory.item_index),\n 349 |                 \"storage_dir\": str(self.long_term_memory.storage_dir),\n 350 |             },\n 351 |         }\n 352 | \n 353 |     def export_memories(self, session_summaries: Optional[List[SessionSummary]] = None, history_summary: str = \"\") -> Dict[str, Any]:\n 354 |         \"\"\"导出可写入 session 文件的记忆数据。\"\"\"\n 355 |         session_summaries = session_summaries or []\n 356 |         if not self.enabled:\n 357 |             return {\n 358 |                 \"working_memory\": [],\n 359 |                 \"episodic_memory\": [],\n 360 |                 \"memory_items\": [],\n 361 |                 \"session_summaries\": [s.to_dict() for s in session_summaries],\n 362 |                 \"history_summary\": history_summary,\n 363 |             }\n 364 | \n 365 |         return {\n 366 |             \"working_memory\": self.working_memory.get_all(),\n 367 |             \"episodic_memory\": [s.to_dict() for s in self.episodic_memory.get_all()],\n 368 |             \"memory_items\": [item.to_dict() for item in self.long_term_memory.get_all_items()],\n 369 |             \"session_summaries\": [s.to_dict() for s in session_summaries],\n 370 |             \"history_summary\": history_summary,\n 371 |         }\n 372 | \n 373 |     def import_memories(self, data: Dict[str, Any]) -> Dict[str, Any]:\n 374 |         \"\"\"\n 375 |         导入 session 文件中的记忆数据。\n 376 | \n 377 |         返回 Phase 1 兼容字段：history_summary 与 session_summaries。\n 378 |         \"\"\"\n 379 |         session_summaries: List[SessionSummary] = []\n 380 |         for s_dict in data.get(\"session_summaries\", []):\n 381 |             try:\n 382 |                 session_summaries.append(SessionSummary.from_dict(s_dict))\n 383 |             except Exception as e:\n 384 |                 print(f\"⚠️ 恢复会话摘要失败: {e}\")\n 385 | \n 386 |         if self.enabled:\n 387 |             self.working_memory.clear()\n 388 |             for msg in data.get(\"working_memory\", []):\n 389 |                 self.working_memory.add(msg)\n 390 | \n 391 |             self.episodic_memory.clear()\n 392 |             for s_dict in data.get(\"episodic_memory\", []):\n 393 |                 try:\n 394 |                     self.episodic_memory.add(SessionSummary.from_dict(s_dict))\n 395 |                 except Exception as e:\n 396 |                     print(f\"⚠️ 恢复情景记忆失败: {e}\")\n 397 | \n 398 |             for item_dict in data.get(\"memory_items\", []):\n 399 |                 try:\n 400 |                     self.long_term_memory.store_item(MemoryItem.from_dict(item_dict))\n 401 |                 except Exception as e:\n 402 |                     print(f\"⚠️ 恢复 MemoryItem 失败: {e}\")\n 403 | \n 404 |         return {\n 405 |             \"history_summary\": data.get(\"history_summary\", \"\"),\n 406 |             \"session_summaries\": session_summaries,\n 407 |         }\n 408 | \n 409 |     def export_to_files(self, output_dir: str = \"memory/export\") -> Dict[str, str]:\n 410 |         \"\"\"导出情景记忆和统计信息到独立文件，返回文件路径。\"\"\"\n--- 读取完毕 ---",
+      "files": [
+        "core/memory_manager.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

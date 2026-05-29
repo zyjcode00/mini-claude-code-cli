@@ -1,0 +1,55 @@
+{
+  "id": "mem_8f68884893a04d8c970e9d372724bd92",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "                \"tool_messages\": sum(1 for msg in compressed_messages if msg.get(\"role\") == \"tool\"),\n                \"files_touched\": sorted({path for turn in selected_turns for path in turn.files_touched})[:20],\n            }\n        )\n\n    # ========== 策略 3: 滑动窗口 ==========\n\n    def _compress_with_sliding_window(\n        self,\n        messages: List[Dict[str, Any]],\n        target_ratio: float,\n        min_keep: int\n    ) -> CompressionResult:\n        \"\"\"\n        滑动窗口保留最近消息\n\n        策略：\n        1. 保留最近 target_ratio 比例的消息\n        2. 确保不截断工具调用（重要修复）\n        3. 至少保留 min_keep 条消息\n\n        Args:\n            messages: 消息列表\n            target_ratio: 目标压缩比\n            min_keep: 最少保留的消息数量\n\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:27:55.999454",
+  "updated_at": "2026-05-29T12:27:55.999454",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_e2625467bb25403b8365858b8975ae33"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_e2625467bb25403b8365858b8975ae33",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:27:55.998417",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 530,
+        "path": "core/compression_engine.py",
+        "raw_mode": true,
+        "start_line": 505
+      },
+      "tool_output": "                \"tool_messages\": sum(1 for msg in compressed_messages if msg.get(\"role\") == \"tool\"),\n                \"files_touched\": sorted({path for turn in selected_turns for path in turn.files_touched})[:20],\n            }\n        )\n\n    # ========== 策略 3: 滑动窗口 ==========\n\n    def _compress_with_sliding_window(\n        self,\n        messages: List[Dict[str, Any]],\n        target_ratio: float,\n        min_keep: int\n    ) -> CompressionResult:\n        \"\"\"\n        滑动窗口保留最近消息\n\n        策略：\n        1. 保留最近 target_ratio 比例的消息\n        2. 确保不截断工具调用（重要修复）\n        3. 至少保留 min_keep 条消息\n\n        Args:\n            messages: 消息列表\n            target_ratio: 目标压缩比\n            min_keep: 最少保留的消息数量\n\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

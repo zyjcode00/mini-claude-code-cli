@@ -1,0 +1,46 @@
+{
+  "id": "mem_aa1b61308f66449ca40f1b5fbf16eb88",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: get_git_status",
+  "content": "✅ 工作区干净\n📍 分支: agent/plan-83698ecd\n📌 最新提交: a2efae0 🎯 [Task-2] Auto snapshot",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:59:36.326059",
+  "updated_at": "2026-05-29T12:59:36.326059",
+  "concepts": [
+    "post_tool_use",
+    "get_git_status"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_a25b9054c0414c219b30f6a99b334bd7"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_a25b9054c0414c219b30f6a99b334bd7",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:59:36.326059",
+      "event_type": "post_tool_use",
+      "tool_name": "get_git_status",
+      "tool_input": {},
+      "tool_output": "✅ 工作区干净\n📍 分支: agent/plan-83698ecd\n📌 最新提交: a2efae0 🎯 [Task-2] Auto snapshot",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "id": "mem_e7f3afe0c27a41fba6ff4856f7edc9f0",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\n D tmp_inspect_session.py\n D tmp_ranges.py\n D tmp_stats.py\ntmp_inspect_session.py\ntmp_ranges.py\ntmp_stats.py\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:06:07.609938",
+  "updated_at": "2026-05-29T13:06:07.609938",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [
+    "tmp_inspect_session.py",
+    "tmp_ranges.py",
+    "tmp_stats.py"
+  ],
+  "source_observation_ids": [
+    "obs_44f7a57eaa744cd99e40929b6dd8036b"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_44f7a57eaa744cd99e40929b6dd8036b",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:06:07.609938",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "git status --short --untracked-files=all && git ls-files tmp_inspect_session.py tmp_ranges.py tmp_stats.py"
+      },
+      "tool_output": "STDOUT:\n D tmp_inspect_session.py\n D tmp_ranges.py\n D tmp_stats.py\ntmp_inspect_session.py\ntmp_ranges.py\ntmp_stats.py\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tmp_inspect_session.py",
+        "tmp_ranges.py",
+        "tmp_stats.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

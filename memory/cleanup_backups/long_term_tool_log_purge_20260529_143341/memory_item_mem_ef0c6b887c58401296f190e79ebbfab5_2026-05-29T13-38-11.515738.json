@@ -1,0 +1,91 @@
+{
+  "id": "mem_ef0c6b887c58401296f190e79ebbfab5",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: list_all_symbols",
+  "content": "📊 项目符号索引 (共 696 个定义)\n\n================================================================================\n\n\n📁 core\\bm25_retriever.py\n--------------------------------------------------------------------------------\n📦   BM25Document (L16-L22)\n    💬 BM25 文档\n📦   BM25Retriever (L25-L444)\n    💬 BM25 检索器\n    💬 \n⚡   BM25Retriever.__init__ (L40-L69)\n    💬 初始化 BM25 检索器\n    💬 \n⚡   BM25Retriever.index_document (L71-L120)\n    💬 索引单个文档\n    💬 \n⚡   BM25Retriever.index_documents (L122-L138)\n    💬 批量索引文档\n    💬 \n⚡   BM25Retriever.search (L140-L208)\n    💬 检索文档\n    💬 \n⚡   BM25Retriever.search_with_details (L210-L244)\n    💬 检索文档（带详细信息）\n    💬 \n⚡   BM25Retriever.get_document (L246-L258)\n    💬 获取文档内容\n    💬 \n⚡   BM25Retriever.get_statistics (L260-L274)\n    💬 获取统计信息\n    💬 \n⚡   BM25Retriever._calculate_idf (L276-L301)\n    💬 计算 IDF（逆文档频率）\n    💬 \n⚡   BM25Retriever._update_statistics (L303-L313)\n    💬 更新统计信息\n⚡   BM25Retriever._remove_document (L315-L338)\n    💬 删除文档\n    💬 \n⚡   BM25Retriever._tokenize (L340-L374)\n    💬 分词（支持中英文）\n    💬 \n⚡   BM25Retriever._extract_highlights (L376-L419)\n    💬 提取高亮片段\n    💬 \n⚡   BM25Retriever.clear (L421-L432)\n    💬 清空索引\n⚡   BM25Retriever.__len__ (L434-L436)\n    💬 返回文档数量\n⚡   BM25Retriever.__repr__ (L438-L444)\n⚡   test_bm25_performance (L448-L480)\n    💬 测试 BM25 检索器性能\n\n📁 core\\compression_engine.py\n--------------------------------------------------------------------------------\n📦   CompressionStrategy (L26-L30)\n    💬 压缩策略枚举\n📦   CompressedSessionState (L34-L132)\n    💬 Structured, deterministic state extracted from compressed turns.\n⚡   CompressedSessionState.to_dict (L53-L70)\n⚡   CompressedSessionState.from_dict (L73-L90)\n⚡   CompressedSessionState.render_for_prompt (L92-L132)\n    💬 Render structured state as a compact prompt section.\n📦   CompressionResult (L136-L150)\n    💬 压缩结果\n⚡   CompressionResult.__post_init__ (L148-L150)\n📦   CompressionEngine (L153-L1536)\n    💬 多策略压缩引擎\n    💬 \n⚡   CompressionEngine.__init__ (L163-L193)\n    💬 初始化压缩引擎\n    💬 \n⚡   CompressionEngine.compress (L195-L251)\n    💬 执行压缩\n    💬 \n⚡   CompressionEngine._select_strategy (L253-L302)\n    💬 根据消息特征自动选择压缩策略\n    💬 \n⚡   CompressionEngine._compress_with_llm (L306-L454)\n    💬 使用 LLM 生成摘要（当前策略）\n    💬 \n⚡   CompressionEngine._compress_with_keyframe (L458-L541)\n    💬 提取关键帧（工具调用、错误消息、用户消息）\n    💬 \n⚡   CompressionEngine._compress_with_sliding_window (L545-L602)\n    💬 滑动窗口保留最近消息\n    💬 \n⚡   CompressionEngine._get_messages_hash (L608-L627)\n    💬 计算消息列表的哈希值（用于缓存）\n    💬 \n⚡   CompressionEngine._should_call_llm (L629-L651)\n    💬 检查是否应该调用 LLM（频率限制）\n    💬 \n⚡   CompressionEngine._record_llm_call (L653-L658)\n    💬 记录一次 LLM 调用（用于频率限制）\n⚡   CompressionEngine._generate_summary_from_messages (L662-L836)\n    💬 从消息列表生成简化版的 SessionSummary（用于非 LLM 策略）\n    💬 \n⚡   CompressionEngine._promote_compression_result (L838-L859)\n    💬 Promote reusable knowledge from CompressedSessionState into long-term MemoryItems.\n⚡   CompressionEngine._build_memory_promotion_candidates (L861-L979)\n    💬 Convert compressed state facts into MemoryItem candidates aligned with memory module APIs.\n⚡   CompressionEngine._existing_memory_signatures (L981-L987)\n⚡   CompressionEngine._memory_item_signature (L989-L991)\n⚡   CompressionEngine._infer_project_from_memory_manager (L993-L1000)\n⚡   CompressionEngine._shorten_text (L1002-L1004)\n⚡   CompressionEngine._extract_memory_concepts (L1006-L1013)\n⚡   CompressionEngine._extract_compressed_state (L1015-L1074)\n    💬 Build a deterministic structured state from turn metadata and content.\n⚡   CompressionEngine._extract_task_goal (L1076-L1091)\n⚡   CompressionEngine._extract_plan_goal (L1093-L1109)\n⚡   CompressionEngine._is_low_information_user_message (L1111-L1116)\n⚡   CompressionEngine._infer_current_status (L1118-L1125)\n⚡   CompressionEngine._turn_text (L1127-L1128)\n⚡   CompressionEngine._collect_steps (L1130-L1139)\n⚡   CompressionEngine._collect_decisions (L1141-L1146)\n⚡   CompressionEngine._collect_preferences (L1148-L1152)\n⚡   CompressionEngine._collect_files_read (L1154-L1172)\n⚡   Com...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:38:11.515738",
+  "updated_at": "2026-05-29T13:38:11.515738",
+  "concepts": [
+    "tool_failure",
+    "list_all_symbols"
+  ],
+  "files": [
+    ".",
+    "core\\bm25_retriever.py",
+    "core\\compression_engine.py",
+    "core\\context.py",
+    "core\\context_assembler.py",
+    "core\\engine.py",
+    "core\\keyword_indexer.py",
+    "core\\memory_context_builder.py",
+    "core\\memory_items.py",
+    "core\\memory_layers.py",
+    "core\\memory_manager.py",
+    "core\\memory_models.py",
+    "core\\memory_retrieval.py",
+    "core\\plan.py",
+    "core\\prompts.py",
+    "CLAUDE.md",
+    "core\\session_manager.py",
+    "core\\turn_builder.py",
+    "main.py",
+    "tests\\test_compressed_session_state.py"
+  ],
+  "source_observation_ids": [
+    "obs_ed7a3aa853094263be651247de0b81e4"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_ed7a3aa853094263be651247de0b81e4",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:38:11.515738",
+      "event_type": "tool_failure",
+      "tool_name": "list_all_symbols",
+      "tool_input": {
+        "path": ".",
+        "symbol_type": "all"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "📊 项目符号索引 (共 696 个定义)\n\n================================================================================\n\n\n📁 core\\bm25_retriever.py\n--------------------------------------------------------------------------------\n📦   BM25Document (L16-L22)\n    💬 BM25 文档\n📦   BM25Retriever (L25-L444)\n    💬 BM25 检索器\n    💬 \n⚡   BM25Retriever.__init__ (L40-L69)\n    💬 初始化 BM25 检索器\n    💬 \n⚡   BM25Retriever.index_document (L71-L120)\n    💬 索引单个文档\n    💬 \n⚡   BM25Retriever.index_documents (L122-L138)\n    💬 批量索引文档\n    💬 \n⚡   BM25Retriever.search (L140-L208)\n    💬 检索文档\n    💬 \n⚡   BM25Retriever.search_with_details (L210-L244)\n    💬 检索文档（带详细信息）\n    💬 \n⚡   BM25Retriever.get_document (L246-L258)\n    💬 获取文档内容\n    💬 \n⚡   BM25Retriever.get_statistics (L260-L274)\n    💬 获取统计信息\n    💬 \n⚡   BM25Retriever._calculate_idf (L276-L301)\n    💬 计算 IDF（逆文档频率）\n    💬 \n⚡   BM25Retriever._update_statistics (L303-L313)\n    💬 更新统计信息\n⚡   BM25Retriever._remove_document (L315-L338)\n    💬 删除文档\n    💬 \n⚡   BM25Retriever._tokenize (L340-L374)\n    💬 分词（支持中英文）\n    💬 \n⚡   BM25Retriever._extract_highlights (L376-L419)\n    💬 提取高亮片段\n    💬 \n⚡   BM25Retriever.clear (L421-L432)\n    💬 清空索引\n⚡   BM25Retriever.__len__ (L434-L436)\n    💬 返回文档数量\n⚡   BM25Retriever.__repr__ (L438-L444)\n⚡   test_bm25_performance (L448-L480)\n    💬 测试 BM25 检索器性能\n\n📁 core\\compression_engine.py\n--------------------------------------------------------------------------------\n📦   CompressionStrategy (L26-L30)\n    💬 压缩策略枚举\n📦   CompressedSessionState (L34-L132)\n    💬 Structured, deterministic state extracted from compressed turns.\n⚡   CompressedSessionState.to_dict (L53-L70)\n⚡   CompressedSessionState.from_dict (L73-L90)\n⚡   CompressedSessionState.render_for_prompt (L92-L132)\n    💬 Render structured state as a compact prompt section.\n📦   CompressionResult (L136-L150)\n    💬 压缩结果\n⚡   CompressionResult.__post_init__ (L148-L150)\n📦   CompressionEngine (L153-L1536)\n    💬 多策略压缩引擎\n    💬 \n⚡   CompressionEngine.__init__ (L163-L193)\n    💬 初始化压缩引擎\n    💬 \n⚡   CompressionEngine.compress (L195-L251)\n    💬 执行压缩\n    💬 \n⚡   CompressionEngine._select_strategy (L253-L302)\n    💬 根据消息特征自动选择压缩策略\n    💬 \n⚡   CompressionEngine._compress_with_llm (L306-L454)\n    💬 使用 LLM 生成摘要（当前策略）\n    💬 \n⚡   CompressionEngine._compress_with_keyframe (L458-L541)\n    💬 提取关键帧（工具调用、错误消息、用户消息）\n    💬 \n⚡   CompressionEngine._compress_with_sliding_window (L545-L602)\n    💬 滑动窗口保留最近消息\n    💬 \n⚡   CompressionEngine._get_messages_hash (L608-L627)\n    💬 计算消息列表的哈希值（用于缓存）\n    💬 \n⚡   CompressionEngine._should_call_llm (L629-L651)\n    💬 检查是否应该调用 LLM（频率限制）\n    💬 \n⚡   CompressionEngine._record_llm_call (L653-L658)\n    💬 记录一次 LLM 调用（用于频率限制）\n⚡   CompressionEngine._generate_summary_from_messages (L662-L836)\n    💬 从消息列表生成简化版的 SessionSummary（用于非 LLM 策略）\n    💬 \n⚡   CompressionEngine._promote_compression_result (L838-L859)\n    💬 Promote reusable knowledge from CompressedSessionState into long-term MemoryItems.\n⚡   CompressionEngine._build_memory_promotion_candidates (L861-L979)\n    💬 Convert compressed state facts into MemoryItem candidates aligned with memory module APIs.\n⚡   CompressionEngine._existing_memory_signatures (L981-L987)\n⚡   CompressionEngine._memory_item_signature (L989-L991)\n⚡   CompressionEngine._infer_project_from_memory_manager (L993-L1000)\n⚡   CompressionEngine._shorten_text (L1002-L1004)\n⚡   CompressionEngine._extract_memory_concepts (L1006-L1013)\n⚡   CompressionEngine._extract_compressed_state (L1015-L1074)\n    💬 Build a deterministic structured state from turn metadata and content.\n⚡   CompressionEngine._extract_task_goal (L1076-L1091)\n⚡   CompressionEngine._extract_plan_goal (L1093-L1109)\n⚡   CompressionEngine._is_low_information_user_message (L1111-L1116)\n⚡   CompressionEngine._infer_current_status (L1118-L1125)\n⚡   CompressionEngine._turn_text (L1127-L1128)\n⚡   CompressionEngine._collect_steps (L1130-L1139)\n⚡   CompressionEngine._collect_decisions (L1141-L1146)\n⚡   CompressionEngine._collect_preferences (L1148-L1152)\n⚡   CompressionEngine._collect_files_read (L1154-L1172)\n⚡   Com...",
+      "files": [
+        ".",
+        "core\\bm25_retriever.py",
+        "core\\compression_engine.py",
+        "core\\context.py",
+        "core\\context_assembler.py",
+        "core\\engine.py",
+        "core\\keyword_indexer.py",
+        "core\\memory_context_builder.py",
+        "core\\memory_items.py",
+        "core\\memory_layers.py",
+        "core\\memory_manager.py",
+        "core\\memory_models.py",
+        "core\\memory_retrieval.py",
+        "core\\plan.py",
+        "core\\prompts.py",
+        "CLAUDE.md",
+        "core\\session_manager.py",
+        "core\\turn_builder.py",
+        "main.py",
+        "tests\\test_compressed_session_state.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

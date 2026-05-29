@@ -1,0 +1,48 @@
+{
+  "id": "mem_361bd051416e4f73aa6d312b1c2eff9d",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nJSON_OK \r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:17:39.891124",
+  "updated_at": "2026-05-29T13:17:39.891124",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_57b1544e54764758a8001c9262f8e8a2"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_57b1544e54764758a8001c9262f8e8a2",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:17:39.891124",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -m json.tool memory\\long_term\\index.json > nul && echo JSON_OK || echo JSON_BAD"
+      },
+      "tool_output": "STDOUT:\nJSON_OK \r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "mem_e2988db9e1044c339d39aef063e240ed",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\ndict dict_keys(['history_summary', 'messages', 'plan', 'memories'])\r\nmessages 336\r\nCounter({'tool': 274, 'assistant': 60, 'user': 2})\r\nhistory_summary_len 127\r\nlast20:\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:03:46.681581",
+  "updated_at": "2026-05-29T13:03:46.681581",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_8f663d329c61479a9d4b447785454ae6"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_8f663d329c61479a9d4b447785454ae6",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:03:46.680558",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -c \"import json,collections; p='sessions/test.json'; data=json.load(open(p,encoding='utf-8')); print(type(data).__name__, data.keys()); msgs=data.get('messages',[]); print('messages',len(msgs)); print(collections.Counter(m.get('role') for m in msgs)); print('history_summary_len',len(data.get('history_summary',''))); print('last20:');\nfor i,m in list(enumerate(msgs))[-20:]:\n    tc=m.get('tool_calls') or []\n    print(i,m.get('role'), 'content_len', len(str(m.get('content',''))), 'tools', [c.get('function',{}).get('name') for c in tc], 'name', m.get('name'), 'tool_call_id', m.get('tool_call_id'))\""
+      },
+      "tool_output": "STDOUT:\ndict dict_keys(['history_summary', 'messages', 'plan', 'memories'])\r\nmessages 336\r\nCounter({'tool': 274, 'assistant': 60, 'user': 2})\r\nhistory_summary_len 127\r\nlast20:\r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

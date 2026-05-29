@@ -1,0 +1,66 @@
+{
+  "id": "mem_34aa53a2c4c3448c9a2f8e68b23aef3b",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 57 处匹配，分布在 5 个文件中\n\n================================================================================\n\n[FILE] compression_engine.py (10 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     164 |         self,\n     165 |         default_strategy: CompressionStrategy = None,\n     166 |         plan_manager=None,\n>>>  167 |         memory_manager=None,\n     168 |         promotion_enabled: bool = True,\n     169 |     ):\n     170 |         \"\"\"\n    [上下文]\n     173 |         Args:\n     174 |             default_strategy: 默认压缩策略（None 表示自动选择）\n     175 |             plan_manager: Plan 状态管理器（用于查询真实任务状态）\n>>>  176 |             memory_manager: 可选 MemoryManager，用于把压缩状态晋升为长期记忆\n     177 |             promotion_enabled: 是否在压缩成功后自动晋升可复用经验\n     178 |         \"\"\"\n     179 |         self.default_strategy = default_strategy\n    [上下文]\n     178 |         \"\"\"\n     179 |         self.default_strategy = default_strategy\n     180 |         self.plan_manager = plan_manager  # Plan 状态管理器\n>>>  181 |         self.memory_manager = memory_manager\n     182 |         self.promotion_enabled = promotion_enabled\n     183 | \n     184 |         # 策略选择阈值\n    [上下文]\n     837 | \n     838 |     def _promote_compression_result(self, result: CompressionResult) -> List[MemoryItem]:\n     839 |         \"\"\"Promote reusable knowledge from CompressedSessionState into long-term MemoryItems.\"\"\"\n>>>  840 |         if not self.promotion_enabled or not self.memory_manager or not result or not result.success:\n     841 |             return []\n     842 |         if not result.compressed_state:\n     843 |             return []\n    [上下文]\n     849 |             signature = self._memory_item_signature(item)\n     850 |             if signature in seen:\n     851 |                 continue\n>>>  852 |             saved_path = self.memory_manager.save_memory_item(item)\n     853 |             if saved_path:\n     854 |                 promoted.append(item)\n     855 |                 seen.add(signature)\n    [上下文]\n     867 |         candidates: List[MemoryItem] = []\n     868 |         source_turn_ids = list(state.source_turn_ids)\n     869 |         session_id = result.summary.session_id if result.summary else \"\"\n>>>  870 |         project = self._infer_project_from_memory_manager()\n     871 |         changed_files = [item.get(\"path\", \"\") for item in state.files_changed if item.get(\"path\")]\n     872 |         tests_text = \"; \".join(\n     873 |             item.get(\"command\") or item.get(\"summary\", \"\")\n    [上下文]\n     979 |         return candidates\n     980 | \n     981 |     def _existing_memory_signatures(self) -> set:\n>>>  982 |         if not self.memory_manager or not hasattr(self.memory_manager, \"long_term_memory\"):\n     983 |             return set()\n     984 |         try:\n     985 |             return {self._memory_item_signature(item) for item in self.memory_manager.long_term_memory.get_all_items()}\n    [上下文]\n     982 |         if not self.memory_manager or not hasattr(self.memory_manager, \"long_term_memory\"):\n     983 |             return set()\n     984 |         try:\n>>>  985 |             return {self._memory_item_signature(item) for item in self.memory_manager.long_term_memory.get_all_items()}\n     986 |         except Exception:\n     987 |             return set()\n     988 | \n    [上下文]\n     990 |         raw = \"\\n\".join([item.kind, item.title.strip().lower(), item.content.strip().lower(), \"|\".join(sorted(item.files))])\n     991 |         return hashlib.sha256(raw.encode(\"utf-8\")).hexdigest()\n     992 | \n>>>  993 |     def _infer_project_from_memory_manager(self) -> str:\n     994 |         storage_dir = getattr(getattr(self.memory_manager, \"long_term_memory\", None), \"storage_dir\", None)\n     995 |         if storage_dir:\n     996 |             try:\n    [上下文]\n     991 |         return hashlib.sha256(raw.encode(\"utf-8\")).hexdigest()\n     992 | \n     993 |     def _infer_project_from_memory_manager(self) -> str:\n>>>  994 |      ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:22:19.508258",
+  "updated_at": "2026-05-29T13:22:19.508258",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    "core",
+    "compression_engine.py",
+    "context.py",
+    "engine.py",
+    "memory_manager.py",
+    "memory_retrieval.py"
+  ],
+  "source_observation_ids": [
+    "obs_b1c3d8e52612429b84f13c99c5e7661f"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_b1c3d8e52612429b84f13c99c5e7661f",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:22:19.507215",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": true,
+        "context": 3,
+        "file_pattern": "*.py",
+        "path": "core",
+        "pattern": "export_memories|import_memories|load_session|save_session|memory_manager|working_memory ="
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 57 处匹配，分布在 5 个文件中\n\n================================================================================\n\n[FILE] compression_engine.py (10 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     164 |         self,\n     165 |         default_strategy: CompressionStrategy = None,\n     166 |         plan_manager=None,\n>>>  167 |         memory_manager=None,\n     168 |         promotion_enabled: bool = True,\n     169 |     ):\n     170 |         \"\"\"\n    [上下文]\n     173 |         Args:\n     174 |             default_strategy: 默认压缩策略（None 表示自动选择）\n     175 |             plan_manager: Plan 状态管理器（用于查询真实任务状态）\n>>>  176 |             memory_manager: 可选 MemoryManager，用于把压缩状态晋升为长期记忆\n     177 |             promotion_enabled: 是否在压缩成功后自动晋升可复用经验\n     178 |         \"\"\"\n     179 |         self.default_strategy = default_strategy\n    [上下文]\n     178 |         \"\"\"\n     179 |         self.default_strategy = default_strategy\n     180 |         self.plan_manager = plan_manager  # Plan 状态管理器\n>>>  181 |         self.memory_manager = memory_manager\n     182 |         self.promotion_enabled = promotion_enabled\n     183 | \n     184 |         # 策略选择阈值\n    [上下文]\n     837 | \n     838 |     def _promote_compression_result(self, result: CompressionResult) -> List[MemoryItem]:\n     839 |         \"\"\"Promote reusable knowledge from CompressedSessionState into long-term MemoryItems.\"\"\"\n>>>  840 |         if not self.promotion_enabled or not self.memory_manager or not result or not result.success:\n     841 |             return []\n     842 |         if not result.compressed_state:\n     843 |             return []\n    [上下文]\n     849 |             signature = self._memory_item_signature(item)\n     850 |             if signature in seen:\n     851 |                 continue\n>>>  852 |             saved_path = self.memory_manager.save_memory_item(item)\n     853 |             if saved_path:\n     854 |                 promoted.append(item)\n     855 |                 seen.add(signature)\n    [上下文]\n     867 |         candidates: List[MemoryItem] = []\n     868 |         source_turn_ids = list(state.source_turn_ids)\n     869 |         session_id = result.summary.session_id if result.summary else \"\"\n>>>  870 |         project = self._infer_project_from_memory_manager()\n     871 |         changed_files = [item.get(\"path\", \"\") for item in state.files_changed if item.get(\"path\")]\n     872 |         tests_text = \"; \".join(\n     873 |             item.get(\"command\") or item.get(\"summary\", \"\")\n    [上下文]\n     979 |         return candidates\n     980 | \n     981 |     def _existing_memory_signatures(self) -> set:\n>>>  982 |         if not self.memory_manager or not hasattr(self.memory_manager, \"long_term_memory\"):\n     983 |             return set()\n     984 |         try:\n     985 |             return {self._memory_item_signature(item) for item in self.memory_manager.long_term_memory.get_all_items()}\n    [上下文]\n     982 |         if not self.memory_manager or not hasattr(self.memory_manager, \"long_term_memory\"):\n     983 |             return set()\n     984 |         try:\n>>>  985 |             return {self._memory_item_signature(item) for item in self.memory_manager.long_term_memory.get_all_items()}\n     986 |         except Exception:\n     987 |             return set()\n     988 | \n    [上下文]\n     990 |         raw = \"\\n\".join([item.kind, item.title.strip().lower(), item.content.strip().lower(), \"|\".join(sorted(item.files))])\n     991 |         return hashlib.sha256(raw.encode(\"utf-8\")).hexdigest()\n     992 | \n>>>  993 |     def _infer_project_from_memory_manager(self) -> str:\n     994 |         storage_dir = getattr(getattr(self.memory_manager, \"long_term_memory\", None), \"storage_dir\", None)\n     995 |         if storage_dir:\n     996 |             try:\n    [上下文]\n     991 |         return hashlib.sha256(raw.encode(\"utf-8\")).hexdigest()\n     992 | \n     993 |     def _infer_project_from_memory_manager(self) -> str:\n>>>  994 |      ...",
+      "files": [
+        "core",
+        "compression_engine.py",
+        "context.py",
+        "engine.py",
+        "memory_manager.py",
+        "memory_retrieval.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

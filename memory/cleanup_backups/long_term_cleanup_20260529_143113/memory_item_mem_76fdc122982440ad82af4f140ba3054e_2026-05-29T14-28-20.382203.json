@@ -1,0 +1,55 @@
+{
+  "id": "mem_76fdc122982440ad82af4f140ba3054e",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_layers.py (第 421 至 648 行，共 648 行) ---\n 421 | \n 422 |         Returns:\n 423 |             存储的文件路径\n 424 |         \"\"\"\n 425 |         # 生成文件名\n 426 |         timestamp = summary.timestamp.replace(\":\", \"-\").replace(\" \", \"_\")\n 427 |         filename = f\"summary_{summary.session_id}_{timestamp}.json\"\n 428 |         file_path = self.storage_dir / filename\n 429 | \n 430 |         # 保存到磁盘\n 431 |         try:\n 432 |             with open(file_path, 'w', encoding='utf-8') as f:\n 433 |                 json.dump(summary.to_dict(), f, ensure_ascii=False, indent=2)\n 434 | \n 435 |             # 更新索引\n 436 |             self.index[summary.session_id] = file_path\n 437 | \n 438 |             # 更新倒排索引\n 439 |             keywords = self._extract_keywords(summary.to_dict())\n 440 |             for keyword in keywords:\n 441 |                 if keyword not in self.inverted_index:\n 442 |                     self.inverted_index[keyword] = []\n 443 |                 if summary.session_id not in self.inverted_index[keyword]:\n 444 |                     self.inverted_index[keyword].append(summary.session_id)\n 445 | \n 446 |             # 保存索引\n 447 |             self._save_index()\n 448 | \n 449 |             return str(file_path)\n 450 |         except Exception as e:\n 451 |             print(f\"⚠️ 存储摘要失败: {e}\")\n 452 |             return \"\"\n 453 | \n 454 |     def store_item(self, item: MemoryItem) -> str:\n 455 |         \"\"\"\n 456 |         存储 MemoryItem 到长期记忆。\n 457 | \n 458 |         Args:\n 459 |             item: 长期知识条目\n 460 | \n 461 |         Returns:\n 462 |             存储的文件路径\n 463 |         \"\"\"\n 464 |         timestamp = item.updated_at.replace(\":\", \"-\").replace(\" \", \"_\")\n 465 |         filename = f\"memory_item_{item.id}_{timestamp}.json\"\n 466 |         file_path = self.storage_dir / filename\n 467 | \n 468 |         try:\n 469 |             with open(file_path, 'w', encoding='utf-8') as f:\n 470 |                 json.dump(item.to_dict(), f, ensure_ascii=False, indent=2)\n 471 | \n 472 |             old_file = self.item_index.get(item.id)\n 473 |             if old_file and old_file != file_path and old_file.exists():\n 474 |                 old_file.unlink()\n 475 | \n 476 |             self.item_index[item.id] = file_path\n 477 |             self._remove_id_from_inverted_index(self.item_inverted_index, item.id)\n 478 | \n 479 |             keywords = self._extract_item_keywords(item.to_dict())\n 480 |             for keyword in keywords:\n 481 |                 if keyword not in self.item_inverted_index:\n 482 |                     self.item_inverted_index[keyword] = []\n 483 |                 if item.id not in self.item_inverted_index[keyword]:\n 484 |                     self.item_inverted_index[keyword].append(item.id)\n 485 | \n 486 |             self._save_index()\n 487 |             return str(file_path)\n 488 |         except Exception as e:\n 489 |             print(f\"⚠️ 存储 MemoryItem 失败: {e}\")\n 490 |             return \"\"\n 491 | \n 492 |     def retrieve_item(self, item_id: str) -> Optional[MemoryItem]:\n 493 |         \"\"\"根据 item_id 检索 MemoryItem。\"\"\"\n 494 |         file_path = self.item_index.get(item_id)\n 495 |         if not file_path or not file_path.exists():\n 496 |             return None\n 497 | \n 498 |         try:\n 499 |             with open(file_path, 'r', encoding='utf-8') as f:\n 500 |                 data = json.load(f)\n 501 |                 return MemoryItem.from_dict(data)\n 502 |         except Exception as e:\n 503 |             print(f\"⚠️ 读取 MemoryItem 失败: {e}\")\n 504 |             return None\n 505 | \n 506 |     def search_items(self, query: str, top_k: int = 10, include_archived: bool = False) -> List[MemoryRecallResult]:\n 507 |         \"\"\"关键词检索 MemoryItem，返回统一召回结果。\"\"\"\n 508 |         query_keywords = self._tokenize(query)\n 509 |         if not query_keywords:\n 510 |             return []\n 511 | \n 512 |         scores: Dict[str, float] = {}\n 513 |         matched_terms: Dict[str, List[str]] = {}\n 514 |         for keyword in query_keywords:\n 51...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:28:20.382203",
+  "updated_at": "2026-05-29T14:28:20.382203",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_537baaf420994f128b1ff4fbf66076f5"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_537baaf420994f128b1ff4fbf66076f5",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:28:20.382203",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 648,
+        "path": "core/memory_layers.py",
+        "raw_mode": false,
+        "start_line": 421
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_layers.py (第 421 至 648 行，共 648 行) ---\n 421 | \n 422 |         Returns:\n 423 |             存储的文件路径\n 424 |         \"\"\"\n 425 |         # 生成文件名\n 426 |         timestamp = summary.timestamp.replace(\":\", \"-\").replace(\" \", \"_\")\n 427 |         filename = f\"summary_{summary.session_id}_{timestamp}.json\"\n 428 |         file_path = self.storage_dir / filename\n 429 | \n 430 |         # 保存到磁盘\n 431 |         try:\n 432 |             with open(file_path, 'w', encoding='utf-8') as f:\n 433 |                 json.dump(summary.to_dict(), f, ensure_ascii=False, indent=2)\n 434 | \n 435 |             # 更新索引\n 436 |             self.index[summary.session_id] = file_path\n 437 | \n 438 |             # 更新倒排索引\n 439 |             keywords = self._extract_keywords(summary.to_dict())\n 440 |             for keyword in keywords:\n 441 |                 if keyword not in self.inverted_index:\n 442 |                     self.inverted_index[keyword] = []\n 443 |                 if summary.session_id not in self.inverted_index[keyword]:\n 444 |                     self.inverted_index[keyword].append(summary.session_id)\n 445 | \n 446 |             # 保存索引\n 447 |             self._save_index()\n 448 | \n 449 |             return str(file_path)\n 450 |         except Exception as e:\n 451 |             print(f\"⚠️ 存储摘要失败: {e}\")\n 452 |             return \"\"\n 453 | \n 454 |     def store_item(self, item: MemoryItem) -> str:\n 455 |         \"\"\"\n 456 |         存储 MemoryItem 到长期记忆。\n 457 | \n 458 |         Args:\n 459 |             item: 长期知识条目\n 460 | \n 461 |         Returns:\n 462 |             存储的文件路径\n 463 |         \"\"\"\n 464 |         timestamp = item.updated_at.replace(\":\", \"-\").replace(\" \", \"_\")\n 465 |         filename = f\"memory_item_{item.id}_{timestamp}.json\"\n 466 |         file_path = self.storage_dir / filename\n 467 | \n 468 |         try:\n 469 |             with open(file_path, 'w', encoding='utf-8') as f:\n 470 |                 json.dump(item.to_dict(), f, ensure_ascii=False, indent=2)\n 471 | \n 472 |             old_file = self.item_index.get(item.id)\n 473 |             if old_file and old_file != file_path and old_file.exists():\n 474 |                 old_file.unlink()\n 475 | \n 476 |             self.item_index[item.id] = file_path\n 477 |             self._remove_id_from_inverted_index(self.item_inverted_index, item.id)\n 478 | \n 479 |             keywords = self._extract_item_keywords(item.to_dict())\n 480 |             for keyword in keywords:\n 481 |                 if keyword not in self.item_inverted_index:\n 482 |                     self.item_inverted_index[keyword] = []\n 483 |                 if item.id not in self.item_inverted_index[keyword]:\n 484 |                     self.item_inverted_index[keyword].append(item.id)\n 485 | \n 486 |             self._save_index()\n 487 |             return str(file_path)\n 488 |         except Exception as e:\n 489 |             print(f\"⚠️ 存储 MemoryItem 失败: {e}\")\n 490 |             return \"\"\n 491 | \n 492 |     def retrieve_item(self, item_id: str) -> Optional[MemoryItem]:\n 493 |         \"\"\"根据 item_id 检索 MemoryItem。\"\"\"\n 494 |         file_path = self.item_index.get(item_id)\n 495 |         if not file_path or not file_path.exists():\n 496 |             return None\n 497 | \n 498 |         try:\n 499 |             with open(file_path, 'r', encoding='utf-8') as f:\n 500 |                 data = json.load(f)\n 501 |                 return MemoryItem.from_dict(data)\n 502 |         except Exception as e:\n 503 |             print(f\"⚠️ 读取 MemoryItem 失败: {e}\")\n 504 |             return None\n 505 | \n 506 |     def search_items(self, query: str, top_k: int = 10, include_archived: bool = False) -> List[MemoryRecallResult]:\n 507 |         \"\"\"关键词检索 MemoryItem，返回统一召回结果。\"\"\"\n 508 |         query_keywords = self._tokenize(query)\n 509 |         if not query_keywords:\n 510 |             return []\n 511 | \n 512 |         scores: Dict[str, float] = {}\n 513 |         matched_terms: Dict[str, List[str]] = {}\n 514 |         for keyword in query_keywords:\n 51...",
+      "files": [
+        "core/memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

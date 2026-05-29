@@ -1,0 +1,52 @@
+{
+  "id": "mem_9b59cd759c0c4b7f946947eb70506fbf",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: run_pytest",
+  "content": "✅ 测试通过！\n============================= test session starts =============================\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\ncachedir: .pytest_cache\nrootdir: D:\\LLM\\mini-claude-code-cli\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 9 items\n\ntests/test_memory_persistence.py::TestMemoryPersistence::test_export_memories_basic PASSED [ 11%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_import_memories_basic PASSED [ 22%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_export_import_roundtrip PASSED [ 33%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_persistence_with_session_file PASSED [ 44%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_backward_compatibility_no_memories_field PASSED [ 55%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_empty_memories_export_import PASSED [ 66%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_large_memory_persistence PASSED [ 77%]\ntests/test_memory_persistence.py::TestPhaseCompatibility::test_phase1_only_session PASSED [ 88%]\ntests/test_memory_persistence.py::TestPhaseCompatibility::test_phase2_enabled_automatically PASSED [100%]\n\n============================== 9 passed in 1.02s ==============================\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:43:58.217278",
+  "updated_at": "2026-05-29T13:43:58.217278",
+  "concepts": [
+    "test_result",
+    "run_pytest"
+  ],
+  "files": [
+    "tests/test_memory_persistence.py"
+  ],
+  "source_observation_ids": [
+    "obs_7b4df276b25447b3b21e5dfb81718215"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_7b4df276b25447b3b21e5dfb81718215",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:43:58.217278",
+      "event_type": "test_result",
+      "tool_name": "run_pytest",
+      "tool_input": {
+        "path": "tests/test_memory_persistence.py"
+      },
+      "tool_output": "✅ 测试通过！\n============================= test session starts =============================\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\ncachedir: .pytest_cache\nrootdir: D:\\LLM\\mini-claude-code-cli\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 9 items\n\ntests/test_memory_persistence.py::TestMemoryPersistence::test_export_memories_basic PASSED [ 11%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_import_memories_basic PASSED [ 22%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_export_import_roundtrip PASSED [ 33%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_persistence_with_session_file PASSED [ 44%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_backward_compatibility_no_memories_field PASSED [ 55%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_empty_memories_export_import PASSED [ 66%]\ntests/test_memory_persistence.py::TestMemoryPersistence::test_large_memory_persistence PASSED [ 77%]\ntests/test_memory_persistence.py::TestPhaseCompatibility::test_phase1_only_session PASSED [ 88%]\ntests/test_memory_persistence.py::TestPhaseCompatibility::test_phase2_enabled_automatically PASSED [100%]\n\n============================== 9 passed in 1.02s ==============================\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_memory_persistence.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

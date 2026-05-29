@@ -1,0 +1,57 @@
+{
+  "id": "mem_d682e82d794d4e3b9f432be306a46312",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "        return f\"EpisodicMemory(size={len(self.data)}/{self.max_size})\"\n\n\nclass LongTermMemory:\n    \"\"\"\n    长期记忆层：基于文件系统的持久化存储\n\n    特点：\n    - 存储在磁盘上（JSON 格式）\n    - 支持关键词检索\n    - 用于存储历史所有会话摘要\n    \"\"\"\n\n    def __init__(self, storage_dir: str = \"memory/long_term\"):\n        \"\"\"\n        初始化长期记忆\n\n        Args:\n            storage_dir: 存储目录路径\n        \"\"\"\n        self.storage_dir = Path(storage_dir)\n        self.storage_dir.mkdir(parents=True, exist_ok=True)\n\n        # 内存索引：{session_id: file_path}\n        self.index: Dict[str, Path] = {}\n\n        # MemoryItem 索引：{memory_item_id: file_path}\n        self.item_index: Dict[str, Path] = {}\n\n        # 倒排索引：{keyword: [session_ids]}\n        self.inverted_index: Dict[str, List[str]] = {}\n\n        # MemoryItem 倒排索引：{keyword: [memory_item_ids]}\n        self.item_inverted_index: Dict[str, List[str]] = {}\n\n        # 初始化时加载索引\n        self._load_index()\n\n    def _load_index(self):\n        \"\"\"从磁盘加载索引\"\"\"\n        index_file = self.storage_dir / \"index.json\"\n        if index_file.exists():\n            try:\n                with open(index_file, 'r', encoding='utf-8') as f:\n                    data = json.load(f)\n                    self.index = {k: Path(v) for k, v in data.get(\"index\", {}).items()}\n                    self.item_index = {k: Path(v) for k, v in data.get(\"item_index\", {}).items()}\n                    self.inverted_index = data.get(\"inverted_index\", {})\n                    self.item_inverted_index = data.get(\"item_inverted_index\", {})\n            except Exception as e:\n                # 如果加载失败，重建索引\n                print(f\"⚠️ 加载索引失败，将重建索引: {e}\")\n                self._rebuild_index()\n\n    def _save_index(self):\n        \"\"\"保存索引到磁盘\"\"\"\n        index_file = self.storage_dir / \"index.json\"\n        try:\n            with open(index_file, 'w', encoding='utf-8') as f:\n                json.dump({\n                    \"index\": {k: str(v) for k, v in self.index.items()},\n                    \"item_index\": {k: str(v) for k, v in self.item_index.items()},\n                    \"inverted_index\": self.inverted_index,\n                    \"item_inverted_index\": self.item_inverted_index\n                }, f, ensure_ascii=False, indent=2)\n        except Exception as e:\n            print(f\"⚠️ 保存索引失败: {e}\")\n\n    def _rebuild_index(self):\n        \"\"\"重建索引\"\"\"\n        self.index.clear()\n        self.item_index.clear()\n        self.inverted_index.clear()\n        self.item_inverted_index.clear()\n\n        # 遍历所有摘要文件\n        for summary_file in self.storage_dir.glob(\"summary_*.json\"):\n            try:\n                with open(summary_file, 'r', encoding='utf-8') as f:\n                    data = json.load(f)\n                    session_id = data.get(\"session_id\")\n                    if session_id:\n                        self.index[session_id] = summary_file\n\n                        # 更新倒排索引\n                        keywords = self._extract_keywords(data)\n                        for keyword in keywords:\n                            if keyword not in self.inverted_index:\n                                self.inverted_index[keyword] = []\n                            if session_id not in self.inverted_index[keyword]:\n                                self.inverted_index[keyword].append(session_id)\n            except Exception as e:\n                print(f\"⚠️ 重建索引时跳过文件 {summary_file}: {e}\")\n\n        # 遍历所有 MemoryItem 文件\n        for item_file in self.storage_dir.glob(\"memory_item_*.json\"):\n            try:\n                with open(item_file, 'r', encoding='utf-8') as f:\n                    data = json.load(f)\n                    item_id = data.get(\"id\")\n                    if item_id:\n                        self.item_index[item_id] = item_file\n\n                        keywords = self._extract_item_keywords(data)\n                        for keyword in keywords:\n                            if keyword not in self.item_inverted_index:\n                                self.item_inverted_index[keyword] = []\n                            if item...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T15:59:54.829954",
+  "updated_at": "2026-05-28T15:59:54.829954",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py",
+    "index.json"
+  ],
+  "source_observation_ids": [
+    "obs_f8a80fc785b94881991c59ff5ee32b5d"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f8a80fc785b94881991c59ff5ee32b5d",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T15:59:54.829954",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "path": "core/memory_layers.py",
+        "start_line": 160,
+        "end_line": 570,
+        "raw_mode": true
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "        return f\"EpisodicMemory(size={len(self.data)}/{self.max_size})\"\n\n\nclass LongTermMemory:\n    \"\"\"\n    长期记忆层：基于文件系统的持久化存储\n\n    特点：\n    - 存储在磁盘上（JSON 格式）\n    - 支持关键词检索\n    - 用于存储历史所有会话摘要\n    \"\"\"\n\n    def __init__(self, storage_dir: str = \"memory/long_term\"):\n        \"\"\"\n        初始化长期记忆\n\n        Args:\n            storage_dir: 存储目录路径\n        \"\"\"\n        self.storage_dir = Path(storage_dir)\n        self.storage_dir.mkdir(parents=True, exist_ok=True)\n\n        # 内存索引：{session_id: file_path}\n        self.index: Dict[str, Path] = {}\n\n        # MemoryItem 索引：{memory_item_id: file_path}\n        self.item_index: Dict[str, Path] = {}\n\n        # 倒排索引：{keyword: [session_ids]}\n        self.inverted_index: Dict[str, List[str]] = {}\n\n        # MemoryItem 倒排索引：{keyword: [memory_item_ids]}\n        self.item_inverted_index: Dict[str, List[str]] = {}\n\n        # 初始化时加载索引\n        self._load_index()\n\n    def _load_index(self):\n        \"\"\"从磁盘加载索引\"\"\"\n        index_file = self.storage_dir / \"index.json\"\n        if index_file.exists():\n            try:\n                with open(index_file, 'r', encoding='utf-8') as f:\n                    data = json.load(f)\n                    self.index = {k: Path(v) for k, v in data.get(\"index\", {}).items()}\n                    self.item_index = {k: Path(v) for k, v in data.get(\"item_index\", {}).items()}\n                    self.inverted_index = data.get(\"inverted_index\", {})\n                    self.item_inverted_index = data.get(\"item_inverted_index\", {})\n            except Exception as e:\n                # 如果加载失败，重建索引\n                print(f\"⚠️ 加载索引失败，将重建索引: {e}\")\n                self._rebuild_index()\n\n    def _save_index(self):\n        \"\"\"保存索引到磁盘\"\"\"\n        index_file = self.storage_dir / \"index.json\"\n        try:\n            with open(index_file, 'w', encoding='utf-8') as f:\n                json.dump({\n                    \"index\": {k: str(v) for k, v in self.index.items()},\n                    \"item_index\": {k: str(v) for k, v in self.item_index.items()},\n                    \"inverted_index\": self.inverted_index,\n                    \"item_inverted_index\": self.item_inverted_index\n                }, f, ensure_ascii=False, indent=2)\n        except Exception as e:\n            print(f\"⚠️ 保存索引失败: {e}\")\n\n    def _rebuild_index(self):\n        \"\"\"重建索引\"\"\"\n        self.index.clear()\n        self.item_index.clear()\n        self.inverted_index.clear()\n        self.item_inverted_index.clear()\n\n        # 遍历所有摘要文件\n        for summary_file in self.storage_dir.glob(\"summary_*.json\"):\n            try:\n                with open(summary_file, 'r', encoding='utf-8') as f:\n                    data = json.load(f)\n                    session_id = data.get(\"session_id\")\n                    if session_id:\n                        self.index[session_id] = summary_file\n\n                        # 更新倒排索引\n                        keywords = self._extract_keywords(data)\n                        for keyword in keywords:\n                            if keyword not in self.inverted_index:\n                                self.inverted_index[keyword] = []\n                            if session_id not in self.inverted_index[keyword]:\n                                self.inverted_index[keyword].append(session_id)\n            except Exception as e:\n                print(f\"⚠️ 重建索引时跳过文件 {summary_file}: {e}\")\n\n        # 遍历所有 MemoryItem 文件\n        for item_file in self.storage_dir.glob(\"memory_item_*.json\"):\n            try:\n                with open(item_file, 'r', encoding='utf-8') as f:\n                    data = json.load(f)\n                    item_id = data.get(\"id\")\n                    if item_id:\n                        self.item_index[item_id] = item_file\n\n                        keywords = self._extract_item_keywords(data)\n                        for keyword in keywords:\n                            if keyword not in self.item_inverted_index:\n                                self.item_inverted_index[keyword] = []\n                            if item...",
+      "files": [
+        "core/memory_layers.py",
+        "index.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

@@ -1,0 +1,54 @@
+{
+  "id": "mem_8e472af0fabe4740844f8c7ab3f749cd",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 core/memory_manager.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:38:16.606747",
+  "updated_at": "2026-05-29T12:38:16.606747",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "core/memory_manager.py"
+  ],
+  "source_observation_ids": [
+    "obs_bcbf958d8289436994195a33181a4e9c"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_bcbf958d8289436994195a33181a4e9c",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:38:16.606747",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "        self.long_term_memory = long_term_memory or LongTermMemory(storage_dir=long_term_storage_dir)\n        self.compression_engine = compression_engine or CompressionEngine(\n            plan_manager=plan_manager,\n            memory_manager=self,\n        )\n        if compression_engine is not None and getattr(compression_engine, \"memory_manager\", None) is None:\n            compression_engine.memory_manager = self\n        self.retriever = MemoryRetriever(",
+        "old_str": "        self.long_term_memory = long_term_memory or LongTermMemory(storage_dir=long_term_storage_dir)\n        self.compression_engine = compression_engine or CompressionEngine(plan_manager=plan_manager)\n        self.retriever = MemoryRetriever(",
+        "path": "core/memory_manager.py"
+      },
+      "tool_output": "成功: 已更新 core/memory_manager.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/memory_manager.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

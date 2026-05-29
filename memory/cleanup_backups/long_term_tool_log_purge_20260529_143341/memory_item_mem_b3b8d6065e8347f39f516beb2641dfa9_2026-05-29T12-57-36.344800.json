@@ -1,0 +1,55 @@
+{
+  "id": "mem_b3b8d6065e8347f39f516beb2641dfa9",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "错误: 找不到文件 core/prompt_builder.py",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:57:36.344800",
+  "updated_at": "2026-05-29T12:57:36.344800",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/prompt_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_61f5b0557bee45cbb992c1de6dcaed4d"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_61f5b0557bee45cbb992c1de6dcaed4d",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:57:36.344800",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 260,
+        "path": "core/prompt_builder.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": "错误: 找不到文件 core/prompt_builder.py",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/prompt_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "mem_6df094b2458942d4a7ca17852c13471c",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "            messages=turn_messages,\n            is_tool_pair_complete=False,\n            orphan_tool_call_ids=sorted(set(orphan_ids)),\n        )\n        return turn, j\n\n    def _new_turn(\n        self,\n        turn_index: int,\n        start_index: int,\n        end_index: int,\n        messages: List[Dict[str, Any]],\n        is_tool_pair_complete: bool = True,\n        missing_tool_call_ids: Optional[List[str]] = None,\n        orphan_tool_call_ids: Optional[List[str]] = None,\n    ) -> ConversationTurn:\n        user_message = next((msg for msg in messages if msg.get(\"role\") == \"user\"), None)\n        assistant_messages = [msg for msg in messages if msg.get(\"role\") == \"assistant\"]\n        tool_messages = [msg for msg in messages if msg.get(\"role\") == \"tool\"]\n        has_tool_calls = any(msg.get(\"role\") == \"assistant\" and msg.get(\"tool_calls\") for msg in messages)\n\n        categories = self._categorize(messages)\n        files_touched = self._extract_files(messages)\n        errors = self._extract_matching_lines(messages, self.ERROR_KEYWORDS)\n        tests = self._extract_matching_lines(messages, self.TEST_KEYWORDS)\n        token_estimate = self._estimate_tokens(messages)\n        importance = self._estimate_importance(\n            messages,\n            categories,\n            is_tool_pair_complete,\n            token_estimate,\n            files_touched,\n            errors,\n            tests,\n        )\n        return ConversationTurn(\n            id=f\"turn_{start_index}_{end_index}_{turn_index}\",\n            start_index=start_index,\n            end_index=end_index,\n            messages=[dict(msg) for msg in messages],\n            user_message=dict(user_message) if user_message else None,\n            assistant_messages=[dict(msg) for msg in assistant_messages],\n            tool_messages=[dict(msg) for msg in tool_messages],\n            has_tool_calls=has_tool_calls,\n            is_tool_pair_complete=is_tool_pair_complete,\n            missing_tool_call_ids=missing_tool_call_ids or [],\n            orphan_tool_call_ids=orphan_tool_call_ids or [],\n            token_estimate=token_estimate,\n            importance=importance,\n            categories=categories,\n            files_touched=files_touched,\n            errors=errors,\n            tests=tests,\n        )\n\n    def _tool_call_ids(self, message: Dict[str, Any]) -> Set[str]:\n        return {tc.get(\"id\") for tc in message.get(\"tool_calls\", []) if tc.get(\"id\")}\n\n    def _estimate_tokens(self, messages: List[Dict[str, Any]]) -> int:\n        # Lightweight approximation: four chars per token, minimum one token.\n        return max(1, sum(len(str(msg)) for msg in messages) // 4)\n\n    def _estimate_importance(\n        self,\n        messages: List[Dict[str, Any]],\n        categories: List[str],\n        is_tool_pair_complete: bool,\n        token_estimate: int,\n        files_touched: List[str],\n        errors: List[str],\n        tests: List[str],\n    ) -> float:\n        score = 0.08\n        text = self._messages_text(messages).lower()\n\n        if any(msg.get(\"role\") == \"user\" for msg in messages):\n            score += 0.22\n        if any(msg.get(\"tool_calls\") for msg in messages):\n            score += 0.10\n        if files_touched:\n            score += min(0.20, 0.06 * len(files_touched))\n        if errors or \"error\" in categories:\n            score += 0.30\n        if tests or \"test\" in categories:\n            score += 0.20\n        if \"planning\" in categories:\n            score += 0.16\n        if \"code_edit\" in categories:\n            score += 0.22\n        if \"command\" in categories:\n            score += 0.08\n        if any(keyword in text for keyword in self.SUCCESS_KEYWORDS):\n            score += 0.06\n        if any(keyword in text for keyword in self.FAILURE_KEYWORDS):\n            score += 0.08\n        if \"bulk_output\" in categories:\n            score -= 0.20\n        if not is_tool_pair_complete:\n            score -= 0.25\n\n        # Very large turns are often file dumps/stdout; keep their metadata b...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:11:17.630992",
+  "updated_at": "2026-05-29T13:11:17.630992",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_ca2c72677bdc47ac8bc72ba807c5ba4d"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_ca2c72677bdc47ac8bc72ba807c5ba4d",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:11:17.630992",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 340,
+        "path": "core/turn_builder.py",
+        "raw_mode": true,
+        "start_line": 180
+      },
+      "tool_output": "            messages=turn_messages,\n            is_tool_pair_complete=False,\n            orphan_tool_call_ids=sorted(set(orphan_ids)),\n        )\n        return turn, j\n\n    def _new_turn(\n        self,\n        turn_index: int,\n        start_index: int,\n        end_index: int,\n        messages: List[Dict[str, Any]],\n        is_tool_pair_complete: bool = True,\n        missing_tool_call_ids: Optional[List[str]] = None,\n        orphan_tool_call_ids: Optional[List[str]] = None,\n    ) -> ConversationTurn:\n        user_message = next((msg for msg in messages if msg.get(\"role\") == \"user\"), None)\n        assistant_messages = [msg for msg in messages if msg.get(\"role\") == \"assistant\"]\n        tool_messages = [msg for msg in messages if msg.get(\"role\") == \"tool\"]\n        has_tool_calls = any(msg.get(\"role\") == \"assistant\" and msg.get(\"tool_calls\") for msg in messages)\n\n        categories = self._categorize(messages)\n        files_touched = self._extract_files(messages)\n        errors = self._extract_matching_lines(messages, self.ERROR_KEYWORDS)\n        tests = self._extract_matching_lines(messages, self.TEST_KEYWORDS)\n        token_estimate = self._estimate_tokens(messages)\n        importance = self._estimate_importance(\n            messages,\n            categories,\n            is_tool_pair_complete,\n            token_estimate,\n            files_touched,\n            errors,\n            tests,\n        )\n        return ConversationTurn(\n            id=f\"turn_{start_index}_{end_index}_{turn_index}\",\n            start_index=start_index,\n            end_index=end_index,\n            messages=[dict(msg) for msg in messages],\n            user_message=dict(user_message) if user_message else None,\n            assistant_messages=[dict(msg) for msg in assistant_messages],\n            tool_messages=[dict(msg) for msg in tool_messages],\n            has_tool_calls=has_tool_calls,\n            is_tool_pair_complete=is_tool_pair_complete,\n            missing_tool_call_ids=missing_tool_call_ids or [],\n            orphan_tool_call_ids=orphan_tool_call_ids or [],\n            token_estimate=token_estimate,\n            importance=importance,\n            categories=categories,\n            files_touched=files_touched,\n            errors=errors,\n            tests=tests,\n        )\n\n    def _tool_call_ids(self, message: Dict[str, Any]) -> Set[str]:\n        return {tc.get(\"id\") for tc in message.get(\"tool_calls\", []) if tc.get(\"id\")}\n\n    def _estimate_tokens(self, messages: List[Dict[str, Any]]) -> int:\n        # Lightweight approximation: four chars per token, minimum one token.\n        return max(1, sum(len(str(msg)) for msg in messages) // 4)\n\n    def _estimate_importance(\n        self,\n        messages: List[Dict[str, Any]],\n        categories: List[str],\n        is_tool_pair_complete: bool,\n        token_estimate: int,\n        files_touched: List[str],\n        errors: List[str],\n        tests: List[str],\n    ) -> float:\n        score = 0.08\n        text = self._messages_text(messages).lower()\n\n        if any(msg.get(\"role\") == \"user\" for msg in messages):\n            score += 0.22\n        if any(msg.get(\"tool_calls\") for msg in messages):\n            score += 0.10\n        if files_touched:\n            score += min(0.20, 0.06 * len(files_touched))\n        if errors or \"error\" in categories:\n            score += 0.30\n        if tests or \"test\" in categories:\n            score += 0.20\n        if \"planning\" in categories:\n            score += 0.16\n        if \"code_edit\" in categories:\n            score += 0.22\n        if \"command\" in categories:\n            score += 0.08\n        if any(keyword in text for keyword in self.SUCCESS_KEYWORDS):\n            score += 0.06\n        if any(keyword in text for keyword in self.FAILURE_KEYWORDS):\n            score += 0.08\n        if \"bulk_output\" in categories:\n            score -= 0.20\n        if not is_tool_pair_complete:\n            score -= 0.25\n\n        # Very large turns are often file dumps/stdout; keep their metadata b...",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

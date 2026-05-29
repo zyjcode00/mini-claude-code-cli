@@ -1,0 +1,54 @@
+{
+  "id": "mem_9c1f70a339dd447b8faf2320f5124134",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 tests/test_memory_layers.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:19:42.823094",
+  "updated_at": "2026-05-29T13:19:42.823094",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "tests/test_memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_738e92024be940cb8d46e245a846ddbf"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_738e92024be940cb8d46e245a846ddbf",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:19:42.823094",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "    def test_rebuild_index_supports_legacy_file_path_field(self):\n        \"\"\"测试重建索引时兼容旧 JSON 中的 file_path 字段\"\"\"\n        ltm = LongTermMemory(storage_dir=self.temp_dir)\n        legacy_file = Path(self.temp_dir) / \"summary_legacy_2024-01-01T00-00-00.json\"\n        legacy_file.write_text(\n            '''{\n                \"session_id\": \"legacy_file_path_test\",\n                \"timestamp\": \"2024-01-01T00:00:00\",\n                \"summary_text\": \"旧版 file_path 字段测试\",\n                \"task_goal\": \"兼容历史长期记忆\",\n                \"task_status\": \"done\",\n                \"files_changed\": [\n                    {\n                        \"file_path\": \"tools/legacy_memory_tool.py\",\n                        \"action\": \"modified\",\n                        \"summary\": \"旧版字段\"\n                    }\n                ],\n                \"errors_encountered\": [],\n                \"tools_used\": []\n            }''',\n            encoding=\"utf-8\"\n        )\n\n        ltm._rebuild_index()\n\n        results = ltm.search(\"legacy_memory_tool\")\n        assert len(results) == 1\n        assert results[0].session_id == \"legacy_file_path_test\"\n        assert results[0].task_status == \"completed\"\n        assert results[0].files_changed[0].path == \"tools/legacy_memory_tool.py\"\n\n    def test_corrupt_index_is_backed_up_and_rebuilt(self):\n        \"\"\"损坏 index.json 时应备份现场并重建出可解析的新索引。\"\"\"\n        summary_file = Path(self.temp_dir) / \"summary_corrupt_2024-01-01T00-00-00.json\"\n        summary_file.write_text(\n            json.dumps({\n                \"session_id\": \"corrupt_index_rebuild\",\n                \"timestamp\": \"2024-01-01T00:00:00\",\n                \"summary_text\": \"索引损坏恢复测试\",\n                \"task_goal\": \"重建索引\",\n                \"task_status\": \"completed\",\n                \"files_changed\": [],\n                \"errors_encountered\": [],\n                \"tools_used\": [],\n            }, ensure_ascii=False),\n            encoding=\"utf-8\",\n        )\n        index_file = Path(self.temp_dir) / \"index.json\"\n        index_file.write_text('{\"index\": {\"broken\": \"missing comma\" \"x\": 1}', encoding=\"utf-8\")\n\n        ltm = LongTermMemory(storage_dir=self.temp_dir)\n\n        backups = list(Path(self.temp_dir).glob(\"index.json.corrupt_*.bak\"))\n        assert len(backups) == 1\n        assert json.loads(index_file.read_text(encoding=\"utf-8\"))\n        assert ltm.retrieve(\"corrupt_index_rebuild\") is not None\n\n    def test_save_index_writes_valid_json_atomically(self):\n        \"\"\"保存索引应通过临时文件原子替换，最终 index.json 始终为合法 JSON。\"\"\"\n        ltm = LongTermMemory(storage_dir=self.temp_dir)\n        summary = SessionSummary(\n            session_id=\"atomic_save\",\n            timestamp=\"2024-01-01T00:00:00\",\n            summary_text=\"原子保存索引\",\n            task_goal=\"避免半写入 JSON\",\n            task_status=\"completed\",\n        )\n\n        ltm.store(summary)\n\n        index_file = Path(self.temp_dir) / \"index.json\"\n        data = json.loads(index_file.read_text(encoding=\"utf-8\"))\n        assert \"atomic_save\" in data[\"index\"]\n        assert not list(Path(self.temp_dir).glob(\"index.*.tmp\"))\n\n    def test_clear(self):\n        \"\"\"测试清空\"\"\"",
+        "old_str": "    def test_rebuild_index_supports_legacy_file_path_field(self):\n        \"\"\"测试重建索引时兼容旧 JSON 中的 file_path 字段\"\"\"\n        ltm = LongTermMemory(storage_dir=self.temp_dir)\n        legacy_file = Path(self.temp_dir) / \"summary_legacy_2024-01-01T00-00-00.json\"\n        legacy_file.write_text(\n            '''{\n                \"session_id\": \"legacy_file_path_test\",\n                \"timestamp\": \"2024-01-01T00:00:00\",\n                \"summary_text\": \"旧版 file_path 字段测试\",\n                \"task_goal\": \"兼容历史长期记忆\",\n                \"task_status\": \"done\",\n                \"files_changed\": [\n                    {\n                        \"file_path\": \"tools/legacy_memory_tool.py\",\n                        \"action\": \"modified\",\n                        \"summary\": \"旧版字段\"\n                    }\n                ],\n                \"errors_encountered\": [],\n                \"tools_used\": []\n            }''',\n            encoding=\"utf-8\"\n        )\n\n        ltm._rebuild_index()\n\n        results = ltm.search(\"legacy_memory_tool\")\n        assert len(results) == 1\n        assert results[0].session_id == \"legacy_file_path_test\"\n        assert results[0].task_status == \"completed\"\n        assert results[0].files_changed[0].path == \"tools/legacy_memory_tool.py\"\n\n    def test_clear(self):\n        \"\"\"测试清空\"\"\"",
+        "path": "tests/test_memory_layers.py"
+      },
+      "tool_output": "成功: 已更新 tests/test_memory_layers.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

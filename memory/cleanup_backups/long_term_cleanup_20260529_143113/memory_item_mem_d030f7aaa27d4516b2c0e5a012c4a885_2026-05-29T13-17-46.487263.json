@@ -1,0 +1,55 @@
+{
+  "id": "mem_d030f7aaa27d4516b2c0e5a012c4a885",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: main.py (第 1 至 180 行，共 194 行) ---\n   1 | import argparse\n   2 | import os\n   3 | import sys\n   4 | import asyncio\n   5 | from pathlib import Path\n   6 | from rich.console import Console\n   7 | from rich.panel import Panel\n   8 | from rich.markdown import Markdown\n   9 | from rich.prompt import Prompt\n  10 | from core.plan import PlanManager  # 🔥 改为导入类而非全局实例\n  11 | \n  12 | # 1. 核心引擎导入\n  13 | from core.engine import AgentEngine\n  14 | \n  15 | # 2. 优化后的工具导入\n  16 | from tools import get_default_tools\n  17 | \n  18 | # Git 辅助函数导入\n  19 | from tools.git_tool import has_uncommitted_changes, create_snapshot, get_git_status_dict\n  20 | \n  21 | console = Console()\n  22 | \n  23 | \n  24 | DEFAULT_BASE_URL = \"https://api.openai.com/v1\"\n  25 | \n  26 | \n  27 | def load_env_file(env_path=None):\n  28 |     \"\"\"Load simple KEY=VALUE pairs from a .env file without overriding existing env vars.\"\"\"\n  29 |     path = Path(env_path or \".env\")\n  30 |     if not path.exists():\n  31 |         return\n  32 | \n  33 |     for raw_line in path.read_text(encoding=\"utf-8\").splitlines():\n  34 |         line = raw_line.strip()\n  35 |         if not line or line.startswith(\"#\") or \"=\" not in line:\n  36 |             continue\n  37 |         key, value = line.split(\"=\", 1)\n  38 |         key = key.strip()\n  39 |         value = value.strip().strip('\"').strip(\"'\")\n  40 |         if key and key not in os.environ:\n  41 |             os.environ[key] = value\n  42 | \n  43 | \n  44 | def get_agent_config():\n  45 |     \"\"\"Return API configuration from environment variables or local .env file.\"\"\"\n  46 |     load_env_file()\n  47 |     api_key = os.getenv(\"MINI_CLAUDE_API_KEY\") or os.getenv(\"OPENAI_API_KEY\")\n  48 |     base_url = os.getenv(\"MINI_CLAUDE_BASE_URL\", DEFAULT_BASE_URL)\n  49 | \n  50 |     if not api_key:\n  51 |         raise RuntimeError(\n  52 |             \"未检测到 API Key。请设置环境变量 MINI_CLAUDE_API_KEY，\"\n  53 |             \"或在项目根目录创建 .env 文件。可参考 .env.example。\"\n  54 |         )\n  55 | \n  56 |     return {\"api_key\": api_key, \"base_url\": base_url}\n  57 | \n  58 | \n  59 | def print_task_board(plan_manager):\n  60 |     \"\"\"简单的任务看板输出\"\"\"\n  61 |     if not plan_manager.tasks:\n  62 |         return\n  63 | \n  64 |     console.print(\"\\n\" + \"─\" * 50)\n  65 |     console.print(\"[bold cyan]📋 任务看板[/bold cyan]\")\n  66 |     console.print(\"─\" * 50)\n  67 | \n  68 |     for task in plan_manager.tasks:\n  69 |         status_icon = \"✅\" if task[\"status\"] == \"done\" else \"⏳\"\n  70 | \n  71 |         status_color = \"green\" if task[\"status\"] == \"done\" else \"dim\"\n  72 | \n  73 |         console.print(f\"  {status_icon} [{status_color}]{task['task']}[/{status_color}]\")\n  74 | \n  75 |     console.print(\"─\" * 50 + \"\\n\")\n  76 | \n  77 | \n  78 | def print_banner():\n  79 |     banner = \"\"\"\n  80 |     [bold cyan]Claude Code (Lite) - Python 研究版[/bold cyan]\n  81 |     [dim]基于工程化代理架构 | 核心循环 [/dim]\n  82 |     输入 [bold red]'exit'[/bold red] 退出，输入 [bold yellow]'/clear'[/bold yellow] 清空上下文\n  83 |     \"\"\"\n  84 |     console.print(Panel(banner, border_style=\"cyan\"))\n  85 | \n  86 | \n  87 | #   main改为异步\n  88 | async def main():\n  89 |     # 命令行参数解析\n  90 |     parser = argparse.ArgumentParser(description=\"Mini-Claude Agent 控制台\")\n  91 |     parser.add_argument(\"--session\", type=str, default=\"default\", help=\"指定会话 ID\")\n  92 |     parser.add_argument(\"--model\", type=str, default=\"gpt-5.5\", help=\"指定使用的模型\")\n  93 |     args = parser.parse_args()\n  94 | \n  95 |     print(f\"--- 🚀 正在启动会话: {args.session} ---\")\n  96 | \n  97 |     agent_config = get_agent_config()\n  98 | \n  99 |     # 🔥 创建独立的 PlanManager 实例（每个 session 独立）\n 100 |     plan_manager = PlanManager()\n 101 | \n 102 |     # 3. 初始化工具集 (使用工厂函数)\n 103 |     tools_list = get_default_tools(plan_manager=plan_manager)\n 104 | \n 105 |     # 4. 初始化核心引擎\n 106 |     engine = AgentEngine(\n 107 |         tools=tools_list,\n 108 |         model=args.model,\n 109 |         plan_manager=plan_manager,\n 110 |         session_id=args.session,\n 111 |         base_url=agent_config[\"base_url\"],\n 112 ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:17:46.487263",
+  "updated_at": "2026-05-29T13:17:46.487263",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "main.py"
+  ],
+  "source_observation_ids": [
+    "obs_f478678df5504ec9a7745eb35d04423a"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f478678df5504ec9a7745eb35d04423a",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:17:46.487263",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 180,
+        "path": "main.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: main.py (第 1 至 180 行，共 194 行) ---\n   1 | import argparse\n   2 | import os\n   3 | import sys\n   4 | import asyncio\n   5 | from pathlib import Path\n   6 | from rich.console import Console\n   7 | from rich.panel import Panel\n   8 | from rich.markdown import Markdown\n   9 | from rich.prompt import Prompt\n  10 | from core.plan import PlanManager  # 🔥 改为导入类而非全局实例\n  11 | \n  12 | # 1. 核心引擎导入\n  13 | from core.engine import AgentEngine\n  14 | \n  15 | # 2. 优化后的工具导入\n  16 | from tools import get_default_tools\n  17 | \n  18 | # Git 辅助函数导入\n  19 | from tools.git_tool import has_uncommitted_changes, create_snapshot, get_git_status_dict\n  20 | \n  21 | console = Console()\n  22 | \n  23 | \n  24 | DEFAULT_BASE_URL = \"https://api.openai.com/v1\"\n  25 | \n  26 | \n  27 | def load_env_file(env_path=None):\n  28 |     \"\"\"Load simple KEY=VALUE pairs from a .env file without overriding existing env vars.\"\"\"\n  29 |     path = Path(env_path or \".env\")\n  30 |     if not path.exists():\n  31 |         return\n  32 | \n  33 |     for raw_line in path.read_text(encoding=\"utf-8\").splitlines():\n  34 |         line = raw_line.strip()\n  35 |         if not line or line.startswith(\"#\") or \"=\" not in line:\n  36 |             continue\n  37 |         key, value = line.split(\"=\", 1)\n  38 |         key = key.strip()\n  39 |         value = value.strip().strip('\"').strip(\"'\")\n  40 |         if key and key not in os.environ:\n  41 |             os.environ[key] = value\n  42 | \n  43 | \n  44 | def get_agent_config():\n  45 |     \"\"\"Return API configuration from environment variables or local .env file.\"\"\"\n  46 |     load_env_file()\n  47 |     api_key = os.getenv(\"MINI_CLAUDE_API_KEY\") or os.getenv(\"OPENAI_API_KEY\")\n  48 |     base_url = os.getenv(\"MINI_CLAUDE_BASE_URL\", DEFAULT_BASE_URL)\n  49 | \n  50 |     if not api_key:\n  51 |         raise RuntimeError(\n  52 |             \"未检测到 API Key。请设置环境变量 MINI_CLAUDE_API_KEY，\"\n  53 |             \"或在项目根目录创建 .env 文件。可参考 .env.example。\"\n  54 |         )\n  55 | \n  56 |     return {\"api_key\": api_key, \"base_url\": base_url}\n  57 | \n  58 | \n  59 | def print_task_board(plan_manager):\n  60 |     \"\"\"简单的任务看板输出\"\"\"\n  61 |     if not plan_manager.tasks:\n  62 |         return\n  63 | \n  64 |     console.print(\"\\n\" + \"─\" * 50)\n  65 |     console.print(\"[bold cyan]📋 任务看板[/bold cyan]\")\n  66 |     console.print(\"─\" * 50)\n  67 | \n  68 |     for task in plan_manager.tasks:\n  69 |         status_icon = \"✅\" if task[\"status\"] == \"done\" else \"⏳\"\n  70 | \n  71 |         status_color = \"green\" if task[\"status\"] == \"done\" else \"dim\"\n  72 | \n  73 |         console.print(f\"  {status_icon} [{status_color}]{task['task']}[/{status_color}]\")\n  74 | \n  75 |     console.print(\"─\" * 50 + \"\\n\")\n  76 | \n  77 | \n  78 | def print_banner():\n  79 |     banner = \"\"\"\n  80 |     [bold cyan]Claude Code (Lite) - Python 研究版[/bold cyan]\n  81 |     [dim]基于工程化代理架构 | 核心循环 [/dim]\n  82 |     输入 [bold red]'exit'[/bold red] 退出，输入 [bold yellow]'/clear'[/bold yellow] 清空上下文\n  83 |     \"\"\"\n  84 |     console.print(Panel(banner, border_style=\"cyan\"))\n  85 | \n  86 | \n  87 | #   main改为异步\n  88 | async def main():\n  89 |     # 命令行参数解析\n  90 |     parser = argparse.ArgumentParser(description=\"Mini-Claude Agent 控制台\")\n  91 |     parser.add_argument(\"--session\", type=str, default=\"default\", help=\"指定会话 ID\")\n  92 |     parser.add_argument(\"--model\", type=str, default=\"gpt-5.5\", help=\"指定使用的模型\")\n  93 |     args = parser.parse_args()\n  94 | \n  95 |     print(f\"--- 🚀 正在启动会话: {args.session} ---\")\n  96 | \n  97 |     agent_config = get_agent_config()\n  98 | \n  99 |     # 🔥 创建独立的 PlanManager 实例（每个 session 独立）\n 100 |     plan_manager = PlanManager()\n 101 | \n 102 |     # 3. 初始化工具集 (使用工厂函数)\n 103 |     tools_list = get_default_tools(plan_manager=plan_manager)\n 104 | \n 105 |     # 4. 初始化核心引擎\n 106 |     engine = AgentEngine(\n 107 |         tools=tools_list,\n 108 |         model=args.model,\n 109 |         plan_manager=plan_manager,\n 110 |         session_id=args.session,\n 111 |         base_url=agent_config[\"base_url\"],\n 112 ...",
+      "files": [
+        "main.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

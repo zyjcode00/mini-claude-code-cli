@@ -1,0 +1,48 @@
+{
+  "id": "mem_1755f1da37814bbab0451ac07a0ae591",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "Command executed with no output.",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:48:47.704942",
+  "updated_at": "2026-05-29T12:48:47.704942",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_3c823046a12e44dc9b3f8b8a96992603"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_3c823046a12e44dc9b3f8b8a96992603",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:48:47.704942",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -m py_compile core/engine.py core/context_assembler.py"
+      },
+      "tool_output": "Command executed with no output.",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

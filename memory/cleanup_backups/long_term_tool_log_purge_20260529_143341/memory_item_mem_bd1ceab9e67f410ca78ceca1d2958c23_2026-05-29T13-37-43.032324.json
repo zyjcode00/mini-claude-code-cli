@@ -1,0 +1,53 @@
+{
+  "id": "mem_bd1ceab9e67f410ca78ceca1d2958c23",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: write_full_file",
+  "content": "成功: 已写入 tmp_startup_stats.py",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:37:43.032324",
+  "updated_at": "2026-05-29T13:37:43.032324",
+  "concepts": [
+    "post_tool_use",
+    "write_full_file"
+  ],
+  "files": [
+    "tmp_startup_stats.py"
+  ],
+  "source_observation_ids": [
+    "obs_5be091fc86034d3289208dd0e5039b38"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_5be091fc86034d3289208dd0e5039b38",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:37:43.032324",
+      "event_type": "post_tool_use",
+      "tool_name": "write_full_file",
+      "tool_input": {
+        "content": "from pathlib import Path\nimport json\n\nfor p in [Path('memory/long_term'), Path('sessions')]:\n    files = list(p.glob('*.json')) if p.exists() else []\n    total = sum(f.stat().st_size for f in files)\n    print(str(p), 'json_files=', len(files), 'size_kb=', round(total / 1024, 1))\n    for f in sorted(files, key=lambda x: x.stat().st_size, reverse=True)[:8]:\n        print(' ', f.name, round(f.stat().st_size / 1024, 1), 'KB')\n\nidx = Path('memory/long_term/index.json')\nif idx.exists():\n    data = json.loads(idx.read_text(encoding='utf-8'))\n    print('index counts:', {\n        k: len(v) if isinstance(v, dict) else 'na'\n        for k, v in data.items()\n        if k in ['index', 'item_index', 'inverted_index', 'item_inverted_index']\n    })\n",
+        "path": "tmp_startup_stats.py"
+      },
+      "tool_output": "成功: 已写入 tmp_startup_stats.py",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tmp_startup_stats.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "mem_5ddbffb9907f4d14920d87cdad300dbf",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: mark_task_done",
+  "content": "✅ 任务 2 已完成！进度: 2/3\n\n当前计划:\n目标: 评估 mini-claude-code-cli 中旧记忆系统是否还能删除，以及给出安全迁移/删除建议\n1. ✅ 核对旧记忆相关字段和接口的当前依赖点\n2. ✅ 判断旧系统与新 MemoryItem/Hybrid Recall 的重叠和兼容价值\n3. ⏳ 给出是否删除、删除范围和分阶段迁移建议",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T16:54:34.282222",
+  "updated_at": "2026-05-28T16:54:34.282222",
+  "concepts": [
+    "post_tool_use",
+    "mark_task_done"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_5dd05e32a8c743849230cf98cc6f13d9"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_5dd05e32a8c743849230cf98cc6f13d9",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T16:54:34.282222",
+      "event_type": "post_tool_use",
+      "tool_name": "mark_task_done",
+      "tool_input": {
+        "task_id": 2
+      },
+      "tool_output": "✅ 任务 2 已完成！进度: 2/3\n\n当前计划:\n目标: 评估 mini-claude-code-cli 中旧记忆系统是否还能删除，以及给出安全迁移/删除建议\n1. ✅ 核对旧记忆相关字段和接口的当前依赖点\n2. ✅ 判断旧系统与新 MemoryItem/Hybrid Recall 的重叠和兼容价值\n3. ⏳ 给出是否删除、删除范围和分阶段迁移建议",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

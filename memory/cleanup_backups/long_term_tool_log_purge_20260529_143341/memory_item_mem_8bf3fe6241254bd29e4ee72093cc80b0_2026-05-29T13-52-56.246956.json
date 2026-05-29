@@ -1,0 +1,48 @@
+{
+  "id": "mem_8bf3fe6241254bd29e4ee72093cc80b0",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "Command executed with no output.",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:52:56.246956",
+  "updated_at": "2026-05-29T13:52:56.246956",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_7b84de828a984651b6ca2af52864ecad"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_7b84de828a984651b6ca2af52864ecad",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:52:56.246956",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python - <<'PY'\nimport json\nfrom pathlib import Path\np=Path('memory/long_term/index.json')\ndata=json.loads(p.read_text(encoding='utf-8'))\nii=data.get('item_inverted_index',{})\nprint('item_index_count', len(data.get('item_index',{})))\nprint('keyword_count', len(ii))\n# sample first 80 keys\nprint('sample_keys:', list(ii.keys())[:80])\n# top broad terms by doc freq\nprint('top_terms:')\nfor k,v in sorted(ii.items(), key=lambda kv: len(kv[1]), reverse=True)[:40]:\n    print(k, len(v))\n# suspicious short/chinese snippets samples\nprint('short_or_frag_samples:', [k for k in ii if len(k)<=3][:80])\nPY"
+      },
+      "tool_output": "Command executed with no output.",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

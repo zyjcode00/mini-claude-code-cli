@@ -1,0 +1,48 @@
+{
+  "id": "mem_650739325c274a80bde057ce1312f82e",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nN 336\r\nCounter({'tool': 274, 'assistant': 60, 'user': 2})\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:04:20.972252",
+  "updated_at": "2026-05-29T13:04:20.972252",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_e2ee7f3923614ba8b7c41e5c3b800947"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_e2ee7f3923614ba8b7c41e5c3b800947",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:04:20.972252",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -c \"import json,collections; data=json.load(open('sessions/test.json',encoding='utf-8')); msgs=data['messages']; print('N',len(msgs)); from collections import Counter; print(Counter([m.get('role') for m in msgs]));\nexec('''\\nfor i,m in list(enumerate(msgs))[-60:]:\\n    tc=m.get(\\\"tool_calls\\\") or []\\n    content=str(m.get(\\\"content\\\",\\\"\\\"))\\n    print(f\\\"{i:03d} role={m.get('role')} name={m.get('name')} cid={m.get('tool_call_id')} len={len(content)} tools={[c.get('function',{}).get('name') for c in tc]}\\\")\\n    if content:\\n        print(\\\"    \\\"+content[:220].replace(chr(10), \\\"\\\\\\\\n\\\"))\\n''')\""
+      },
+      "tool_output": "STDOUT:\nN 336\r\nCounter({'tool': 274, 'assistant': 60, 'user': 2})\r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "id": "mem_38513d7d9ce349bd85c5f8ab3a1b1a75",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: docs/memory_system_refactor_roadmap.md (第 1 至 220 行，共 1118 行) ---\n   1 | # Mini Claude Code CLI 记忆系统重构路线与架构设计\n   2 | \n   3 | > 项目路径：`D:\\LLM\\mini-claude-code-cli`\n   4 | > 文档位置：`docs/memory_system_refactor_roadmap.md`\n   5 | > 参考项目：`D:\\LLM\\memory\\agentmemory`\n   6 | > 结论：**建议重构，但不建议推倒重写。应保留现有三层记忆雏形，按 agentmemory 的“事件捕获 + 结构化记忆 + 混合检索 + 预算注入”思路渐进增强。**\n   7 | \n   8 | ---\n   9 | \n  10 | ## 1. 结论：现在的记忆系统需要重构吗？\n  11 | \n  12 | 需要，但不是因为现在完全没用，而是因为它已经有了雏形，却缺少形成长期价值的闭环。\n  13 | \n  14 | 当前 `mini-claude-code-cli` 已经具备：\n  15 | \n  16 | - `WorkingMemory`：保存最近消息；\n  17 | - `EpisodicMemory`：保存结构化 `SessionSummary`；\n  18 | - `LongTermMemory`：基于 JSON 文件和倒排索引做长期记忆；\n  19 | - `CompressionEngine`：多策略压缩；\n  20 | - `get_system_prompt()`：把历史摘要、情景记忆、长期记忆注入 System Prompt；\n  21 | - `sessions/*.json`：保存会话状态、Plan 状态、消息和记忆；\n  22 | - `tests/test_memory_*.py`：已经有基础测试覆盖。\n  23 | \n  24 | 所以不应该重写成另一个项目，而应该进行“架构级重构”：\n  25 | \n  26 | ```text\n  27 | 保留现有三层记忆和测试\n  28 |   -> 抽出统一 MemoryManager / MemoryStore / MemoryRetriever\n  29 |   -> 增加 Observation 事件捕获\n  30 |   -> 增加显式 Memory 类型\n  31 |   -> 改进检索和注入策略\n  32 |   -> 最后考虑接入 agentmemory 或 MCP\n  33 | ```\n  34 | \n  35 | 如果直接推倒重写，风险是：\n  36 | \n  37 | 1. 现有 Plan 状态同步、Session 恢复、压缩测试都会受影响；\n  38 | 2. 当前项目是 Python CLI Agent，agentmemory 是 TypeScript 独立服务，直接移植成本高；\n  39 | 3. 你的项目已有可运行链路，更适合渐进式演进。\n  40 | \n  41 | ---\n  42 | \n  43 | ## 2. 当前记忆系统现状\n  44 | \n  45 | ### 2.1 现有相关模块\n  46 | \n  47 | ```text\n  48 | core/\n  49 | ├── context.py              # 上下文与记忆编排，目前承担过多职责\n  50 | ├── memory_layers.py        # Working / Episodic / LongTerm 三层记忆\n  51 | ├── memory_models.py        # SessionSummary、FileChange、ErrorRecord、ToolUsage\n  52 | ├── memory_retrieval.py     # 三层记忆检索器\n  53 | ├── compression_engine.py   # 压缩策略与摘要生成\n  54 | ├── prompts.py              # 记忆注入 System Prompt\n  55 | ├── engine.py               # LLM 调用、工具循环、session 保存恢复\n  56 | ├── keyword_indexer.py      # 关键词索引\n  57 | └── bm25_retriever.py       # BM25 检索\n  58 | \n  59 | tools/\n  60 | └── retrieval_tool.py       # 独立的关键词/BM25 检索工具\n  61 | \n  62 | memory/\n  63 | └── long_term/              # 长期记忆 JSON 文件和 index.json\n  64 | \n  65 | sessions/\n  66 | └── *.json                  # 会话状态、消息、Plan、memories\n  67 | ```\n  68 | \n  69 | ### 2.2 当前数据流\n  70 | \n  71 | 当前大致数据流是：\n  72 | \n  73 | ```text\n  74 | 用户输入 / 工具结果\n  75 |   -> AgentEngine 往 ContextManager.messages 添加消息\n  76 |   -> ContextManager 同步写入 WorkingMemory\n  77 |   -> 超过阈值时调用 CompressionEngine.compress()\n  78 |   -> 生成 SessionSummary\n  79 |   -> 写入 EpisodicMemory 和 session_summaries\n  80 |   -> 如果 EpisodicMemory 满了，才淘汰旧摘要到 LongTermMemory\n  81 |   -> save_session() 把 messages / plan / memories 存到 sessions/{session_id}.json\n  82 |   -> 下一次 _call_llm() 时，从 LongTermMemory 检索，再拼入 System Prompt\n  83 | ```\n  84 | \n  85 | ---\n  86 | \n  87 | ## 3. 为什么现在会感觉“鸡肋”？\n  88 | \n  89 | ### 3.1 没有原始 Observation 层\n  90 | \n  91 | agentmemory 的核心是先记录 `RawObservation`：\n  92 | \n  93 | - 用户提交了什么 prompt；\n  94 | - 调用了什么工具；\n  95 | - 工具输入是什么；\n  96 | - 工具输出是什么；\n  97 | - 工具失败的 traceback 是什么；\n  98 | - 哪些文件被读取或修改；\n  99 | - 当前项目路径、session id、时间戳是什么。\n 100 | \n 101 | 而当前项目主要依赖 `messages` 和压缩后的 `SessionSummary`。问题是：\n 102 | \n 103 | - 工具调用的原始上下文没有被单独结构化保存；\n 104 | - 很多有价值的信息只散落在对话消息里；\n 105 | - 压缩失败或摘要质量差时，长期记忆质量就会下降；\n 106 | - 后续无法追溯一条记忆来自哪次工具调用。\n 107 | \n 108 | ### 3.2 长期记忆写入太被动\n 109 | \n 110 | 当前 `LongTermMemory` 主要在 `EpisodicMemory` 超过上限时才写入：\n 111 | \n 112 | ```text\n 113 | EpisodicMemory max_size = 50\n 114 | 超过 50 条后，重要性最低的摘要才被 store 到 LongTermMemory\n 115 | ```\n 116 | \n 117 | 这会导致：\n 118 | \n 119 | - 普通项目长期记忆很久都不会真正落入 `memory/long_term`；\n 120 | - 跨会话检索可能经常检索不到有价值内容；\n 121 | - 明明完成了重要任务，却没有立刻沉淀成长期知识。\n 122 | \n 123 | ### 3.3 只有 SessionSummary，没有显式 Memory 类型\n 124 | \n 125 | 当前核心长期单元是 `SessionSummary`，更像“这次会话发生了什么”。\n 126 | \n 127 | 但 coding agent 更需要区分：\n 128 | \n 129 | | 类型 | 示例 |\n 130 | |---|---|\n 131 | | `fact` | 项目使用 OpenAI 兼容接口调用 DeepSeek |\n 132 | | `architecture` | AgentEngine 负责异步 ReAct 循环，ContextManager 负责编排上下文 |\n 133 | | `preference` | 用户希望文档使用中文，保存到 docs 目录 |\n 134 | | `bug` |...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:46:21.373520",
+  "updated_at": "2026-05-29T12:46:21.373520",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "docs/memory_system_refactor_roadmap.md",
+    "context.py",
+    "memory_layers.py",
+    "memory_models.py",
+    "memory_retrieval.py",
+    "compression_engine.py",
+    "prompts.py",
+    "engine.py",
+    "keyword_indexer.py",
+    "bm25_retriever.py",
+    "retrieval_tool.py",
+    "index.json",
+    "CLAUDE.md",
+    "README.md",
+    "tools/retrieval_tool.py"
+  ],
+  "source_observation_ids": [
+    "obs_d19869416ead40b9a2a0b85df2c699e6"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_d19869416ead40b9a2a0b85df2c699e6",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:46:21.373520",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 220,
+        "path": "docs/memory_system_refactor_roadmap.md",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: docs/memory_system_refactor_roadmap.md (第 1 至 220 行，共 1118 行) ---\n   1 | # Mini Claude Code CLI 记忆系统重构路线与架构设计\n   2 | \n   3 | > 项目路径：`D:\\LLM\\mini-claude-code-cli`\n   4 | > 文档位置：`docs/memory_system_refactor_roadmap.md`\n   5 | > 参考项目：`D:\\LLM\\memory\\agentmemory`\n   6 | > 结论：**建议重构，但不建议推倒重写。应保留现有三层记忆雏形，按 agentmemory 的“事件捕获 + 结构化记忆 + 混合检索 + 预算注入”思路渐进增强。**\n   7 | \n   8 | ---\n   9 | \n  10 | ## 1. 结论：现在的记忆系统需要重构吗？\n  11 | \n  12 | 需要，但不是因为现在完全没用，而是因为它已经有了雏形，却缺少形成长期价值的闭环。\n  13 | \n  14 | 当前 `mini-claude-code-cli` 已经具备：\n  15 | \n  16 | - `WorkingMemory`：保存最近消息；\n  17 | - `EpisodicMemory`：保存结构化 `SessionSummary`；\n  18 | - `LongTermMemory`：基于 JSON 文件和倒排索引做长期记忆；\n  19 | - `CompressionEngine`：多策略压缩；\n  20 | - `get_system_prompt()`：把历史摘要、情景记忆、长期记忆注入 System Prompt；\n  21 | - `sessions/*.json`：保存会话状态、Plan 状态、消息和记忆；\n  22 | - `tests/test_memory_*.py`：已经有基础测试覆盖。\n  23 | \n  24 | 所以不应该重写成另一个项目，而应该进行“架构级重构”：\n  25 | \n  26 | ```text\n  27 | 保留现有三层记忆和测试\n  28 |   -> 抽出统一 MemoryManager / MemoryStore / MemoryRetriever\n  29 |   -> 增加 Observation 事件捕获\n  30 |   -> 增加显式 Memory 类型\n  31 |   -> 改进检索和注入策略\n  32 |   -> 最后考虑接入 agentmemory 或 MCP\n  33 | ```\n  34 | \n  35 | 如果直接推倒重写，风险是：\n  36 | \n  37 | 1. 现有 Plan 状态同步、Session 恢复、压缩测试都会受影响；\n  38 | 2. 当前项目是 Python CLI Agent，agentmemory 是 TypeScript 独立服务，直接移植成本高；\n  39 | 3. 你的项目已有可运行链路，更适合渐进式演进。\n  40 | \n  41 | ---\n  42 | \n  43 | ## 2. 当前记忆系统现状\n  44 | \n  45 | ### 2.1 现有相关模块\n  46 | \n  47 | ```text\n  48 | core/\n  49 | ├── context.py              # 上下文与记忆编排，目前承担过多职责\n  50 | ├── memory_layers.py        # Working / Episodic / LongTerm 三层记忆\n  51 | ├── memory_models.py        # SessionSummary、FileChange、ErrorRecord、ToolUsage\n  52 | ├── memory_retrieval.py     # 三层记忆检索器\n  53 | ├── compression_engine.py   # 压缩策略与摘要生成\n  54 | ├── prompts.py              # 记忆注入 System Prompt\n  55 | ├── engine.py               # LLM 调用、工具循环、session 保存恢复\n  56 | ├── keyword_indexer.py      # 关键词索引\n  57 | └── bm25_retriever.py       # BM25 检索\n  58 | \n  59 | tools/\n  60 | └── retrieval_tool.py       # 独立的关键词/BM25 检索工具\n  61 | \n  62 | memory/\n  63 | └── long_term/              # 长期记忆 JSON 文件和 index.json\n  64 | \n  65 | sessions/\n  66 | └── *.json                  # 会话状态、消息、Plan、memories\n  67 | ```\n  68 | \n  69 | ### 2.2 当前数据流\n  70 | \n  71 | 当前大致数据流是：\n  72 | \n  73 | ```text\n  74 | 用户输入 / 工具结果\n  75 |   -> AgentEngine 往 ContextManager.messages 添加消息\n  76 |   -> ContextManager 同步写入 WorkingMemory\n  77 |   -> 超过阈值时调用 CompressionEngine.compress()\n  78 |   -> 生成 SessionSummary\n  79 |   -> 写入 EpisodicMemory 和 session_summaries\n  80 |   -> 如果 EpisodicMemory 满了，才淘汰旧摘要到 LongTermMemory\n  81 |   -> save_session() 把 messages / plan / memories 存到 sessions/{session_id}.json\n  82 |   -> 下一次 _call_llm() 时，从 LongTermMemory 检索，再拼入 System Prompt\n  83 | ```\n  84 | \n  85 | ---\n  86 | \n  87 | ## 3. 为什么现在会感觉“鸡肋”？\n  88 | \n  89 | ### 3.1 没有原始 Observation 层\n  90 | \n  91 | agentmemory 的核心是先记录 `RawObservation`：\n  92 | \n  93 | - 用户提交了什么 prompt；\n  94 | - 调用了什么工具；\n  95 | - 工具输入是什么；\n  96 | - 工具输出是什么；\n  97 | - 工具失败的 traceback 是什么；\n  98 | - 哪些文件被读取或修改；\n  99 | - 当前项目路径、session id、时间戳是什么。\n 100 | \n 101 | 而当前项目主要依赖 `messages` 和压缩后的 `SessionSummary`。问题是：\n 102 | \n 103 | - 工具调用的原始上下文没有被单独结构化保存；\n 104 | - 很多有价值的信息只散落在对话消息里；\n 105 | - 压缩失败或摘要质量差时，长期记忆质量就会下降；\n 106 | - 后续无法追溯一条记忆来自哪次工具调用。\n 107 | \n 108 | ### 3.2 长期记忆写入太被动\n 109 | \n 110 | 当前 `LongTermMemory` 主要在 `EpisodicMemory` 超过上限时才写入：\n 111 | \n 112 | ```text\n 113 | EpisodicMemory max_size = 50\n 114 | 超过 50 条后，重要性最低的摘要才被 store 到 LongTermMemory\n 115 | ```\n 116 | \n 117 | 这会导致：\n 118 | \n 119 | - 普通项目长期记忆很久都不会真正落入 `memory/long_term`；\n 120 | - 跨会话检索可能经常检索不到有价值内容；\n 121 | - 明明完成了重要任务，却没有立刻沉淀成长期知识。\n 122 | \n 123 | ### 3.3 只有 SessionSummary，没有显式 Memory 类型\n 124 | \n 125 | 当前核心长期单元是 `SessionSummary`，更像“这次会话发生了什么”。\n 126 | \n 127 | 但 coding agent 更需要区分：\n 128 | \n 129 | | 类型 | 示例 |\n 130 | |---|---|\n 131 | | `fact` | 项目使用 OpenAI 兼容接口调用 DeepSeek |\n 132 | | `architecture` | AgentEngine 负责异步 ReAct 循环，ContextManager 负责编排上下文 |\n 133 | | `preference` | 用户希望文档使用中文，保存到 docs 目录 |\n 134 | | `bug` |...",
+      "files": [
+        "docs/memory_system_refactor_roadmap.md",
+        "context.py",
+        "memory_layers.py",
+        "memory_models.py",
+        "memory_retrieval.py",
+        "compression_engine.py",
+        "prompts.py",
+        "engine.py",
+        "keyword_indexer.py",
+        "bm25_retriever.py",
+        "retrieval_tool.py",
+        "index.json",
+        "CLAUDE.md",
+        "README.md",
+        "tools/retrieval_tool.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

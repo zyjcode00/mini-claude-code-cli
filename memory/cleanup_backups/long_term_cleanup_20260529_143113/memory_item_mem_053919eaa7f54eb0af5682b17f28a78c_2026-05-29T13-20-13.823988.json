@@ -1,0 +1,52 @@
+{
+  "id": "mem_053919eaa7f54eb0af5682b17f28a78c",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nINDEX_OK \r\n Volume in drive D has no label.\r\n Volume Serial Number is 06B2-F622\r\n\r\n Directory of D:\\LLM\\mini-claude-code-cli\\memory\\long_term\r\n\r\n2026/05/29  13:20         2,949,824 index.json\r\n               1 File(s)      2,949,824 bytes\r\n               0 Dir(s)  42,813,296,640 bytes free\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:20:13.823988",
+  "updated_at": "2026-05-29T13:20:13.823988",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [
+    "index.json"
+  ],
+  "source_observation_ids": [
+    "obs_f7d06820927e4b91a7511d48db47a059"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f7d06820927e4b91a7511d48db47a059",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:20:13.823988",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -m json.tool memory\\long_term\\index.json > nul && echo INDEX_OK && dir memory\\long_term\\index.json"
+      },
+      "tool_output": "STDOUT:\nINDEX_OK \r\n Volume in drive D has no label.\r\n Volume Serial Number is 06B2-F622\r\n\r\n Directory of D:\\LLM\\mini-claude-code-cli\\memory\\long_term\r\n\r\n2026/05/29  13:20         2,949,824 index.json\r\n               1 File(s)      2,949,824 bytes\r\n               0 Dir(s)  42,813,296,640 bytes free\r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "index.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

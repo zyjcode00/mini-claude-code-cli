@@ -1,0 +1,55 @@
+{
+  "id": "mem_39c37a71177b427da069ec425f22c523",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_retrieval.py (第 261 至 633 行，共 633 行) ---\n 261 | \n 262 |         Returns:\n 263 |             元组列表：(摘要, 相关性分数, \"episodic\")\n 264 |         \"\"\"\n 265 |         results = []\n 266 | \n 267 |         # 使用情景记忆的搜索功能\n 268 |         summaries = self.episodic_memory.search(query, top_k * 2)  # 获取更多结果用于排序\n 269 | \n 270 |         for summary in summaries:\n 271 |             # 计算 BM25 分数\n 272 |             score = self._calculate_bm25_score(query, summary)\n 273 |             results.append((summary, score, \"episodic\"))\n 274 | \n 275 |         # 按分数排序\n 276 |         results.sort(key=lambda x: x[1], reverse=True)\n 277 | \n 278 |         return results[:top_k]\n 279 | \n 280 |     def _search_long_term_memory(\n 281 |         self,\n 282 |         query: str,\n 283 |         top_k: int\n 284 |     ) -> List[Tuple[SessionSummary, float, str]]:\n 285 |         \"\"\"\n 286 |         从长期记忆中检索摘要\n 287 | \n 288 |         Args:\n 289 |             query: 查询关键词\n 290 |             top_k: 返回结果数量\n 291 | \n 292 |         Returns:\n 293 |             元组列表：(摘要, 相关性分数, \"long_term\")\n 294 |         \"\"\"\n 295 |         results = []\n 296 | \n 297 |         # 使用长期记忆的搜索功能\n 298 |         summaries = self.long_term_memory.search(query, top_k * 2)\n 299 | \n 300 |         for summary in summaries:\n 301 |             # 计算 BM25 分数\n 302 |             score = self._calculate_bm25_score(query, summary)\n 303 |             results.append((summary, score, \"long_term\"))\n 304 | \n 305 |         # 按分数排序\n 306 |         results.sort(key=lambda x: x[1], reverse=True)\n 307 | \n 308 |         return results[:top_k]\n 309 | \n 310 |     def _calculate_bm25_score(\n 311 |         self,\n 312 |         query: str,\n 313 |         summary: SessionSummary,\n 314 |         k1: float = 1.5,\n 315 |         b: float = 0.75\n 316 |     ) -> float:\n 317 |         \"\"\"\n 318 |         计算 BM25 相关性分数\n 319 | \n 320 |         Args:\n 321 |             query: 查询字符串\n 322 |             summary: 会话摘要\n 323 |             k1: BM25 参数\n 324 |             b: BM25 参数\n 325 | \n 326 |         Returns:\n 327 |             BM25 分数\n 328 |         \"\"\"\n 329 |         import math\n 330 | \n 331 |         # 分词\n 332 |         query_terms = self._tokenize(query)\n 333 | \n 334 |         # 文档内容\n 335 |         doc_text = f\"{summary.summary_text} {summary.task_goal}\"\n 336 |         doc_terms = self._tokenize(doc_text)\n 337 | \n 338 |         # 文档长度\n 339 |         doc_len = len(doc_terms)\n 340 | \n 341 |         # 平均文档长度（简化处理）\n 342 |         avg_doc_len = 100  # 假设平均长度为 100\n 343 | \n 344 |         # 计算词频\n 345 |         term_freq = {}\n 346 |         for term in doc_terms:\n 347 |             term_freq[term] = term_freq.get(term, 0) + 1\n 348 | \n 349 |         # 计算 BM25 分数\n 350 |         score = 0.0\n 351 |         for term in query_terms:\n 352 |             if term in term_freq:\n 353 |                 tf = term_freq[term]\n 354 | \n 355 |                 # BM25 公式\n 356 |                 numerator = tf * (k1 + 1)\n 357 |                 denominator = tf + k1 * (1 - b + b * (doc_len / avg_doc_len))\n 358 | \n 359 |                 score += numerator / denominator\n 360 | \n 361 |         return score\n 362 | \n 363 |     def _tokenize(self, text: str) -> List[str]:\n 364 |         \"\"\"\n 365 |         简单分词（支持中英文）\n 366 | \n 367 |         Args:\n 368 |             text: 输入文本\n 369 | \n 370 |         Returns:\n 371 |             词项列表\n 372 |         \"\"\"\n 373 |         import re\n 374 | \n 375 |         # 英文单词\n 376 |         words = re.findall(r'\\b[a-zA-Z]{2,}\\b', text.lower())\n 377 | \n 378 |         # 中文分词（简单实现：提取 2-3 字的片段）\n 379 |         # 注意：这是简化版本，实际应用中应使用 jieba 等分词工具\n 380 |         chinese_2char = re.findall(r'[\\u4e00-\\u9fa5]{2}', text)\n 381 |         chinese_3char = re.findall(r'[\\u4e00-\\u9fa5]{3}', text)\n 382 | \n 383 |         # 合并并去重\n 384 |         chinese = list(set(chinese_2char + chinese_3char))\n 385 | \n 386 |         return words + chinese\n 387 | \n 388 |     def hybrid_recall(\n 389 |         self,\n 390 |         query: str = \"\",\n 391 |         top_k: int = 5,\n 392 |  ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:57:59.581452",
+  "updated_at": "2026-05-29T12:57:59.581452",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_retrieval.py"
+  ],
+  "source_observation_ids": [
+    "obs_3de0e758d126493d9ed52860f3f9e2bb"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_3de0e758d126493d9ed52860f3f9e2bb",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:57:59.581452",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 633,
+        "path": "core/memory_retrieval.py",
+        "raw_mode": false,
+        "start_line": 261
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_retrieval.py (第 261 至 633 行，共 633 行) ---\n 261 | \n 262 |         Returns:\n 263 |             元组列表：(摘要, 相关性分数, \"episodic\")\n 264 |         \"\"\"\n 265 |         results = []\n 266 | \n 267 |         # 使用情景记忆的搜索功能\n 268 |         summaries = self.episodic_memory.search(query, top_k * 2)  # 获取更多结果用于排序\n 269 | \n 270 |         for summary in summaries:\n 271 |             # 计算 BM25 分数\n 272 |             score = self._calculate_bm25_score(query, summary)\n 273 |             results.append((summary, score, \"episodic\"))\n 274 | \n 275 |         # 按分数排序\n 276 |         results.sort(key=lambda x: x[1], reverse=True)\n 277 | \n 278 |         return results[:top_k]\n 279 | \n 280 |     def _search_long_term_memory(\n 281 |         self,\n 282 |         query: str,\n 283 |         top_k: int\n 284 |     ) -> List[Tuple[SessionSummary, float, str]]:\n 285 |         \"\"\"\n 286 |         从长期记忆中检索摘要\n 287 | \n 288 |         Args:\n 289 |             query: 查询关键词\n 290 |             top_k: 返回结果数量\n 291 | \n 292 |         Returns:\n 293 |             元组列表：(摘要, 相关性分数, \"long_term\")\n 294 |         \"\"\"\n 295 |         results = []\n 296 | \n 297 |         # 使用长期记忆的搜索功能\n 298 |         summaries = self.long_term_memory.search(query, top_k * 2)\n 299 | \n 300 |         for summary in summaries:\n 301 |             # 计算 BM25 分数\n 302 |             score = self._calculate_bm25_score(query, summary)\n 303 |             results.append((summary, score, \"long_term\"))\n 304 | \n 305 |         # 按分数排序\n 306 |         results.sort(key=lambda x: x[1], reverse=True)\n 307 | \n 308 |         return results[:top_k]\n 309 | \n 310 |     def _calculate_bm25_score(\n 311 |         self,\n 312 |         query: str,\n 313 |         summary: SessionSummary,\n 314 |         k1: float = 1.5,\n 315 |         b: float = 0.75\n 316 |     ) -> float:\n 317 |         \"\"\"\n 318 |         计算 BM25 相关性分数\n 319 | \n 320 |         Args:\n 321 |             query: 查询字符串\n 322 |             summary: 会话摘要\n 323 |             k1: BM25 参数\n 324 |             b: BM25 参数\n 325 | \n 326 |         Returns:\n 327 |             BM25 分数\n 328 |         \"\"\"\n 329 |         import math\n 330 | \n 331 |         # 分词\n 332 |         query_terms = self._tokenize(query)\n 333 | \n 334 |         # 文档内容\n 335 |         doc_text = f\"{summary.summary_text} {summary.task_goal}\"\n 336 |         doc_terms = self._tokenize(doc_text)\n 337 | \n 338 |         # 文档长度\n 339 |         doc_len = len(doc_terms)\n 340 | \n 341 |         # 平均文档长度（简化处理）\n 342 |         avg_doc_len = 100  # 假设平均长度为 100\n 343 | \n 344 |         # 计算词频\n 345 |         term_freq = {}\n 346 |         for term in doc_terms:\n 347 |             term_freq[term] = term_freq.get(term, 0) + 1\n 348 | \n 349 |         # 计算 BM25 分数\n 350 |         score = 0.0\n 351 |         for term in query_terms:\n 352 |             if term in term_freq:\n 353 |                 tf = term_freq[term]\n 354 | \n 355 |                 # BM25 公式\n 356 |                 numerator = tf * (k1 + 1)\n 357 |                 denominator = tf + k1 * (1 - b + b * (doc_len / avg_doc_len))\n 358 | \n 359 |                 score += numerator / denominator\n 360 | \n 361 |         return score\n 362 | \n 363 |     def _tokenize(self, text: str) -> List[str]:\n 364 |         \"\"\"\n 365 |         简单分词（支持中英文）\n 366 | \n 367 |         Args:\n 368 |             text: 输入文本\n 369 | \n 370 |         Returns:\n 371 |             词项列表\n 372 |         \"\"\"\n 373 |         import re\n 374 | \n 375 |         # 英文单词\n 376 |         words = re.findall(r'\\b[a-zA-Z]{2,}\\b', text.lower())\n 377 | \n 378 |         # 中文分词（简单实现：提取 2-3 字的片段）\n 379 |         # 注意：这是简化版本，实际应用中应使用 jieba 等分词工具\n 380 |         chinese_2char = re.findall(r'[\\u4e00-\\u9fa5]{2}', text)\n 381 |         chinese_3char = re.findall(r'[\\u4e00-\\u9fa5]{3}', text)\n 382 | \n 383 |         # 合并并去重\n 384 |         chinese = list(set(chinese_2char + chinese_3char))\n 385 | \n 386 |         return words + chinese\n 387 | \n 388 |     def hybrid_recall(\n 389 |         self,\n 390 |         query: str = \"\",\n 391 |         top_k: int = 5,\n 392 |  ...",
+      "files": [
+        "core/memory_retrieval.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

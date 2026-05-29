@@ -1,0 +1,56 @@
+{
+  "id": "mem_b35a9e516b8f4d4b836efc4198942854",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: search_code",
+  "content": "未找到匹配项。已搜索 0 个文件。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T18:57:21.847070",
+  "updated_at": "2026-05-28T18:57:21.847070",
+  "concepts": [
+    "post_tool_use",
+    "search_code"
+  ],
+  "files": [
+    "core/engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_e541df7e3e8645f9b12c02dc3eb9f139"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_e541df7e3e8645f9b12c02dc3eb9f139",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T18:57:21.847070",
+      "event_type": "post_tool_use",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": true,
+        "context": 2,
+        "file_pattern": "*.py",
+        "path": "core/engine.py",
+        "pattern": "KeywordIndexer|BM25Retriever|keyword_indexer|bm25_retriever|retrieval_enabled|index_content|index_session_summaries|get_retrieval_stats|_summary_to_text"
+      },
+      "tool_output": "未找到匹配项。已搜索 0 个文件。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

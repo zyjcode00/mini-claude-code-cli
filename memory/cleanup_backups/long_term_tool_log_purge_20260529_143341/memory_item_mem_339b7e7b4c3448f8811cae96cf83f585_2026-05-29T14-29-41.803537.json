@@ -1,0 +1,53 @@
+{
+  "id": "mem_339b7e7b4c3448f8811cae96cf83f585",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: write_full_file",
+  "content": "成功: 已写入 _analyze_long_term_memory.py",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:29:41.803537",
+  "updated_at": "2026-05-29T14:29:41.803537",
+  "concepts": [
+    "post_tool_use",
+    "write_full_file"
+  ],
+  "files": [
+    "_analyze_long_term_memory.py"
+  ],
+  "source_observation_ids": [
+    "obs_f9a5cfdac01c4808b362aad3dcfb0ace"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f9a5cfdac01c4808b362aad3dcfb0ace",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:29:41.803537",
+      "event_type": "post_tool_use",
+      "tool_name": "write_full_file",
+      "tool_input": {
+        "content": "import json\nfrom pathlib import Path\nfrom collections import Counter, defaultdict\n\nbase = Path('memory/long_term')\nfiles = list(base.iterdir()) if base.exists() else []\nprint('BASE', base.resolve())\nprint('total files', len(files))\n\ncat = Counter()\nfor p in files:\n    n = p.name\n    if n == 'index.json':\n        cat['index.json'] += 1\n    elif n == 'index.pending.json':\n        cat['index.pending.json'] += 1\n    elif n.startswith('index.') and n.endswith('.tmp'):\n        cat['index.*.tmp'] += 1\n    elif '.corrupt_' in n and n.endswith('.bak'):\n        cat['corrupt bak'] += 1\n    elif n.startswith('memory_item_') and p.suffix == '.json':\n        cat['memory_item json'] += 1\n    elif n.startswith('summary_') and p.suffix == '.json':\n        cat['summary json'] += 1\n    else:\n        cat['other'] += 1\nprint('categories', dict(cat))\n\nprint('non canonical files:')\nfor p in files:\n    canonical = p.name == 'index.json' or (p.name.startswith('memory_item_') and p.suffix == '.json') or (p.name.startswith('summary_') and p.suffix == '.json')\n    if not canonical:\n        print(' ', p.name, p.stat().st_size)\n\nitems = []\nsummaries = []\nbad = []\nfor p in base.glob('memory_item_*.json'):\n    try:\n        items.append((p, json.loads(p.read_text(encoding='utf-8'))))\n    except Exception as e:\n        bad.append((p, str(e)))\nfor p in base.glob('summary_*.json'):\n    try:\n        summaries.append((p, json.loads(p.read_text(encoding='utf-8'))))\n    except Exception as e:\n        bad.append((p, str(e)))\nprint('parse bad', len(bad))\nfor p, e in bad[:20]:\n    print('BAD', p.name, e)\nprint('items', len(items), 'summaries', len(summaries))\nprint('kind', dict(Counter(str(d.get('kind') or d.get('type') or '') for _, d in items)))\nprint('status', dict(Counter(str(d.get('status') or '') for _, d in items)))\n\nmissing = []\nfor p, d in items:\n    req = ['id', 'title', 'content', 'created_at', 'updated_at', 'importance', 'confidence', 'status']\n    miss = [k for k in req if k not in d or d.get(k) in (None, '')]\n    if miss:\n        missing.append((p.name, miss, str(d.get('title', ''))[:60]))\nprint('missing required-ish', len(missing))\nfor row in missing[:50]:\n    print('MISSING', row)\n\nids = defaultdict(list)\nfp = defaultdict(list)\nfor p, d in items:\n    ids[d.get('id')].append(p.name)\n    key = (str(d.get('kind') or d.get('type') or ''), str(d.get('title', '')).strip(), str(d.get('content', '')).strip())\n    fp[key].append((p.name, d.get('updated_at', ''), d.get('status', ''), d.get('importance')))\nprint('duplicate ids', sum(1 for v in ids.values() if len(v) > 1))\nfor k, v in ids.items():\n    if len(v) > 1:\n        print('DUPID', k, v)\nprint('duplicate exact content groups', sum(1 for v in fp.values() if len(v) > 1))\nshown=0\nfor k, v in fp.items():\n    if len(v) > 1:\n        print('DUPCONTENT', k[0], k[1][:100], 'count', len(v))\n        for x in v[:8]:\n            print(' ', x)\n        shown += 1\n        if shown >= 30:\n            break\n\nlow = []\nfor p, d in items:\n    title = str(d.get('title', '')).strip()\n    content = str(d.get('content', '')).strip()\n    if (len(title) < 5 or len(content) < 20 or title.startswith('工具执行') or '工具执行成功' in title or '工具执行失败' in title or content.startswith('STDOUT:') or content.startswith('[SEARCH]') or content.startswith('--- 文件:')):\n        low.append((p.name, d.get('kind') or d.get('type'), title[:100], len(content), d.get('importance'), d.get('status')))\nprint('low-quality heuristic', len(low))\nfor row in low[:150]:\n    print('LOW', row)\n\nidx = base / 'index.json'\nif idx.exists():\n    data = json.loads(idx.read_text(encoding='utf-8'))\n    print('index top counts', {k: len(v) if hasattr(v, '__len__') else None for k, v in data.items()})\n    missing_paths = []\n    for id_, path in data.get('item_index', {}).items():\n        if not Path(path).exists():\n            missing_paths.append((id_, path))\n    print('index missing item paths', len(missing_paths))\n",
+        "path": "_analyze_long_term_memory.py"
+      },
+      "tool_output": "成功: 已写入 _analyze_long_term_memory.py",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "_analyze_long_term_memory.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

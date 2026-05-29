@@ -1,0 +1,55 @@
+{
+  "id": "mem_136da8244ad0452ea35720b5615c6030",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/compression_engine.py (第 1040 至 1220 行，共 1441 行) ---\n1040 |             state.tool_safety_notes.append(\"压缩前检测到不完整或孤立 tool pair，结构化状态仅基于 provider-safe turn 聚合\")\n1041 |         state.tool_safety_notes.append(\"压缩结果不得包含半截 assistant tool call 与 tool 响应\")\n1042 | \n1043 |         if dropped_turns:\n1044 |             dropped_categories = sorted({category for turn in dropped_turns for category in turn.categories})\n1045 |             state.dropped_content_summary = f\"丢弃 {len(dropped_turns)} 个较低优先级 turn\"\n1046 |             if dropped_categories:\n1047 |                 state.dropped_content_summary += f\"，类别: {', '.join(dropped_categories[:8])}\"\n1048 | \n1049 |         if llm_summary_text:\n1050 |             state.key_decisions.extend(self._extract_llm_decision_lines(llm_summary_text))\n1051 | \n1052 |         state.completed_steps = self._dedupe_keep_order(state.completed_steps)[:12]\n1053 |         state.pending_steps = self._dedupe_keep_order(state.pending_steps)[:12]\n1054 |         state.key_decisions = self._dedupe_keep_order(state.key_decisions)[:12]\n1055 |         state.user_preferences = self._dedupe_keep_order(state.user_preferences)[:8]\n1056 |         state.commands_run = self._dedupe_dicts(state.commands_run, \"command\")[:12]\n1057 |         state.tests_run = self._dedupe_dicts(state.tests_run, \"command\")[:12]\n1058 |         state.errors_encountered = self._dedupe_dicts(state.errors_encountered, \"message\")[:10]\n1059 |         return state\n1060 | \n1061 |     def _extract_task_goal(self, turns: List[ConversationTurn]) -> str:\n1062 |         for turn in turns:\n1063 |             if turn.user_message and isinstance(turn.user_message.get(\"content\"), str):\n1064 |                 content = turn.user_message.get(\"content\", \"\").strip()\n1065 |                 if content:\n1066 |                     return content[:200]\n1067 |         return \"\"\n1068 | \n1069 |     def _infer_current_status(self, turns: List[ConversationTurn]) -> str:\n1070 |         text = \"\\n\".join(self._turn_text(turn) for turn in turns[-6:]).lower()\n1071 |         if any(keyword in text for keyword in [\"traceback\", \"failed\", \"失败\", \"错误\", \"❌\"]):\n1072 |             if not any(keyword in text for keyword in [\"passed\", \"测试通过\", \"修复\", \"✅\"]):\n1073 |                 return \"failed\"\n1074 |         if any(keyword in text for keyword in [\"全部完成\", \"任务完成\", \"已完成\", \"done\", \"completed\"]):\n1075 |             return \"completed\"\n1076 |         return \"in_progress\"\n1077 | \n1078 |     def _turn_text(self, turn: ConversationTurn) -> str:\n1079 |         return \"\\n\".join(str(msg.get(\"content\", \"\")) for msg in turn.messages if isinstance(msg, dict))\n1080 | \n1081 |     def _collect_steps(self, text: str, completed: List[str], pending: List[str]) -> None:\n1082 |         for line in text.splitlines():\n1083 |             clean = line.strip(\" -\\t\")[:220]\n1084 |             if not clean:\n1085 |                 continue\n1086 |             lowered = clean.lower()\n1087 |             if any(marker in clean for marker in [\"✅\", \"已完成\", \"完成:\", \"完成：\"]) or lowered.startswith((\"done\", \"completed\")):\n1088 |                 completed.append(clean)\n1089 |             if any(marker in clean for marker in [\"⏳\", \"未完成\", \"待办\", \"下一步\", \"todo\"]):\n1090 |                 pending.append(clean)\n1091 | \n1092 |     def _collect_decisions(self, text: str, decisions: List[str]) -> None:\n1093 |         keywords = [\"决定\", \"决策\", \"选择\", \"采用\", \"建议\", \"注意\", \"必须\", \"保持\", \"不要\"]\n1094 |         for line in text.splitlines():\n1095 |             clean = line.strip(\" -\\t\")\n1096 |             if 8 <= len(clean) <= 260 and any(keyword in clean for keyword in keywords):\n1097 |                 decisions.append(clean[:260])\n1098 | \n1099 |     def _collect_preferences(self, text: str, preferences: List[str]) -> None:\n1100 |         for line in text.splitlines():\n1101 |             clean = line.strip(\" -\\t\")\n1102 |             if any(keyword in clean for keyword in [\"用户偏好\", \"prefer\", \"preference\", \"希望\", \"要求\"]):\n1103 |                 preferences.append...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:05:14.559968",
+  "updated_at": "2026-05-29T13:05:14.559968",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_51da3c2247684b1687a2b261ecd7419a"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_51da3c2247684b1687a2b261ecd7419a",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:05:14.559968",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 1220,
+        "path": "core/compression_engine.py",
+        "raw_mode": false,
+        "start_line": 1040
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/compression_engine.py (第 1040 至 1220 行，共 1441 行) ---\n1040 |             state.tool_safety_notes.append(\"压缩前检测到不完整或孤立 tool pair，结构化状态仅基于 provider-safe turn 聚合\")\n1041 |         state.tool_safety_notes.append(\"压缩结果不得包含半截 assistant tool call 与 tool 响应\")\n1042 | \n1043 |         if dropped_turns:\n1044 |             dropped_categories = sorted({category for turn in dropped_turns for category in turn.categories})\n1045 |             state.dropped_content_summary = f\"丢弃 {len(dropped_turns)} 个较低优先级 turn\"\n1046 |             if dropped_categories:\n1047 |                 state.dropped_content_summary += f\"，类别: {', '.join(dropped_categories[:8])}\"\n1048 | \n1049 |         if llm_summary_text:\n1050 |             state.key_decisions.extend(self._extract_llm_decision_lines(llm_summary_text))\n1051 | \n1052 |         state.completed_steps = self._dedupe_keep_order(state.completed_steps)[:12]\n1053 |         state.pending_steps = self._dedupe_keep_order(state.pending_steps)[:12]\n1054 |         state.key_decisions = self._dedupe_keep_order(state.key_decisions)[:12]\n1055 |         state.user_preferences = self._dedupe_keep_order(state.user_preferences)[:8]\n1056 |         state.commands_run = self._dedupe_dicts(state.commands_run, \"command\")[:12]\n1057 |         state.tests_run = self._dedupe_dicts(state.tests_run, \"command\")[:12]\n1058 |         state.errors_encountered = self._dedupe_dicts(state.errors_encountered, \"message\")[:10]\n1059 |         return state\n1060 | \n1061 |     def _extract_task_goal(self, turns: List[ConversationTurn]) -> str:\n1062 |         for turn in turns:\n1063 |             if turn.user_message and isinstance(turn.user_message.get(\"content\"), str):\n1064 |                 content = turn.user_message.get(\"content\", \"\").strip()\n1065 |                 if content:\n1066 |                     return content[:200]\n1067 |         return \"\"\n1068 | \n1069 |     def _infer_current_status(self, turns: List[ConversationTurn]) -> str:\n1070 |         text = \"\\n\".join(self._turn_text(turn) for turn in turns[-6:]).lower()\n1071 |         if any(keyword in text for keyword in [\"traceback\", \"failed\", \"失败\", \"错误\", \"❌\"]):\n1072 |             if not any(keyword in text for keyword in [\"passed\", \"测试通过\", \"修复\", \"✅\"]):\n1073 |                 return \"failed\"\n1074 |         if any(keyword in text for keyword in [\"全部完成\", \"任务完成\", \"已完成\", \"done\", \"completed\"]):\n1075 |             return \"completed\"\n1076 |         return \"in_progress\"\n1077 | \n1078 |     def _turn_text(self, turn: ConversationTurn) -> str:\n1079 |         return \"\\n\".join(str(msg.get(\"content\", \"\")) for msg in turn.messages if isinstance(msg, dict))\n1080 | \n1081 |     def _collect_steps(self, text: str, completed: List[str], pending: List[str]) -> None:\n1082 |         for line in text.splitlines():\n1083 |             clean = line.strip(\" -\\t\")[:220]\n1084 |             if not clean:\n1085 |                 continue\n1086 |             lowered = clean.lower()\n1087 |             if any(marker in clean for marker in [\"✅\", \"已完成\", \"完成:\", \"完成：\"]) or lowered.startswith((\"done\", \"completed\")):\n1088 |                 completed.append(clean)\n1089 |             if any(marker in clean for marker in [\"⏳\", \"未完成\", \"待办\", \"下一步\", \"todo\"]):\n1090 |                 pending.append(clean)\n1091 | \n1092 |     def _collect_decisions(self, text: str, decisions: List[str]) -> None:\n1093 |         keywords = [\"决定\", \"决策\", \"选择\", \"采用\", \"建议\", \"注意\", \"必须\", \"保持\", \"不要\"]\n1094 |         for line in text.splitlines():\n1095 |             clean = line.strip(\" -\\t\")\n1096 |             if 8 <= len(clean) <= 260 and any(keyword in clean for keyword in keywords):\n1097 |                 decisions.append(clean[:260])\n1098 | \n1099 |     def _collect_preferences(self, text: str, preferences: List[str]) -> None:\n1100 |         for line in text.splitlines():\n1101 |             clean = line.strip(\" -\\t\")\n1102 |             if any(keyword in clean for keyword in [\"用户偏好\", \"prefer\", \"preference\", \"希望\", \"要求\"]):\n1103 |                 preferences.append...",
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

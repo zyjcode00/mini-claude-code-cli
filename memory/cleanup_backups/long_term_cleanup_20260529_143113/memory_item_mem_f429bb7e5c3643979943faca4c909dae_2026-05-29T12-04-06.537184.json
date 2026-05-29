@@ -1,0 +1,57 @@
+{
+  "id": "mem_f429bb7e5c3643979943faca4c909dae",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/compression_engine.py (第 260 至 620 行，共 925 行) ---\n 260 |                 )\n 261 | \n 262 |             # 解析结构化摘要\n 263 |             summary = self._parse_structured_summary(\n 264 |                 summary_text, to_summarize, 0.5\n 265 |             )\n 266 | \n 267 |             # 🔥 Phase 2: 缓存结果\n 268 |             if len(self.summary_cache) >= self.cache_max_size:\n 269 |                 # 如果缓存满了，删除最早的条目\n 270 |                 first_key = next(iter(self.summary_cache))\n 271 |                 del self.summary_cache[first_key]\n 272 |                 print(f\"   🗑️  缓存已满，删除最早条目\")\n 273 | \n 274 |             self.summary_cache[messages_hash] = summary\n 275 |             print(f\"   💾 摘要已缓存，当前缓存大小: {len(self.summary_cache)}/{self.cache_max_size}\")\n 276 | \n 277 |             return CompressionResult(\n 278 |                 success=True,\n 279 |                 strategy=CompressionStrategy.LLM_SUMMARY,\n 280 |                 compressed_messages=keep_messages,\n 281 |                 summary=summary,\n 282 |                 compression_ratio=len(keep_messages) / len(messages) if messages else 0,\n 283 |                 original_count=len(messages),\n 284 |                 compressed_count=len(keep_messages),\n 285 |                 metadata={\"summary_text\": summary_text, \"from_cache\": False}\n 286 |             )\n 287 | \n 288 |         except Exception as e:\n 289 |             print(f\"   [错误] LLM 摘要失败: {str(e)}\")\n 290 |             return CompressionResult(\n 291 |                 success=False,\n 292 |                 strategy=CompressionStrategy.LLM_SUMMARY,\n 293 |                 compressed_messages=keep_messages,\n 294 |                 original_count=len(messages),\n 295 |                 compressed_count=len(keep_messages),\n 296 |                 metadata={\"error\": str(e)}\n 297 |             )\n 298 | \n 299 |     # ========== 策略 2: 关键帧提取 ==========\n 300 | \n 301 |     def _compress_with_keyframe(\n 302 |         self,\n 303 |         messages: List[Dict[str, Any]],\n 304 |         target_ratio: float,\n 305 |         min_keep: int\n 306 |     ) -> CompressionResult:\n 307 |         \"\"\"\n 308 |         提取关键帧（工具调用、错误消息、用户消息）\n 309 | \n 310 |         策略：\n 311 |         1. 提取所有用户消息\n 312 |         2. 提取所有错误消息\n 313 |         3. 提取工具调用及其结果\n 314 |         4. 如果还有空间，按重要性补充\n 315 | \n 316 |         Args:\n 317 |             messages: 消息列表\n 318 |             target_ratio: 目标压缩比\n 319 |             min_keep: 最少保留的消息数量\n 320 | \n 321 |         Returns:\n 322 |             CompressionResult\n 323 |         \"\"\"\n 324 |         target_count = max(min_keep, int(len(messages) * target_ratio))\n 325 |         keyframes = []\n 326 |         keyframe_indices = set()\n 327 | \n 328 |         # 1. 提取用户消息（不超过目标数量的 40%）\n 329 |         user_target = int(target_count * 0.4)\n 330 |         user_count = 0\n 331 |         for i, msg in enumerate(messages):\n 332 |             if msg.get(\"role\") == \"user\" and user_count < user_target:\n 333 |                 keyframes.append(msg)\n 334 |                 keyframe_indices.add(i)\n 335 |                 user_count += 1\n 336 | \n 337 |         # 2. 提取错误消息（不超过目标数量的 20%）\n 338 |         error_target = int(target_count * 0.2)\n 339 |         error_count = 0\n 340 |         for i, msg in enumerate(messages):\n 341 |             if i in keyframe_indices:\n 342 |                 continue\n 343 |             content = str(msg.get(\"content\", \"\"))\n 344 |             if any(keyword in content for keyword in [\"Error\", \"错误\", \"Exception\", \"失败\", \"Traceback\"]) and error_count < error_target:\n 345 |                 keyframes.append(msg)\n 346 |                 keyframe_indices.add(i)\n 347 |                 error_count += 1\n 348 | \n 349 |         # 3. 提取工具调用（不超过目标数量的 30%）\n 350 |         tool_target = int(target_count * 0.3)\n 351 |         tool_count = 0\n 352 |         for i, msg in enumerate(messages):\n 353 |             if i in keyframe_indices or tool_count >= tool_target:\n 354 |                 continue\n 355 |             if msg.get(\"role\") == \"assistant\" and msg.get(...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:04:06.537184",
+  "updated_at": "2026-05-29T12:04:06.537184",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py",
+    "hashlib.md"
+  ],
+  "source_observation_ids": [
+    "obs_ba861da7c7364fca8b63a2d305132877"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_ba861da7c7364fca8b63a2d305132877",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:04:06.537184",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 620,
+        "path": "core/compression_engine.py",
+        "raw_mode": false,
+        "start_line": 260
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/compression_engine.py (第 260 至 620 行，共 925 行) ---\n 260 |                 )\n 261 | \n 262 |             # 解析结构化摘要\n 263 |             summary = self._parse_structured_summary(\n 264 |                 summary_text, to_summarize, 0.5\n 265 |             )\n 266 | \n 267 |             # 🔥 Phase 2: 缓存结果\n 268 |             if len(self.summary_cache) >= self.cache_max_size:\n 269 |                 # 如果缓存满了，删除最早的条目\n 270 |                 first_key = next(iter(self.summary_cache))\n 271 |                 del self.summary_cache[first_key]\n 272 |                 print(f\"   🗑️  缓存已满，删除最早条目\")\n 273 | \n 274 |             self.summary_cache[messages_hash] = summary\n 275 |             print(f\"   💾 摘要已缓存，当前缓存大小: {len(self.summary_cache)}/{self.cache_max_size}\")\n 276 | \n 277 |             return CompressionResult(\n 278 |                 success=True,\n 279 |                 strategy=CompressionStrategy.LLM_SUMMARY,\n 280 |                 compressed_messages=keep_messages,\n 281 |                 summary=summary,\n 282 |                 compression_ratio=len(keep_messages) / len(messages) if messages else 0,\n 283 |                 original_count=len(messages),\n 284 |                 compressed_count=len(keep_messages),\n 285 |                 metadata={\"summary_text\": summary_text, \"from_cache\": False}\n 286 |             )\n 287 | \n 288 |         except Exception as e:\n 289 |             print(f\"   [错误] LLM 摘要失败: {str(e)}\")\n 290 |             return CompressionResult(\n 291 |                 success=False,\n 292 |                 strategy=CompressionStrategy.LLM_SUMMARY,\n 293 |                 compressed_messages=keep_messages,\n 294 |                 original_count=len(messages),\n 295 |                 compressed_count=len(keep_messages),\n 296 |                 metadata={\"error\": str(e)}\n 297 |             )\n 298 | \n 299 |     # ========== 策略 2: 关键帧提取 ==========\n 300 | \n 301 |     def _compress_with_keyframe(\n 302 |         self,\n 303 |         messages: List[Dict[str, Any]],\n 304 |         target_ratio: float,\n 305 |         min_keep: int\n 306 |     ) -> CompressionResult:\n 307 |         \"\"\"\n 308 |         提取关键帧（工具调用、错误消息、用户消息）\n 309 | \n 310 |         策略：\n 311 |         1. 提取所有用户消息\n 312 |         2. 提取所有错误消息\n 313 |         3. 提取工具调用及其结果\n 314 |         4. 如果还有空间，按重要性补充\n 315 | \n 316 |         Args:\n 317 |             messages: 消息列表\n 318 |             target_ratio: 目标压缩比\n 319 |             min_keep: 最少保留的消息数量\n 320 | \n 321 |         Returns:\n 322 |             CompressionResult\n 323 |         \"\"\"\n 324 |         target_count = max(min_keep, int(len(messages) * target_ratio))\n 325 |         keyframes = []\n 326 |         keyframe_indices = set()\n 327 | \n 328 |         # 1. 提取用户消息（不超过目标数量的 40%）\n 329 |         user_target = int(target_count * 0.4)\n 330 |         user_count = 0\n 331 |         for i, msg in enumerate(messages):\n 332 |             if msg.get(\"role\") == \"user\" and user_count < user_target:\n 333 |                 keyframes.append(msg)\n 334 |                 keyframe_indices.add(i)\n 335 |                 user_count += 1\n 336 | \n 337 |         # 2. 提取错误消息（不超过目标数量的 20%）\n 338 |         error_target = int(target_count * 0.2)\n 339 |         error_count = 0\n 340 |         for i, msg in enumerate(messages):\n 341 |             if i in keyframe_indices:\n 342 |                 continue\n 343 |             content = str(msg.get(\"content\", \"\"))\n 344 |             if any(keyword in content for keyword in [\"Error\", \"错误\", \"Exception\", \"失败\", \"Traceback\"]) and error_count < error_target:\n 345 |                 keyframes.append(msg)\n 346 |                 keyframe_indices.add(i)\n 347 |                 error_count += 1\n 348 | \n 349 |         # 3. 提取工具调用（不超过目标数量的 30%）\n 350 |         tool_target = int(target_count * 0.3)\n 351 |         tool_count = 0\n 352 |         for i, msg in enumerate(messages):\n 353 |             if i in keyframe_indices or tool_count >= tool_target:\n 354 |                 continue\n 355 |             if msg.get(\"role\") == \"assistant\" and msg.get(...",
+      "files": [
+        "core/compression_engine.py",
+        "hashlib.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

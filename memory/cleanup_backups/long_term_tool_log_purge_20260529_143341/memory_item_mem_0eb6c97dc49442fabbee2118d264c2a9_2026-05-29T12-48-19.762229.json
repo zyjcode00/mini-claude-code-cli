@@ -1,0 +1,57 @@
+{
+  "id": "mem_0eb6c97dc49442fabbee2118d264c2a9",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "        self.load_session()\n\n\n\n    async def _call_llm(self, relevant_history: str = \"\", user_input: str = \"\"):\n        \"\"\"核心推理：改为异步调用\"\"\"\n        current_plan = self.plan_manager.get_formatted_plan()\n\n        # Phase 2/3: 获取三层记忆数据\n        episodic_memories = self.context.episodic_memory.get_all() if self.context._enable_memory_layers else []\n        session_summaries = self.context.session_summaries\n\n        # 🔥🔥🔥 跨会话长期记忆检索：从磁盘检索所有会话的长期记忆\n        long_term_memories = []\n        if self.context._enable_memory_layers and user_input:\n            try:\n                # 从长期记忆中检索与当前任务相关的摘要（跨所有会话）\n                long_term_memories = self.context.memory_manager.search_long_term(\n                    query=user_input,\n                    top_k=5  # 检索最相关的 5 条长期记忆\n                )\n                if long_term_memories:\n                    print(f\" [🧠] 检索到 {len(long_term_memories)} 条跨会话长期记忆\")\n            except Exception as e:\n                print(f\" [⚠️] 长期记忆检索失败: {e}\")\n\n        # 🔥 新增：获取已完成任务列表\n        completed_goals = self.plan_manager.get_completed_goals()\n\n        system_ptr = get_system_prompt(\n            summary=self.context.history_summary,\n            plan=current_plan,\n            episodic_memories=episodic_memories,\n            session_summaries=session_summaries,\n            long_term_memories=long_term_memories,  # 🔥🔥🔥 新增参数：跨会话长期记忆\n            completed_goals=completed_goals,  # 🔥 新增参数\n            user_input=user_input  # 🔥 新增：用于 CLAUDE.md 按需注入\n        )\n\n        # ========== 检索增强：注入相关历史 ==========\n        if relevant_history:\n            system_ptr += relevant_history\n        # ===========================================\n\n        # 🔥🔥🔥 Phase 4: 获取消息快照（并发安全）\n        messages_snapshot = await self.context.get_messages_snapshot()\n        if self.is_openai_compat:\n            messages_snapshot = CompressionEngine()._sanitize_openai_tool_pairs(messages_snapshot)\n\n        if self.is_openai_compat:\n            oa_tools = [{\"type\": \"function\", \"function\": {\"name\": t[\"name\"], \"description\": t[\"description\"], \"parameters\": t[\"input_schema\"]}} for t in self.tool_specs]\n\n            # 使用 await 调用异步客户端\n            resp = await self.client.chat.completions.create(\n                model=self.model,\n                messages=[{\"role\": \"system\", \"content\": system_ptr}] + messages_snapshot,\n                tools=oa_tools if oa_tools else None\n            )\n\n            msg = resp.choices[0].message\n            # 🔥 修复：转换为字典格式，避免后续 .get() 报错\n            # 🔥🔥🔥 DeepSeek 修复：保存 reasoning_content（思考模式必须回传）\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:48:19.762229",
+  "updated_at": "2026-05-29T12:48:19.762229",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/engine.py",
+    "CLAUDE.md"
+  ],
+  "source_observation_ids": [
+    "obs_b5b46121f31742b8afa0659ef8291151"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_b5b46121f31742b8afa0659ef8291151",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:48:19.762229",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 118,
+        "path": "core/engine.py",
+        "raw_mode": true,
+        "start_line": 57
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "        self.load_session()\n\n\n\n    async def _call_llm(self, relevant_history: str = \"\", user_input: str = \"\"):\n        \"\"\"核心推理：改为异步调用\"\"\"\n        current_plan = self.plan_manager.get_formatted_plan()\n\n        # Phase 2/3: 获取三层记忆数据\n        episodic_memories = self.context.episodic_memory.get_all() if self.context._enable_memory_layers else []\n        session_summaries = self.context.session_summaries\n\n        # 🔥🔥🔥 跨会话长期记忆检索：从磁盘检索所有会话的长期记忆\n        long_term_memories = []\n        if self.context._enable_memory_layers and user_input:\n            try:\n                # 从长期记忆中检索与当前任务相关的摘要（跨所有会话）\n                long_term_memories = self.context.memory_manager.search_long_term(\n                    query=user_input,\n                    top_k=5  # 检索最相关的 5 条长期记忆\n                )\n                if long_term_memories:\n                    print(f\" [🧠] 检索到 {len(long_term_memories)} 条跨会话长期记忆\")\n            except Exception as e:\n                print(f\" [⚠️] 长期记忆检索失败: {e}\")\n\n        # 🔥 新增：获取已完成任务列表\n        completed_goals = self.plan_manager.get_completed_goals()\n\n        system_ptr = get_system_prompt(\n            summary=self.context.history_summary,\n            plan=current_plan,\n            episodic_memories=episodic_memories,\n            session_summaries=session_summaries,\n            long_term_memories=long_term_memories,  # 🔥🔥🔥 新增参数：跨会话长期记忆\n            completed_goals=completed_goals,  # 🔥 新增参数\n            user_input=user_input  # 🔥 新增：用于 CLAUDE.md 按需注入\n        )\n\n        # ========== 检索增强：注入相关历史 ==========\n        if relevant_history:\n            system_ptr += relevant_history\n        # ===========================================\n\n        # 🔥🔥🔥 Phase 4: 获取消息快照（并发安全）\n        messages_snapshot = await self.context.get_messages_snapshot()\n        if self.is_openai_compat:\n            messages_snapshot = CompressionEngine()._sanitize_openai_tool_pairs(messages_snapshot)\n\n        if self.is_openai_compat:\n            oa_tools = [{\"type\": \"function\", \"function\": {\"name\": t[\"name\"], \"description\": t[\"description\"], \"parameters\": t[\"input_schema\"]}} for t in self.tool_specs]\n\n            # 使用 await 调用异步客户端\n            resp = await self.client.chat.completions.create(\n                model=self.model,\n                messages=[{\"role\": \"system\", \"content\": system_ptr}] + messages_snapshot,\n                tools=oa_tools if oa_tools else None\n            )\n\n            msg = resp.choices[0].message\n            # 🔥 修复：转换为字典格式，避免后续 .get() 报错\n            # 🔥🔥🔥 DeepSeek 修复：保存 reasoning_content（思考模式必须回传）\n",
+      "files": [
+        "core/engine.py",
+        "CLAUDE.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

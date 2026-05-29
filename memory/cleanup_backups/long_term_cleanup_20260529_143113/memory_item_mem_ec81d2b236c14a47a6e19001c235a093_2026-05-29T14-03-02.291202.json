@@ -1,0 +1,55 @@
+{
+  "id": "mem_ec81d2b236c14a47a6e19001c235a093",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "--- 文件: D:\\LLM\\memory\\agentmemory\\src\\state\\hybrid-search.ts (第 242 至 324 行，共 324 行) ---\n 242 |   private diversifyBySession(\n 243 |     results: Array<{\n 244 |       obsId: string;\n 245 |       sessionId: string;\n 246 |       bm25Score: number;\n 247 |       vectorScore: number;\n 248 |       graphScore: number;\n 249 |       combinedScore: number;\n 250 |       graphContext?: string;\n 251 |     }>,\n 252 |     limit: number,\n 253 |     maxPerSession = 3,\n 254 |   ): typeof results {\n 255 |     const selected: typeof results = [];\n 256 |     const sessionCounts = new Map<string, number>();\n 257 | \n 258 |     for (const r of results) {\n 259 |       const count = sessionCounts.get(r.sessionId) || 0;\n 260 |       if (count >= maxPerSession) continue;\n 261 |       selected.push(r);\n 262 |       sessionCounts.set(r.sessionId, count + 1);\n 263 |       if (selected.length >= limit) break;\n 264 |     }\n 265 | \n 266 |     if (selected.length < limit) {\n 267 |       for (const r of results) {\n 268 |         if (selected.length >= limit) break;\n 269 |         if (!selected.some(s => s.obsId === r.obsId)) {\n 270 |           selected.push(r);\n 271 |         }\n 272 |       }\n 273 |     }\n 274 | \n 275 |     return selected;\n 276 |   }\n 277 | \n 278 |   private async enrichResults(\n 279 |     results: Array<{\n 280 |       obsId: string;\n 281 |       sessionId: string;\n 282 |       bm25Score: number;\n 283 |       vectorScore: number;\n 284 |       graphScore: number;\n 285 |       combinedScore: number;\n 286 |       graphContext?: string;\n 287 |     }>,\n 288 |     limit: number,\n 289 |   ): Promise<HybridSearchResult[]> {\n 290 |     const sliced = results.slice(0, limit);\n 291 |     const observations = await Promise.all(\n 292 |       sliced.map(async (r) => {\n 293 |         const obs = await this.kv\n 294 |           .get<CompressedObservation>(KV.observations(r.sessionId), r.obsId)\n 295 |           .catch(() => null);\n 296 |         if (obs) return obs;\n 297 |         // Fallback: indexed entry may originate from mem::remember, which\n 298 |         // writes to KV.memories with a synthetic sessionId (\"memory\" or the\n 299 |         // memory's first associated session). Coerce the Memory record into\n 300 |         // a CompressedObservation so search/recall surface saved memories.\n 301 |         const mem = await this.kv\n 302 |           .get<Memory>(KV.memories, r.obsId)\n 303 |           .catch(() => null);\n 304 |         return mem ? memoryToObservation(mem) : null;\n 305 |       }),\n 306 |     );\n 307 |     const enriched: HybridSearchResult[] = [];\n 308 |     for (let i = 0; i < sliced.length; i++) {\n 309 |       const obs = observations[i];\n 310 |       if (obs) {\n 311 |         enriched.push({\n 312 |           observation: obs,\n 313 |           bm25Score: sliced[i].bm25Score,\n 314 |           vectorScore: sliced[i].vectorScore,\n 315 |           graphScore: sliced[i].graphScore,\n 316 |           combinedScore: sliced[i].combinedScore,\n 317 |           sessionId: sliced[i].sessionId,\n 318 |           graphContext: sliced[i].graphContext,\n 319 |         });\n 320 |       }\n 321 |     }\n 322 |     return enriched;\n 323 |   }\n 324 | }\n--- 读取完毕 ---",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:03:02.291202",
+  "updated_at": "2026-05-29T14:03:02.291202",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "D:\\LLM\\memory\\agentmemory\\src\\state\\hybrid-search.ts"
+  ],
+  "source_observation_ids": [
+    "obs_f5c24df10d3c46ee9379e4ebb00a0f18"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f5c24df10d3c46ee9379e4ebb00a0f18",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:03:02.291202",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 324,
+        "path": "D:\\LLM\\memory\\agentmemory\\src\\state\\hybrid-search.ts",
+        "raw_mode": false,
+        "start_line": 242
+      },
+      "tool_output": "--- 文件: D:\\LLM\\memory\\agentmemory\\src\\state\\hybrid-search.ts (第 242 至 324 行，共 324 行) ---\n 242 |   private diversifyBySession(\n 243 |     results: Array<{\n 244 |       obsId: string;\n 245 |       sessionId: string;\n 246 |       bm25Score: number;\n 247 |       vectorScore: number;\n 248 |       graphScore: number;\n 249 |       combinedScore: number;\n 250 |       graphContext?: string;\n 251 |     }>,\n 252 |     limit: number,\n 253 |     maxPerSession = 3,\n 254 |   ): typeof results {\n 255 |     const selected: typeof results = [];\n 256 |     const sessionCounts = new Map<string, number>();\n 257 | \n 258 |     for (const r of results) {\n 259 |       const count = sessionCounts.get(r.sessionId) || 0;\n 260 |       if (count >= maxPerSession) continue;\n 261 |       selected.push(r);\n 262 |       sessionCounts.set(r.sessionId, count + 1);\n 263 |       if (selected.length >= limit) break;\n 264 |     }\n 265 | \n 266 |     if (selected.length < limit) {\n 267 |       for (const r of results) {\n 268 |         if (selected.length >= limit) break;\n 269 |         if (!selected.some(s => s.obsId === r.obsId)) {\n 270 |           selected.push(r);\n 271 |         }\n 272 |       }\n 273 |     }\n 274 | \n 275 |     return selected;\n 276 |   }\n 277 | \n 278 |   private async enrichResults(\n 279 |     results: Array<{\n 280 |       obsId: string;\n 281 |       sessionId: string;\n 282 |       bm25Score: number;\n 283 |       vectorScore: number;\n 284 |       graphScore: number;\n 285 |       combinedScore: number;\n 286 |       graphContext?: string;\n 287 |     }>,\n 288 |     limit: number,\n 289 |   ): Promise<HybridSearchResult[]> {\n 290 |     const sliced = results.slice(0, limit);\n 291 |     const observations = await Promise.all(\n 292 |       sliced.map(async (r) => {\n 293 |         const obs = await this.kv\n 294 |           .get<CompressedObservation>(KV.observations(r.sessionId), r.obsId)\n 295 |           .catch(() => null);\n 296 |         if (obs) return obs;\n 297 |         // Fallback: indexed entry may originate from mem::remember, which\n 298 |         // writes to KV.memories with a synthetic sessionId (\"memory\" or the\n 299 |         // memory's first associated session). Coerce the Memory record into\n 300 |         // a CompressedObservation so search/recall surface saved memories.\n 301 |         const mem = await this.kv\n 302 |           .get<Memory>(KV.memories, r.obsId)\n 303 |           .catch(() => null);\n 304 |         return mem ? memoryToObservation(mem) : null;\n 305 |       }),\n 306 |     );\n 307 |     const enriched: HybridSearchResult[] = [];\n 308 |     for (let i = 0; i < sliced.length; i++) {\n 309 |       const obs = observations[i];\n 310 |       if (obs) {\n 311 |         enriched.push({\n 312 |           observation: obs,\n 313 |           bm25Score: sliced[i].bm25Score,\n 314 |           vectorScore: sliced[i].vectorScore,\n 315 |           graphScore: sliced[i].graphScore,\n 316 |           combinedScore: sliced[i].combinedScore,\n 317 |           sessionId: sliced[i].sessionId,\n 318 |           graphContext: sliced[i].graphContext,\n 319 |         });\n 320 |       }\n 321 |     }\n 322 |     return enriched;\n 323 |   }\n 324 | }\n--- 读取完毕 ---",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "D:\\LLM\\memory\\agentmemory\\src\\state\\hybrid-search.ts"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

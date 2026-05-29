@@ -1,0 +1,66 @@
+{
+  "id": "mem_6d44c3d2384e4e59bb610349234cb06e",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\n[agent/plan-82116ad9 e07e3d7] feat: enhance context compression and memory systems\n 20 files changed, 4062 insertions(+), 295 deletions(-)\n create mode 100644 core/context_assembler.py\n create mode 100644 core/turn_builder.py\n create mode 100644 docs/memory_system_next_architecture.md\n create mode 100644 tests/test_compressed_session_state.py\n create mode 100644 tests/test_context_assembly_budget.py\n create mode 100644 tests/test_memory_phase4_promotion.py\n create mode 100644 tests/test_shared_memory_manager.py\n create mode 100644 tests/test_turn_builder.py\n## agent/plan-82116ad9\ne07e3d7 (HEAD -> agent/plan-82116ad9) feat: enhance context compression and memory systems\n6063b9d (origin/main) Merge pull request #2 from zyjcode00/agent/plan-5caa5b74\n44af35b (origin/agent/plan-5caa5b74) docs: add context compression strategy architecture\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:22:13.533552",
+  "updated_at": "2026-05-29T14:22:13.533552",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [
+    "core/context_assembler.py",
+    "core/turn_builder.py",
+    "docs/memory_system_next_architecture.md",
+    "tests/test_compressed_session_state.py",
+    "tests/test_context_assembly_budget.py",
+    "tests/test_memory_phase4_promotion.py",
+    "tests/test_shared_memory_manager.py",
+    "tests/test_turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_1ed21220d89c49f3a10c2fb3f6f38c2a"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_1ed21220d89c49f3a10c2fb3f6f38c2a",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:22:13.533552",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "cd /d D:\\LLM\\mini-claude-code-cli && git reset --soft origin/main && git commit -m \"feat: enhance context compression and memory systems\" -m \"- add turn-based context assembly with provider-safe tool-pair handling\" -m \"- persist and recall long-term memory items without bloating session files\" -m \"- expand compression state tracking, docs, and regression tests\" -m \"Tests: pytest tests\" && git status --short --branch && git log --oneline --decorate -3"
+      },
+      "tool_output": "STDOUT:\n[agent/plan-82116ad9 e07e3d7] feat: enhance context compression and memory systems\n 20 files changed, 4062 insertions(+), 295 deletions(-)\n create mode 100644 core/context_assembler.py\n create mode 100644 core/turn_builder.py\n create mode 100644 docs/memory_system_next_architecture.md\n create mode 100644 tests/test_compressed_session_state.py\n create mode 100644 tests/test_context_assembly_budget.py\n create mode 100644 tests/test_memory_phase4_promotion.py\n create mode 100644 tests/test_shared_memory_manager.py\n create mode 100644 tests/test_turn_builder.py\n## agent/plan-82116ad9\ne07e3d7 (HEAD -> agent/plan-82116ad9) feat: enhance context compression and memory systems\n6063b9d (origin/main) Merge pull request #2 from zyjcode00/agent/plan-5caa5b74\n44af35b (origin/agent/plan-5caa5b74) docs: add context compression strategy architecture\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/context_assembler.py",
+        "core/turn_builder.py",
+        "docs/memory_system_next_architecture.md",
+        "tests/test_compressed_session_state.py",
+        "tests/test_context_assembly_budget.py",
+        "tests/test_memory_phase4_promotion.py",
+        "tests/test_shared_memory_manager.py",
+        "tests/test_turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

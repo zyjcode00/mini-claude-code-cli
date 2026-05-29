@@ -1,0 +1,66 @@
+{
+  "id": "mem_c2bfe5724f2643bcbdee53739fa548f5",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 11 处匹配，分布在 4 个文件中\n\n================================================================================\n\n[FILE] core\\memory_layers.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     568 | \n     569 |     def __repr__(self) -> str:\n>>>  570 |         return f\"LongTermMemory(summaries={len(self.index)}, items={len(self.item_index)}, dir={self.storage_dir})\"\n\n[FILE] core\\memory_manager.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      54 |         self.working_memory = working_memory or WorkingMemory(max_size=working_max_size)\n      55 |         self.episodic_memory = episodic_memory or EpisodicMemory(max_size=episodic_max_size)\n>>>   56 |         self.long_term_memory = long_term_memory or LongTermMemory(storage_dir=long_term_storage_dir)\n      57 |         self.compression_engine = compression_engine or CompressionEngine(\n      58 |             plan_manager=plan_manager,\n\n[FILE] tests\\test_memory_layers.py (7 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     227 |     def test_init(self):\n     228 |         \"\"\"测试初始化\"\"\"\n>>>  229 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     230 | \n     231 |         assert ltm.count() == 0\n    [上下文]\n     234 |     def test_store_and_retrieve(self):\n     235 |         \"\"\"测试存储和检索\"\"\"\n>>>  236 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     237 | \n     238 |         summary = SessionSummary(\n    [上下文]\n     257 |     def test_search(self):\n     258 |         \"\"\"测试关键词搜索\"\"\"\n>>>  259 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     260 | \n     261 |         summary1 = SessionSummary(\n    [上下文]\n     287 |     def test_rebuild_index(self):\n     288 |         \"\"\"测试重建索引\"\"\"\n>>>  289 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     290 | \n     291 |         # 存储 2 个摘要\n    [上下文]\n     323 |     def test_search_indexes_file_change_path_field(self):\n     324 |         \"\"\"测试长期记忆使用 FileChange.path 字段建立文件路径索引\"\"\"\n>>>  325 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     326 | \n     327 |         summary = SessionSummary(\n    [上下文]\n     343 |     def test_rebuild_index_supports_legacy_file_path_field(self):\n     344 |         \"\"\"测试重建索引时兼容旧 JSON 中的 file_path 字段\"\"\"\n>>>  345 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     346 |         legacy_file = Path(self.temp_dir) / \"summary_legacy_2024-01-01T00-00-00.json\"\n     347 |         legacy_file.write_text(\n    [上下文]\n     375 |     def test_clear(self):\n     376 |         \"\"\"测试清空\"\"\"\n>>>  377 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     378 | \n     379 |         summary = SessionSummary(\n\n[FILE] tests\\test_memory_retrieval.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      26 |         self.working_memory = WorkingMemory(max_size=10)\n      27 |         self.episodic_memory = EpisodicMemory(max_size=20)\n>>>   28 |         self.long_term_memory = LongTermMemory(storage_dir=self.temp_dir)\n      29 | \n      30 |         # 初始化检索器\n    [上下文]\n     360 |         self.working_memory = WorkingMemory(max_size=20)\n     361 |         self.episodic_memory = EpisodicMemory(max_size=50)\n>>>  362 |         self.long_term_memory = LongTermMemory(storage_dir=self.temp_dir)\n     363 | \n     364 |         self.retriever = MemoryRetriever(\n\n================================================================================\n[DONE] 搜索完成: 11 处匹配，4 个文件，共搜索 51 个文件",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:17:19.968014",
+  "updated_at": "2026-05-29T13:17:19.968014",
+  "concepts": [
+    "post_tool_use",
+    "search_code"
+  ],
+  "files": [
+    ".",
+    "core\\memory_layers.py",
+    "core\\memory_manager.py",
+    "tests\\test_memory_layers.py",
+    "summary_legacy_2024-01-01T00-00-00.json",
+    "tests\\test_memory_retrieval.py"
+  ],
+  "source_observation_ids": [
+    "obs_fb3dab2d2bed4bf59cf5e6d77db93c20"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_fb3dab2d2bed4bf59cf5e6d77db93c20",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:17:19.968014",
+      "event_type": "post_tool_use",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": true,
+        "context": 2,
+        "file_pattern": "*.py",
+        "path": ".",
+        "pattern": "LongTermMemory\\("
+      },
+      "tool_output": "[SEARCH] 搜索结果: 共找到 11 处匹配，分布在 4 个文件中\n\n================================================================================\n\n[FILE] core\\memory_layers.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     568 | \n     569 |     def __repr__(self) -> str:\n>>>  570 |         return f\"LongTermMemory(summaries={len(self.index)}, items={len(self.item_index)}, dir={self.storage_dir})\"\n\n[FILE] core\\memory_manager.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      54 |         self.working_memory = working_memory or WorkingMemory(max_size=working_max_size)\n      55 |         self.episodic_memory = episodic_memory or EpisodicMemory(max_size=episodic_max_size)\n>>>   56 |         self.long_term_memory = long_term_memory or LongTermMemory(storage_dir=long_term_storage_dir)\n      57 |         self.compression_engine = compression_engine or CompressionEngine(\n      58 |             plan_manager=plan_manager,\n\n[FILE] tests\\test_memory_layers.py (7 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     227 |     def test_init(self):\n     228 |         \"\"\"测试初始化\"\"\"\n>>>  229 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     230 | \n     231 |         assert ltm.count() == 0\n    [上下文]\n     234 |     def test_store_and_retrieve(self):\n     235 |         \"\"\"测试存储和检索\"\"\"\n>>>  236 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     237 | \n     238 |         summary = SessionSummary(\n    [上下文]\n     257 |     def test_search(self):\n     258 |         \"\"\"测试关键词搜索\"\"\"\n>>>  259 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     260 | \n     261 |         summary1 = SessionSummary(\n    [上下文]\n     287 |     def test_rebuild_index(self):\n     288 |         \"\"\"测试重建索引\"\"\"\n>>>  289 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     290 | \n     291 |         # 存储 2 个摘要\n    [上下文]\n     323 |     def test_search_indexes_file_change_path_field(self):\n     324 |         \"\"\"测试长期记忆使用 FileChange.path 字段建立文件路径索引\"\"\"\n>>>  325 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     326 | \n     327 |         summary = SessionSummary(\n    [上下文]\n     343 |     def test_rebuild_index_supports_legacy_file_path_field(self):\n     344 |         \"\"\"测试重建索引时兼容旧 JSON 中的 file_path 字段\"\"\"\n>>>  345 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     346 |         legacy_file = Path(self.temp_dir) / \"summary_legacy_2024-01-01T00-00-00.json\"\n     347 |         legacy_file.write_text(\n    [上下文]\n     375 |     def test_clear(self):\n     376 |         \"\"\"测试清空\"\"\"\n>>>  377 |         ltm = LongTermMemory(storage_dir=self.temp_dir)\n     378 | \n     379 |         summary = SessionSummary(\n\n[FILE] tests\\test_memory_retrieval.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      26 |         self.working_memory = WorkingMemory(max_size=10)\n      27 |         self.episodic_memory = EpisodicMemory(max_size=20)\n>>>   28 |         self.long_term_memory = LongTermMemory(storage_dir=self.temp_dir)\n      29 | \n      30 |         # 初始化检索器\n    [上下文]\n     360 |         self.working_memory = WorkingMemory(max_size=20)\n     361 |         self.episodic_memory = EpisodicMemory(max_size=50)\n>>>  362 |         self.long_term_memory = LongTermMemory(storage_dir=self.temp_dir)\n     363 | \n     364 |         self.retriever = MemoryRetriever(\n\n================================================================================\n[DONE] 搜索完成: 11 处匹配，4 个文件，共搜索 51 个文件",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        ".",
+        "core\\memory_layers.py",
+        "core\\memory_manager.py",
+        "tests\\test_memory_layers.py",
+        "summary_legacy_2024-01-01T00-00-00.json",
+        "tests\\test_memory_retrieval.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

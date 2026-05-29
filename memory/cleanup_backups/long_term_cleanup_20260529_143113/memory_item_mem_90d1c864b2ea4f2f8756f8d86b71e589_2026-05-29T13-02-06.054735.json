@@ -1,0 +1,55 @@
+{
+  "id": "mem_90d1c864b2ea4f2f8756f8d86b71e589",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/context.py (第 260 至 560 行，共 666 行) ---\n 260 | \n 261 |         result = await self.memory_manager.compress_messages(\n 262 |             messages=source_messages,\n 263 |             strategy=strategy,\n 264 |             llm_summarizer_func=llm_summarizer_func,\n 265 |             min_keep=self.min_keep,\n 266 |             existing_summary=self.history_summary\n 267 |         )\n 268 | \n 269 |         if not result.success:\n 270 |             print(\"   [Phase 3] 压缩失败\")\n 271 |             sanitized_messages = self.compression_engine._sanitize_openai_tool_pairs(source_messages)\n 272 |             if sanitized_messages != source_messages:\n 273 |                 async with self.messages_lock:\n 274 |                     if self.messages[:len(source_messages)] == source_messages:\n 275 |                         appended_messages = self.messages[len(source_messages):]\n 276 |                         self.messages = sanitized_messages + appended_messages\n 277 |                         if self._enable_memory_layers:\n 278 |                             self.memory_manager.reset_working_memory(self.messages)\n 279 |                         print(\"   [Phase 3] 压缩失败后已执行 OpenAI tool pair 安全清理\")\n 280 |             return False\n 281 | \n 282 |         # 更新消息列表。注意：压缩期间可能有新消息被追加，不能用旧快照覆盖新消息。\n 283 |         async with self.messages_lock:\n 284 |             if self.messages[:len(source_messages)] == source_messages:\n 285 |                 appended_messages = self.messages[len(source_messages):]\n 286 |                 self.messages = result.compressed_messages + appended_messages\n 287 |             else:\n 288 |                 print(\"   [Phase 3] 检测到压缩期间消息被修改，跳过本次上下文替换\")\n 289 |                 return False\n 290 | \n 291 |         # Phase 2: 同步更新工作记忆\n 292 |         if self._enable_memory_layers:\n 293 |             self.memory_manager.reset_working_memory(self.messages)\n 294 | \n 295 |         # 如果有结构化摘要，存储到三层记忆\n 296 |         if result.summary:\n 297 |             # Phase 2: 添加到情景记忆\n 298 |             if self._enable_memory_layers:\n 299 |                 evicted_summary = self.memory_manager.save_summary(result.summary)\n 300 | \n 301 |                 if evicted_summary:\n 302 |                     print(f\"   [Phase 2] 情景记忆已满，归档到长期记忆: {evicted_summary.session_id}\")\n 303 | \n 304 |                 print(f\"   [Phase 2] 摘要已添加到情景记忆: {result.summary.session_id}\")\n 305 | \n 306 |             # 兼容 Phase 1: 存储到 session_summaries\n 307 |             self.session_summaries.append(result.summary)\n 308 | \n 309 |             # 兼容旧版：也更新纯文本摘要\n 310 |             self.history_summary = result.summary.summary_text\n 311 |             print(f\"   [Phase 3] 结构化摘要已保存: {result.summary.session_id}\")\n 312 |             print(f\"   [Phase 3] 压缩比: {result.compression_ratio:.2%}\")\n 313 |             print(f\"   [Phase 3] 任务: {result.summary.task_goal}\")\n 314 |             print(f\"   [Phase 3] 状态: {result.summary.task_status}\")\n 315 | \n 316 |         return True\n 317 | \n 318 |     def _parse_structured_summary(\n 319 |         self,\n 320 |         summary_text: str,\n 321 |         messages: List[Any],\n 322 |         avg_importance: float\n 323 |     ) -> Optional[SessionSummary]:\n 324 |         \"\"\"\n 325 |         解析 LLM 返回的结构化摘要\n 326 | \n 327 |         Args:\n 328 |             summary_text: LLM 返回的文本（可能包含 JSON）\n 329 |             messages: 被压缩的消息列表\n 330 |             avg_importance: 平均重要性分数\n 331 | \n 332 |         Returns:\n 333 |             SessionSummary 实例，如果解析失败则返回 None\n 334 |         \"\"\"\n 335 |         try:\n 336 |             # 尝试提取 JSON（可能包含 markdown 代码块）\n 337 |             json_str = self._extract_json(summary_text)\n 338 | \n 339 |             if not json_str:\n 340 |                 return None\n 341 | \n 342 |             # 解析 JSON\n 343 |             data = json.loads(json_str)\n 344 | \n 345 |             # 验证必需字段\n 346 |             required_fields = [\"task_goal\", \"task_status\", \"summary_text\"]\n 347 |             for field in required_fields:\n 348 |                 if field not in data...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:02:06.054735",
+  "updated_at": "2026-05-29T13:02:06.054735",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/context.py"
+  ],
+  "source_observation_ids": [
+    "obs_d021b8743aae485496e86dd472803c91"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_d021b8743aae485496e86dd472803c91",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:02:06.054735",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 560,
+        "path": "core/context.py",
+        "raw_mode": false,
+        "start_line": 260
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/context.py (第 260 至 560 行，共 666 行) ---\n 260 | \n 261 |         result = await self.memory_manager.compress_messages(\n 262 |             messages=source_messages,\n 263 |             strategy=strategy,\n 264 |             llm_summarizer_func=llm_summarizer_func,\n 265 |             min_keep=self.min_keep,\n 266 |             existing_summary=self.history_summary\n 267 |         )\n 268 | \n 269 |         if not result.success:\n 270 |             print(\"   [Phase 3] 压缩失败\")\n 271 |             sanitized_messages = self.compression_engine._sanitize_openai_tool_pairs(source_messages)\n 272 |             if sanitized_messages != source_messages:\n 273 |                 async with self.messages_lock:\n 274 |                     if self.messages[:len(source_messages)] == source_messages:\n 275 |                         appended_messages = self.messages[len(source_messages):]\n 276 |                         self.messages = sanitized_messages + appended_messages\n 277 |                         if self._enable_memory_layers:\n 278 |                             self.memory_manager.reset_working_memory(self.messages)\n 279 |                         print(\"   [Phase 3] 压缩失败后已执行 OpenAI tool pair 安全清理\")\n 280 |             return False\n 281 | \n 282 |         # 更新消息列表。注意：压缩期间可能有新消息被追加，不能用旧快照覆盖新消息。\n 283 |         async with self.messages_lock:\n 284 |             if self.messages[:len(source_messages)] == source_messages:\n 285 |                 appended_messages = self.messages[len(source_messages):]\n 286 |                 self.messages = result.compressed_messages + appended_messages\n 287 |             else:\n 288 |                 print(\"   [Phase 3] 检测到压缩期间消息被修改，跳过本次上下文替换\")\n 289 |                 return False\n 290 | \n 291 |         # Phase 2: 同步更新工作记忆\n 292 |         if self._enable_memory_layers:\n 293 |             self.memory_manager.reset_working_memory(self.messages)\n 294 | \n 295 |         # 如果有结构化摘要，存储到三层记忆\n 296 |         if result.summary:\n 297 |             # Phase 2: 添加到情景记忆\n 298 |             if self._enable_memory_layers:\n 299 |                 evicted_summary = self.memory_manager.save_summary(result.summary)\n 300 | \n 301 |                 if evicted_summary:\n 302 |                     print(f\"   [Phase 2] 情景记忆已满，归档到长期记忆: {evicted_summary.session_id}\")\n 303 | \n 304 |                 print(f\"   [Phase 2] 摘要已添加到情景记忆: {result.summary.session_id}\")\n 305 | \n 306 |             # 兼容 Phase 1: 存储到 session_summaries\n 307 |             self.session_summaries.append(result.summary)\n 308 | \n 309 |             # 兼容旧版：也更新纯文本摘要\n 310 |             self.history_summary = result.summary.summary_text\n 311 |             print(f\"   [Phase 3] 结构化摘要已保存: {result.summary.session_id}\")\n 312 |             print(f\"   [Phase 3] 压缩比: {result.compression_ratio:.2%}\")\n 313 |             print(f\"   [Phase 3] 任务: {result.summary.task_goal}\")\n 314 |             print(f\"   [Phase 3] 状态: {result.summary.task_status}\")\n 315 | \n 316 |         return True\n 317 | \n 318 |     def _parse_structured_summary(\n 319 |         self,\n 320 |         summary_text: str,\n 321 |         messages: List[Any],\n 322 |         avg_importance: float\n 323 |     ) -> Optional[SessionSummary]:\n 324 |         \"\"\"\n 325 |         解析 LLM 返回的结构化摘要\n 326 | \n 327 |         Args:\n 328 |             summary_text: LLM 返回的文本（可能包含 JSON）\n 329 |             messages: 被压缩的消息列表\n 330 |             avg_importance: 平均重要性分数\n 331 | \n 332 |         Returns:\n 333 |             SessionSummary 实例，如果解析失败则返回 None\n 334 |         \"\"\"\n 335 |         try:\n 336 |             # 尝试提取 JSON（可能包含 markdown 代码块）\n 337 |             json_str = self._extract_json(summary_text)\n 338 | \n 339 |             if not json_str:\n 340 |                 return None\n 341 | \n 342 |             # 解析 JSON\n 343 |             data = json.loads(json_str)\n 344 | \n 345 |             # 验证必需字段\n 346 |             required_fields = [\"task_goal\", \"task_status\", \"summary_text\"]\n 347 |             for field in required_fields:\n 348 |                 if field not in data...",
+      "files": [
+        "core/context.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

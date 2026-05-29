@@ -1,0 +1,94 @@
+{
+  "id": "mem_1e63678185a549ef9bb26580f8aa473b",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 2493 处匹配，分布在 41 个文件中\n\n================================================================================\n\n[FILE] main.py (13 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       9 | from rich.prompt import Prompt\n      10 | from core.plan import PlanManager  # 🔥 改为导入类而非全局实例\n>>>   11 | from core.memory_manager import MemoryManager\n      12 | \n      13 | # 1. 核心引擎导入\n    [上下文]\n      90 |     # 命令行参数解析\n      91 |     parser = argparse.ArgumentParser(description=\"Mini-Claude Agent 控制台\")\n>>>   92 |     parser.add_argument(\"--session\", type=str, default=\"default\", help=\"指定会话 ID\")\n      93 |     parser.add_argument(\"--model\", type=str, default=\"gpt-5.5\", help=\"指定使用的模型\")\n      94 |     args = parser.parse_args()\n    [上下文]\n      94 |     args = parser.parse_args()\n      95 | \n>>>   96 |     print(f\"--- 🚀 正在启动会话: {args.session} ---\")\n      97 | \n      98 |     agent_config = get_agent_config()\n    [上下文]\n      98 |     agent_config = get_agent_config()\n      99 | \n>>>  100 |     # 🔥 创建独立的 PlanManager 实例（每个 session 独立）\n     101 |     plan_manager = PlanManager()\n     102 | \n    [上下文]\n     102 | \n     103 |     # 3. 初始化共享记忆管理器与工具集\n>>>  104 |     # tools 和 AgentEngine/ContextManager 共用同一个 MemoryManager，避免启动时重复加载长期记忆索引。\n     105 |     memory_manager = MemoryManager(plan_manager=plan_manager)\n     106 |     tools_list = get_default_tools(plan_manager=plan_manager, memory_manager=memory_manager)\n    [上下文]\n     103 |     # 3. 初始化共享记忆管理器与工具集\n     104 |     # tools 和 AgentEngine/ContextManager 共用同一个 MemoryManager，避免启动时重复加载长期记忆索引。\n>>>  105 |     memory_manager = MemoryManager(plan_manager=plan_manager)\n     106 |     tools_list = get_default_tools(plan_manager=plan_manager, memory_manager=memory_manager)\n     107 | \n    [上下文]\n     104 |     # tools 和 AgentEngine/ContextManager 共用同一个 MemoryManager，避免启动时重复加载长期记忆索引。\n     105 |     memory_manager = MemoryManager(plan_manager=plan_manager)\n>>>  106 |     tools_list = get_default_tools(plan_manager=plan_manager, memory_manager=memory_manager)\n     107 | \n     108 |     # 4. 初始化核心引擎\n    [上下文]\n     111 |         model=args.model,\n     112 |         plan_manager=plan_manager,\n>>>  113 |         session_id=args.session,\n     114 |         base_url=agent_config[\"base_url\"],\n     115 |         api_key=agent_config[\"api_key\"],\n    [上下文]\n     116 |         max_history=150,\n     117 |         min_keep=8,\n>>>  118 |         memory_manager=memory_manager\n     119 |     )\n     120 |     engine.plan_manager = plan_manager\n    [上下文]\n     139 | \n     140 |         if choice == \"2\":\n>>>  141 |             success, msg = create_snapshot(\"🚀 [Startup] Pre-session snapshot\")\n     142 |             if success:\n     143 |                 console.print(f\"[green]{msg}[/green]\")\n    [上下文]\n     165 | \n     166 |             if user_input == \"/clear\":\n>>>  167 |                 engine.context.messages = []\n     168 |                 engine.context.history_summary = \"\"\n     169 |                 engine.plan_manager.clear_plan()  # 🔥 同时清除 Plan 状态\n    [上下文]\n     166 |             if user_input == \"/clear\":\n     167 |                 engine.context.messages = []\n>>>  168 |                 engine.context.history_summary = \"\"\n     169 |                 engine.plan_manager.clear_plan()  # 🔥 同时清除 Plan 状态\n     170 |                 engine.save_session()\n    [上下文]\n     168 |                 engine.context.history_summary = \"\"\n     169 |                 engine.plan_manager.clear_plan()  # 🔥 同时清除 Plan 状态\n>>>  170 |                 engine.save_session()\n     171 |                 console.print(\"[dim]上下文、摘要记忆和任务计划已彻底清空。[/dim]\")\n     172 |                 continue\n\n[FILE] tmp_inspect_session.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       1 | import json\n       2 | from collections import Counter\n>>>    3 | with open('sessions/test.json', encoding='utf-8') as f:\n       4 |     data=json.load(f)\n       5 | msgs=data['mes...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:37:54.679787",
+  "updated_at": "2026-05-29T13:37:54.679787",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    ".",
+    "main.py",
+    "tmp_inspect_session.py",
+    "sessions/test.json",
+    "tmp_ranges.py",
+    "tmp_startup_stats.py",
+    "memory/long_term/index.json",
+    "tmp_stats.py",
+    "core\\bm25_retriever.py",
+    "core\\compression_engine.py",
+    "core/compression_engine.py",
+    "core\\context.py",
+    "core/context.py",
+    "core\\context_assembler.py",
+    "core/context_assembler.py",
+    "core\\engine.py",
+    "core\\memory_context_builder.py",
+    "core\\memory_items.py",
+    "core\\memory_layers.py",
+    "core\\memory_manager.py"
+  ],
+  "source_observation_ids": [
+    "obs_be7096711a66456d93d5fb6d24235284"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_be7096711a66456d93d5fb6d24235284",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:37:54.679787",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 2,
+        "file_pattern": "*.py",
+        "path": ".",
+        "pattern": "memory|context|session|compress|compression|summary|summar"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 2493 处匹配，分布在 41 个文件中\n\n================================================================================\n\n[FILE] main.py (13 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       9 | from rich.prompt import Prompt\n      10 | from core.plan import PlanManager  # 🔥 改为导入类而非全局实例\n>>>   11 | from core.memory_manager import MemoryManager\n      12 | \n      13 | # 1. 核心引擎导入\n    [上下文]\n      90 |     # 命令行参数解析\n      91 |     parser = argparse.ArgumentParser(description=\"Mini-Claude Agent 控制台\")\n>>>   92 |     parser.add_argument(\"--session\", type=str, default=\"default\", help=\"指定会话 ID\")\n      93 |     parser.add_argument(\"--model\", type=str, default=\"gpt-5.5\", help=\"指定使用的模型\")\n      94 |     args = parser.parse_args()\n    [上下文]\n      94 |     args = parser.parse_args()\n      95 | \n>>>   96 |     print(f\"--- 🚀 正在启动会话: {args.session} ---\")\n      97 | \n      98 |     agent_config = get_agent_config()\n    [上下文]\n      98 |     agent_config = get_agent_config()\n      99 | \n>>>  100 |     # 🔥 创建独立的 PlanManager 实例（每个 session 独立）\n     101 |     plan_manager = PlanManager()\n     102 | \n    [上下文]\n     102 | \n     103 |     # 3. 初始化共享记忆管理器与工具集\n>>>  104 |     # tools 和 AgentEngine/ContextManager 共用同一个 MemoryManager，避免启动时重复加载长期记忆索引。\n     105 |     memory_manager = MemoryManager(plan_manager=plan_manager)\n     106 |     tools_list = get_default_tools(plan_manager=plan_manager, memory_manager=memory_manager)\n    [上下文]\n     103 |     # 3. 初始化共享记忆管理器与工具集\n     104 |     # tools 和 AgentEngine/ContextManager 共用同一个 MemoryManager，避免启动时重复加载长期记忆索引。\n>>>  105 |     memory_manager = MemoryManager(plan_manager=plan_manager)\n     106 |     tools_list = get_default_tools(plan_manager=plan_manager, memory_manager=memory_manager)\n     107 | \n    [上下文]\n     104 |     # tools 和 AgentEngine/ContextManager 共用同一个 MemoryManager，避免启动时重复加载长期记忆索引。\n     105 |     memory_manager = MemoryManager(plan_manager=plan_manager)\n>>>  106 |     tools_list = get_default_tools(plan_manager=plan_manager, memory_manager=memory_manager)\n     107 | \n     108 |     # 4. 初始化核心引擎\n    [上下文]\n     111 |         model=args.model,\n     112 |         plan_manager=plan_manager,\n>>>  113 |         session_id=args.session,\n     114 |         base_url=agent_config[\"base_url\"],\n     115 |         api_key=agent_config[\"api_key\"],\n    [上下文]\n     116 |         max_history=150,\n     117 |         min_keep=8,\n>>>  118 |         memory_manager=memory_manager\n     119 |     )\n     120 |     engine.plan_manager = plan_manager\n    [上下文]\n     139 | \n     140 |         if choice == \"2\":\n>>>  141 |             success, msg = create_snapshot(\"🚀 [Startup] Pre-session snapshot\")\n     142 |             if success:\n     143 |                 console.print(f\"[green]{msg}[/green]\")\n    [上下文]\n     165 | \n     166 |             if user_input == \"/clear\":\n>>>  167 |                 engine.context.messages = []\n     168 |                 engine.context.history_summary = \"\"\n     169 |                 engine.plan_manager.clear_plan()  # 🔥 同时清除 Plan 状态\n    [上下文]\n     166 |             if user_input == \"/clear\":\n     167 |                 engine.context.messages = []\n>>>  168 |                 engine.context.history_summary = \"\"\n     169 |                 engine.plan_manager.clear_plan()  # 🔥 同时清除 Plan 状态\n     170 |                 engine.save_session()\n    [上下文]\n     168 |                 engine.context.history_summary = \"\"\n     169 |                 engine.plan_manager.clear_plan()  # 🔥 同时清除 Plan 状态\n>>>  170 |                 engine.save_session()\n     171 |                 console.print(\"[dim]上下文、摘要记忆和任务计划已彻底清空。[/dim]\")\n     172 |                 continue\n\n[FILE] tmp_inspect_session.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       1 | import json\n       2 | from collections import Counter\n>>>    3 | with open('sessions/test.json', encoding='utf-8') as f:\n       4 |     data=json.load(f)\n       5 | msgs=data['mes...",
+      "files": [
+        ".",
+        "main.py",
+        "tmp_inspect_session.py",
+        "sessions/test.json",
+        "tmp_ranges.py",
+        "tmp_startup_stats.py",
+        "memory/long_term/index.json",
+        "tmp_stats.py",
+        "core\\bm25_retriever.py",
+        "core\\compression_engine.py",
+        "core/compression_engine.py",
+        "core\\context.py",
+        "core/context.py",
+        "core\\context_assembler.py",
+        "core/context_assembler.py",
+        "core\\engine.py",
+        "core\\memory_context_builder.py",
+        "core\\memory_items.py",
+        "core\\memory_layers.py",
+        "core\\memory_manager.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

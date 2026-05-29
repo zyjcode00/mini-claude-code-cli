@@ -1,0 +1,48 @@
+{
+  "id": "mem_d298ef590dd5415a97edde5ddcb3f862",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "Command executed with no output.",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:32:24.712403",
+  "updated_at": "2026-05-29T14:32:24.712403",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_8e0517db79204bb29f343e8610f19a08"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_8e0517db79204bb29f343e8610f19a08",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:32:24.712403",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python - <<'PY'\nfrom core.memory_layers import LongTermMemory\nltm = LongTermMemory('memory/long_term')\nresults = ltm.search_items('长期记忆 检索 memory', limit=5)\nprint('item_index', len(ltm.item_index))\nprint('summary_index', len(ltm.index))\nprint('results', len(results))\nfor r in results[:3]:\n    print(r.item.kind, r.item.title[:60], round(r.score, 3), r.reason[:80])\nPY"
+      },
+      "tool_output": "Command executed with no output.",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

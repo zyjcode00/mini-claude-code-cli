@@ -1,0 +1,53 @@
+{
+  "id": "mem_8c3aa02305244779956b099e83e5c91b",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: write_full_file",
+  "content": "成功: 已写入 tests/test_turn_builder.py",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:00:30.638907",
+  "updated_at": "2026-05-29T12:00:30.638907",
+  "concepts": [
+    "post_tool_use",
+    "write_full_file"
+  ],
+  "files": [
+    "tests/test_turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_64984505859f40d088e5372c5ef656ad"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_64984505859f40d088e5372c5ef656ad",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:00:30.638907",
+      "event_type": "post_tool_use",
+      "tool_name": "write_full_file",
+      "tool_input": {
+        "content": "# tests/test_turn_builder.py\n\"\"\"Tests for provider-safe conversation turn construction.\"\"\"\n\nimport pytest\n\nfrom core.compression_engine import CompressionEngine, CompressionStrategy\nfrom core.turn_builder import TurnBuilder\n\n\ndef tool_call(call_id: str, name: str = \"echo\"):\n    return {\n        \"id\": call_id,\n        \"type\": \"function\",\n        \"function\": {\"name\": name, \"arguments\": \"{}\"},\n    }\n\n\ndef assert_valid_openai_tool_pairs(messages):\n    for i, msg in enumerate(messages):\n        if msg.get(\"role\") == \"assistant\" and msg.get(\"tool_calls\"):\n            expected_ids = {tc[\"id\"] for tc in msg[\"tool_calls\"]}\n            contiguous_ids = set()\n            j = i + 1\n            while j < len(messages) and messages[j].get(\"role\") == \"tool\":\n                contiguous_ids.add(messages[j].get(\"tool_call_id\"))\n                j += 1\n            assert expected_ids.issubset(contiguous_ids)\n\n        if msg.get(\"role\") == \"tool\":\n            block_start = i\n            while block_start > 0 and messages[block_start - 1].get(\"role\") == \"tool\":\n                block_start -= 1\n            assert block_start > 0\n            prev_msg = messages[block_start - 1]\n            assert prev_msg.get(\"role\") == \"assistant\" and prev_msg.get(\"tool_calls\")\n            assert msg.get(\"tool_call_id\") in {tc[\"id\"] for tc in prev_msg[\"tool_calls\"]}\n\n\ndef test_turn_builder_keeps_plain_messages_as_individual_turns():\n    messages = [\n        {\"role\": \"user\", \"content\": \"hello\"},\n        {\"role\": \"assistant\", \"content\": \"hi\"},\n        {\"role\": \"user\", \"content\": \"next\"},\n    ]\n\n    builder = TurnBuilder()\n    turns = builder.build(messages)\n\n    assert len(turns) == 3\n    assert [turn.messages for turn in turns] == [[msg] for msg in messages]\n    assert builder.flatten(turns) == messages\n    assert all(turn.is_valid_openai_tool_turn for turn in turns)\n\n\ndef test_turn_builder_groups_complete_openai_tool_call_pair_atomically():\n    messages = [\n        {\"role\": \"user\", \"content\": \"run tools\"},\n        {\n            \"role\": \"assistant\",\n            \"content\": \"\",\n            \"tool_calls\": [tool_call(\"call_1\"), tool_call(\"call_2\")],\n        },\n        {\"role\": \"tool\", \"tool_call_id\": \"call_1\", \"name\": \"echo\", \"content\": \"one\"},\n        {\"role\": \"tool\", \"tool_call_id\": \"call_2\", \"name\": \"echo\", \"content\": \"two\"},\n        {\"role\": \"assistant\", \"content\": \"done\"},\n    ]\n\n    turns = TurnBuilder().build(messages)\n\n    assert len(turns) == 3\n    tool_turn = turns[1]\n    assert tool_turn.start_index == 1\n    assert tool_turn.end_index == 3\n    assert tool_turn.messages == messages[1:4]\n    assert tool_turn.has_tool_calls\n    assert tool_turn.is_tool_pair_complete\n    assert tool_turn.is_valid_openai_tool_turn\n    assert tool_turn.missing_tool_call_ids == []\n    assert tool_turn.orphan_tool_call_ids == []\n\n\ndef test_turn_builder_marks_missing_tool_response_incomplete():\n    messages = [\n        {\n            \"role\": \"assistant\",\n            \"content\": \"\",\n            \"tool_calls\": [tool_call(\"call_missing\")],\n        },\n        {\"role\": \"assistant\", \"content\": \"next message interrupts tool block\"},\n    ]\n\n    turns = TurnBuilder().build(messages)\n\n    assert len(turns) == 2\n    assert turns[0].has_tool_calls\n    assert not turns[0].is_tool_pair_complete\n    assert not turns[0].is_valid_openai_tool_turn\n    assert turns[0].missing_tool_call_ids == [\"call_missing\"]\n\n\ndef test_turn_builder_marks_orphan_tool_message_incomplete():\n    messages = [\n        {\"role\": \"tool\", \"tool_call_id\": \"call_orphan\", \"name\": \"echo\", \"content\": \"orphan\"},\n        {\"role\": \"user\", \"content\": \"continue\"},\n    ]\n\n    turns = TurnBuilder().build(messages)\n\n    assert len(turns) == 2\n    assert not turns[0].has_tool_calls\n    assert not turns[0].is_tool_pair_complete\n    assert not turns[0].is_valid_openai_tool_turn\n    assert turns[0].orphan_tool_call_ids == [\"call_orphan\"]\n\n\ndef test_turn_builder_build_complete_messages_drops_incomplete_tool_turns():\n    messages = [\n        {\"role\": \"user\", \"content\": \"keep\"},\n        {\n            \"role\": \"assistant\",\n            \"content\": \"\",\n            \"tool_calls\": [tool_call(\"call_missing\")],\n        },\n        {\"role\": \"tool\", \"tool_call_id\": \"call_orphan\", \"name\": \"echo\", \"content\": \"orphan\"},\n        {\"role\": \"assistant\", \"content\": \"also keep\"},\n    ]\n\n    complete_messages = TurnBuilder().build_complete_messages(messages)\n\n    assert complete_messages == [\n        {\"role\": \"user\", \"content\": \"keep\"},\n        {\"role\": \"assistant\", \"content\": \"also keep\"},\n    ]\n    assert_valid_openai_tool_pairs(complete_messages)\n\n\n@pytest.mark.asyncio\nasync def test_sliding_window_selects_complete_turns_without_splitting_tool_pair():\n    engine = CompressionEngine()\n    messages = [\n        {\"role\": \"user\", \"content\": \"old\"},\n        {\n            \"role\": \"assistant\",\n            \"content\": \"\",\n            \"tool_calls\": [tool_call(\"call_1\"), tool_call(\"call_2\")],\n        },\n        {\"role\": \"tool\", \"tool_call_id\": \"call_1\", \"name\": \"echo\", \"content\": \"one\"},\n        {\"role\": \"tool\", \"tool_call_id\": \"call_2\", \"name\": \"echo\", \"content\": \"two\"},\n        {\"role\": \"assistant\", \"content\": \"final\"},\n    ]\n\n    result = await engine.compress(\n        messages=messages,\n        strategy=CompressionStrategy.SLIDING_WINDOW,\n        target_ratio=0.4,\n        min_keep=2,\n    )\n\n    assert result.success\n    assert result.compressed_messages == messages[1:]\n    assert_valid_openai_tool_pairs(result.compressed_messages)\n\n\ndef test_sanitizer_uses_turn_builder_to_remove_missing_and_orphan_tool_turns():\n    engine = CompressionEngine()\n    messages = [\n        {\"role\": \"user\", \"content\": \"keep\"},\n        {\n            \"role\": \"assistant\",\n            \"content\": \"\",\n            \"tool_calls\": [tool_call(\"call_missing\")],\n        },\n        {\"role\": \"tool\", \"tool_call_id\": \"call_orphan\", \"name\": \"echo\", \"content\": \"orphan\"},\n        {\n            \"role\": \"assistant\",\n            \"content\": \"\",\n            \"tool_calls\": [tool_call(\"call_ok\")],\n        },\n        {\"role\": \"tool\", \"tool_call_id\": \"call_ok\", \"name\": \"echo\", \"content\": \"ok\"},\n    ]\n\n    sanitized = engine._sanitize_openai_tool_pairs(messages)\n\n    assert sanitized == [messages[0], messages[3], messages[4]]\n    assert_valid_openai_tool_pairs(sanitized)\n",
+        "path": "tests/test_turn_builder.py"
+      },
+      "tool_output": "成功: 已写入 tests/test_turn_builder.py",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

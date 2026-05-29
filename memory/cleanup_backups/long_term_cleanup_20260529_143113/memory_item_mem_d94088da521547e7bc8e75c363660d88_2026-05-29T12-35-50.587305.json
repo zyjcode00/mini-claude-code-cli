@@ -1,0 +1,55 @@
+{
+  "id": "mem_d94088da521547e7bc8e75c363660d88",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/compression_engine.py (第 811 至 968 行，共 1250 行) ---\n 811 |     def _extract_compressed_state(\n 812 |         self,\n 813 |         turns: List[ConversationTurn],\n 814 |         dropped_turns: Optional[List[ConversationTurn]] = None,\n 815 |         llm_summary_text: str = \"\",\n 816 |     ) -> CompressedSessionState:\n 817 |         \"\"\"Build a deterministic structured state from turn metadata and content.\"\"\"\n 818 |         source_turns = [turn for turn in turns if turn.is_valid_openai_tool_turn]\n 819 |         state = CompressedSessionState(source_turn_ids=[turn.id for turn in source_turns])\n 820 |         state.task_goal = self._extract_task_goal(source_turns)\n 821 |         state.current_status = self._infer_current_status(source_turns)\n 822 | \n 823 |         file_paths = []\n 824 |         for turn in source_turns:\n 825 |             file_paths.extend(turn.files_touched)\n 826 |             text = self._turn_text(turn)\n 827 |             self._collect_steps(text, state.completed_steps, state.pending_steps)\n 828 |             self._collect_decisions(text, state.key_decisions)\n 829 |             self._collect_preferences(text, state.user_preferences)\n 830 |             self._collect_commands_and_tests(turn, text, state.commands_run, state.tests_run)\n 831 |             for error in turn.errors:\n 832 |                 resolved = self._looks_resolved_after(source_turns, turn)\n 833 |                 state.errors_encountered.append({\n 834 |                     \"message\": error[:300],\n 835 |                     \"status\": \"resolved\" if resolved else \"failed\",\n 836 |                     \"source_turn_id\": turn.id,\n 837 |                     \"files\": turn.files_touched[:5],\n 838 |                     \"resolved\": resolved,\n 839 |                 })\n 840 | \n 841 |         for path in dict.fromkeys(file_paths):\n 842 |             state.files_changed.append({\n 843 |                 \"path\": path,\n 844 |                 \"action\": self._infer_file_action(path, source_turns),\n 845 |                 \"summary\": \"从 turn 元数据提取的文件变更\",\n 846 |             })\n 847 | \n 848 |         if any((turn.has_tool_calls or turn.tool_messages) and not turn.is_valid_openai_tool_turn for turn in turns):\n 849 |             state.tool_safety_notes.append(\"压缩前检测到不完整或孤立 tool pair，结构化状态仅基于 provider-safe turn 聚合\")\n 850 |         state.tool_safety_notes.append(\"压缩结果不得包含半截 assistant tool call 与 tool 响应\")\n 851 | \n 852 |         if dropped_turns:\n 853 |             dropped_categories = sorted({category for turn in dropped_turns for category in turn.categories})\n 854 |             state.dropped_content_summary = f\"丢弃 {len(dropped_turns)} 个较低优先级 turn\"\n 855 |             if dropped_categories:\n 856 |                 state.dropped_content_summary += f\"，类别: {', '.join(dropped_categories[:8])}\"\n 857 | \n 858 |         if llm_summary_text:\n 859 |             state.key_decisions.extend(self._extract_llm_decision_lines(llm_summary_text))\n 860 | \n 861 |         state.completed_steps = self._dedupe_keep_order(state.completed_steps)[:12]\n 862 |         state.pending_steps = self._dedupe_keep_order(state.pending_steps)[:12]\n 863 |         state.key_decisions = self._dedupe_keep_order(state.key_decisions)[:12]\n 864 |         state.user_preferences = self._dedupe_keep_order(state.user_preferences)[:8]\n 865 |         state.commands_run = self._dedupe_dicts(state.commands_run, \"command\")[:12]\n 866 |         state.tests_run = self._dedupe_dicts(state.tests_run, \"command\")[:12]\n 867 |         state.errors_encountered = self._dedupe_dicts(state.errors_encountered, \"message\")[:10]\n 868 |         return state\n 869 | \n 870 |     def _extract_task_goal(self, turns: List[ConversationTurn]) -> str:\n 871 |         for turn in turns:\n 872 |             if turn.user_message and isinstance(turn.user_message.get(\"content\"), str):\n 873 |                 content = turn.user_message.get(\"content\", \"\").strip()\n 874 |                 if content:\n 875 |                     return content[:200]\n 876 |       ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:35:50.587305",
+  "updated_at": "2026-05-29T12:35:50.587305",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_80d0d4f367a9470297b621e474c205c3"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_80d0d4f367a9470297b621e474c205c3",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:35:50.587305",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 968,
+        "path": "core/compression_engine.py",
+        "raw_mode": false,
+        "start_line": 811
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/compression_engine.py (第 811 至 968 行，共 1250 行) ---\n 811 |     def _extract_compressed_state(\n 812 |         self,\n 813 |         turns: List[ConversationTurn],\n 814 |         dropped_turns: Optional[List[ConversationTurn]] = None,\n 815 |         llm_summary_text: str = \"\",\n 816 |     ) -> CompressedSessionState:\n 817 |         \"\"\"Build a deterministic structured state from turn metadata and content.\"\"\"\n 818 |         source_turns = [turn for turn in turns if turn.is_valid_openai_tool_turn]\n 819 |         state = CompressedSessionState(source_turn_ids=[turn.id for turn in source_turns])\n 820 |         state.task_goal = self._extract_task_goal(source_turns)\n 821 |         state.current_status = self._infer_current_status(source_turns)\n 822 | \n 823 |         file_paths = []\n 824 |         for turn in source_turns:\n 825 |             file_paths.extend(turn.files_touched)\n 826 |             text = self._turn_text(turn)\n 827 |             self._collect_steps(text, state.completed_steps, state.pending_steps)\n 828 |             self._collect_decisions(text, state.key_decisions)\n 829 |             self._collect_preferences(text, state.user_preferences)\n 830 |             self._collect_commands_and_tests(turn, text, state.commands_run, state.tests_run)\n 831 |             for error in turn.errors:\n 832 |                 resolved = self._looks_resolved_after(source_turns, turn)\n 833 |                 state.errors_encountered.append({\n 834 |                     \"message\": error[:300],\n 835 |                     \"status\": \"resolved\" if resolved else \"failed\",\n 836 |                     \"source_turn_id\": turn.id,\n 837 |                     \"files\": turn.files_touched[:5],\n 838 |                     \"resolved\": resolved,\n 839 |                 })\n 840 | \n 841 |         for path in dict.fromkeys(file_paths):\n 842 |             state.files_changed.append({\n 843 |                 \"path\": path,\n 844 |                 \"action\": self._infer_file_action(path, source_turns),\n 845 |                 \"summary\": \"从 turn 元数据提取的文件变更\",\n 846 |             })\n 847 | \n 848 |         if any((turn.has_tool_calls or turn.tool_messages) and not turn.is_valid_openai_tool_turn for turn in turns):\n 849 |             state.tool_safety_notes.append(\"压缩前检测到不完整或孤立 tool pair，结构化状态仅基于 provider-safe turn 聚合\")\n 850 |         state.tool_safety_notes.append(\"压缩结果不得包含半截 assistant tool call 与 tool 响应\")\n 851 | \n 852 |         if dropped_turns:\n 853 |             dropped_categories = sorted({category for turn in dropped_turns for category in turn.categories})\n 854 |             state.dropped_content_summary = f\"丢弃 {len(dropped_turns)} 个较低优先级 turn\"\n 855 |             if dropped_categories:\n 856 |                 state.dropped_content_summary += f\"，类别: {', '.join(dropped_categories[:8])}\"\n 857 | \n 858 |         if llm_summary_text:\n 859 |             state.key_decisions.extend(self._extract_llm_decision_lines(llm_summary_text))\n 860 | \n 861 |         state.completed_steps = self._dedupe_keep_order(state.completed_steps)[:12]\n 862 |         state.pending_steps = self._dedupe_keep_order(state.pending_steps)[:12]\n 863 |         state.key_decisions = self._dedupe_keep_order(state.key_decisions)[:12]\n 864 |         state.user_preferences = self._dedupe_keep_order(state.user_preferences)[:8]\n 865 |         state.commands_run = self._dedupe_dicts(state.commands_run, \"command\")[:12]\n 866 |         state.tests_run = self._dedupe_dicts(state.tests_run, \"command\")[:12]\n 867 |         state.errors_encountered = self._dedupe_dicts(state.errors_encountered, \"message\")[:10]\n 868 |         return state\n 869 | \n 870 |     def _extract_task_goal(self, turns: List[ConversationTurn]) -> str:\n 871 |         for turn in turns:\n 872 |             if turn.user_message and isinstance(turn.user_message.get(\"content\"), str):\n 873 |                 content = turn.user_message.get(\"content\", \"\").strip()\n 874 |                 if content:\n 875 |                     return content[:200]\n 876 |       ...",
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

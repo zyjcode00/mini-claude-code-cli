@@ -1,0 +1,55 @@
+{
+  "id": "mem_6b825cbcdd154501b64506250ea4aeb1",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: tests/test_compression_engine.py (第 1 至 260 行，共 469 行) ---\n   1 | # tests/test_compression_engine.py\n   2 | \"\"\"\n   3 | 压缩引擎测试\n   4 | \n   5 | 测试覆盖：\n   6 | 1. 4 种压缩策略（LLM_SUMMARY/KEYFRAME/SLIDING_WINDOW/IMPORTANCE_FILTER）\n   7 | 2. 策略选择器\n   8 | 3. 压缩效果\n   9 | 4. 集成到 ContextManager\n  10 | \"\"\"\n  11 | \n  12 | import pytest\n  13 | import asyncio\n  14 | from typing import List, Dict, Any\n  15 | \n  16 | from core.compression_engine import (\n  17 |     CompressionEngine,\n  18 |     CompressionStrategy,\n  19 |     CompressionResult,\n  20 |     select_compression_strategy\n  21 | )\n  22 | from core.memory_models import SessionSummary\n  23 | from core.context import ContextManager\n  24 | \n  25 | \n  26 | # ========== 辅助函数 ==========\n  27 | \n  28 | def create_mock_messages(count: int, role_pattern: str = \"mixed\") -> List[Dict[str, Any]]:\n  29 |     \"\"\"\n  30 |     创建模拟消息列表\n  31 | \n  32 |     Args:\n  33 |         count: 消息数量\n  34 |         role_pattern: 角色模式\n  35 |             - \"mixed\": 混合角色（user/assistant/tool）\n  36 |             - \"error\": 错误密集\n  37 |             - \"tool\": 工具密集\n  38 |             - \"simple\": 简单对话（user/assistant）\n  39 | \n  40 |     Returns:\n  41 |         消息列表\n  42 |     \"\"\"\n  43 |     messages = []\n  44 | \n  45 |     if role_pattern == \"mixed\":\n  46 |         for i in range(count):\n  47 |             if i % 3 == 0:\n  48 |                 messages.append({\"role\": \"user\", \"content\": f\"任务 {i}\"})\n  49 |             elif i % 3 == 1:\n  50 |                 messages.append({\"role\": \"assistant\", \"content\": f\"回复 {i}\", \"tool_calls\": [{\"id\": f\"tc_{i}\", \"type\": \"function\", \"function\": {\"name\": \"bash\", \"arguments\": \"\"}}]})\n  51 |             else:\n  52 |                 messages.append({\"role\": \"tool\", \"content\": f\"工具结果 {i}\", \"tool_call_id\": f\"tc_{i}\"})\n  53 | \n  54 |     elif role_pattern == \"error\":\n  55 |         for i in range(count):\n  56 |             if i % 4 == 0:\n  57 |                 messages.append({\"role\": \"user\", \"content\": f\"任务 {i}\"})\n  58 |             elif i % 4 == 1:\n  59 |                 messages.append({\"role\": \"assistant\", \"content\": f\"回复 {i}\", \"tool_calls\": [{\"id\": f\"tc_{i}\", \"type\": \"function\", \"function\": {\"name\": \"bash\", \"arguments\": \"\"}}]})\n  60 |             elif i % 4 == 2:\n  61 |                 messages.append({\"role\": \"tool\", \"content\": f\"Error: 失败 {i}\", \"tool_call_id\": f\"tc_{i}\"})\n  62 |             else:\n  63 |                 messages.append({\"role\": \"assistant\", \"content\": f\"Traceback: 错误 {i}\"})\n  64 | \n  65 |     elif role_pattern == \"tool\":\n  66 |         for i in range(count):\n  67 |             if i % 2 == 0:\n  68 |                 messages.append({\"role\": \"user\", \"content\": f\"任务 {i}\"})\n  69 |             else:\n  70 |                 messages.append({\"role\": \"assistant\", \"content\": f\"工具调用 {i}\", \"tool_calls\": [{\"id\": f\"tc_{i}\", \"type\": \"function\", \"function\": {\"name\": \"bash\", \"arguments\": \"\"}}]})\n  71 |                 messages.append({\"role\": \"tool\", \"content\": f\"工具结果 {i}\", \"tool_call_id\": f\"tc_{i}\"})\n  72 | \n  73 |     elif role_pattern == \"simple\":\n  74 |         for i in range(count):\n  75 |             if i % 2 == 0:\n  76 |                 messages.append({\"role\": \"user\", \"content\": f\"任务 {i}\"})\n  77 |             else:\n  78 |                 messages.append({\"role\": \"assistant\", \"content\": f\"回复 {i}\"})\n  79 | \n  80 |     return messages\n  81 | \n  82 | \n  83 | async def mock_llm_summarizer(prompt: str) -> str:\n  84 |     \"\"\"\n  85 |     模拟 LLM 摘要函数\n  86 | \n  87 |     Returns:\n  88 |         JSON 格式的摘要文本\n  89 |     \"\"\"\n  90 |     return \"\"\"\n  91 |     {\n  92 |         \"task_goal\": \"完成测试任务\",\n  93 |         \"task_status\": \"in_progress\",\n  94 |         \"files_changed\": [],\n  95 |         \"errors_encountered\": [],\n  96 |         \"tools_used\": [],\n  97 |         \"key_decisions\": [],\n  98 |         \"summary_text\": \"这是一个测试摘要\"\n  99 |     }\n 100 |     \"\"\"\n 101 | \n 102 | \n 103 | # ========== 测试 1: 压缩引擎初始化 ==========\n 104 | \n 105 | def test_compression_engine_init():\n 106 |     \"\"\"测试压缩引擎初始化\"\"\"\n 107 |...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:04:28.676826",
+  "updated_at": "2026-05-29T12:04:28.676826",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "tests/test_compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_7551f49da2cd49d68354ff1e74a4b57f"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_7551f49da2cd49d68354ff1e74a4b57f",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:04:28.676826",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 260,
+        "path": "tests/test_compression_engine.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: tests/test_compression_engine.py (第 1 至 260 行，共 469 行) ---\n   1 | # tests/test_compression_engine.py\n   2 | \"\"\"\n   3 | 压缩引擎测试\n   4 | \n   5 | 测试覆盖：\n   6 | 1. 4 种压缩策略（LLM_SUMMARY/KEYFRAME/SLIDING_WINDOW/IMPORTANCE_FILTER）\n   7 | 2. 策略选择器\n   8 | 3. 压缩效果\n   9 | 4. 集成到 ContextManager\n  10 | \"\"\"\n  11 | \n  12 | import pytest\n  13 | import asyncio\n  14 | from typing import List, Dict, Any\n  15 | \n  16 | from core.compression_engine import (\n  17 |     CompressionEngine,\n  18 |     CompressionStrategy,\n  19 |     CompressionResult,\n  20 |     select_compression_strategy\n  21 | )\n  22 | from core.memory_models import SessionSummary\n  23 | from core.context import ContextManager\n  24 | \n  25 | \n  26 | # ========== 辅助函数 ==========\n  27 | \n  28 | def create_mock_messages(count: int, role_pattern: str = \"mixed\") -> List[Dict[str, Any]]:\n  29 |     \"\"\"\n  30 |     创建模拟消息列表\n  31 | \n  32 |     Args:\n  33 |         count: 消息数量\n  34 |         role_pattern: 角色模式\n  35 |             - \"mixed\": 混合角色（user/assistant/tool）\n  36 |             - \"error\": 错误密集\n  37 |             - \"tool\": 工具密集\n  38 |             - \"simple\": 简单对话（user/assistant）\n  39 | \n  40 |     Returns:\n  41 |         消息列表\n  42 |     \"\"\"\n  43 |     messages = []\n  44 | \n  45 |     if role_pattern == \"mixed\":\n  46 |         for i in range(count):\n  47 |             if i % 3 == 0:\n  48 |                 messages.append({\"role\": \"user\", \"content\": f\"任务 {i}\"})\n  49 |             elif i % 3 == 1:\n  50 |                 messages.append({\"role\": \"assistant\", \"content\": f\"回复 {i}\", \"tool_calls\": [{\"id\": f\"tc_{i}\", \"type\": \"function\", \"function\": {\"name\": \"bash\", \"arguments\": \"\"}}]})\n  51 |             else:\n  52 |                 messages.append({\"role\": \"tool\", \"content\": f\"工具结果 {i}\", \"tool_call_id\": f\"tc_{i}\"})\n  53 | \n  54 |     elif role_pattern == \"error\":\n  55 |         for i in range(count):\n  56 |             if i % 4 == 0:\n  57 |                 messages.append({\"role\": \"user\", \"content\": f\"任务 {i}\"})\n  58 |             elif i % 4 == 1:\n  59 |                 messages.append({\"role\": \"assistant\", \"content\": f\"回复 {i}\", \"tool_calls\": [{\"id\": f\"tc_{i}\", \"type\": \"function\", \"function\": {\"name\": \"bash\", \"arguments\": \"\"}}]})\n  60 |             elif i % 4 == 2:\n  61 |                 messages.append({\"role\": \"tool\", \"content\": f\"Error: 失败 {i}\", \"tool_call_id\": f\"tc_{i}\"})\n  62 |             else:\n  63 |                 messages.append({\"role\": \"assistant\", \"content\": f\"Traceback: 错误 {i}\"})\n  64 | \n  65 |     elif role_pattern == \"tool\":\n  66 |         for i in range(count):\n  67 |             if i % 2 == 0:\n  68 |                 messages.append({\"role\": \"user\", \"content\": f\"任务 {i}\"})\n  69 |             else:\n  70 |                 messages.append({\"role\": \"assistant\", \"content\": f\"工具调用 {i}\", \"tool_calls\": [{\"id\": f\"tc_{i}\", \"type\": \"function\", \"function\": {\"name\": \"bash\", \"arguments\": \"\"}}]})\n  71 |                 messages.append({\"role\": \"tool\", \"content\": f\"工具结果 {i}\", \"tool_call_id\": f\"tc_{i}\"})\n  72 | \n  73 |     elif role_pattern == \"simple\":\n  74 |         for i in range(count):\n  75 |             if i % 2 == 0:\n  76 |                 messages.append({\"role\": \"user\", \"content\": f\"任务 {i}\"})\n  77 |             else:\n  78 |                 messages.append({\"role\": \"assistant\", \"content\": f\"回复 {i}\"})\n  79 | \n  80 |     return messages\n  81 | \n  82 | \n  83 | async def mock_llm_summarizer(prompt: str) -> str:\n  84 |     \"\"\"\n  85 |     模拟 LLM 摘要函数\n  86 | \n  87 |     Returns:\n  88 |         JSON 格式的摘要文本\n  89 |     \"\"\"\n  90 |     return \"\"\"\n  91 |     {\n  92 |         \"task_goal\": \"完成测试任务\",\n  93 |         \"task_status\": \"in_progress\",\n  94 |         \"files_changed\": [],\n  95 |         \"errors_encountered\": [],\n  96 |         \"tools_used\": [],\n  97 |         \"key_decisions\": [],\n  98 |         \"summary_text\": \"这是一个测试摘要\"\n  99 |     }\n 100 |     \"\"\"\n 101 | \n 102 | \n 103 | # ========== 测试 1: 压缩引擎初始化 ==========\n 104 | \n 105 | def test_compression_engine_init():\n 106 |     \"\"\"测试压缩引擎初始化\"\"\"\n 107 |...",
+      "files": [
+        "tests/test_compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

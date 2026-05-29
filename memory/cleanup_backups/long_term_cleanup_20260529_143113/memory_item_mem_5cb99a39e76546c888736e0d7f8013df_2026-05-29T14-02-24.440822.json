@@ -1,0 +1,90 @@
+{
+  "id": "mem_5cb99a39e76546c888736e0d7f8013df",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nD:\\LLM\\memory\\agentmemory\\.claude-plugin\r\nD:\\LLM\\memory\\agentmemory\\.codex-plugin\r\nD:\\LLM\\memory\\agentmemory\\.env.example\r\nD:\\LLM\\memory\\agentmemory\\AGENTS.md\r\nD:\\LLM\\memory\\agentmemory\\assets\r\nD:\\LLM\\memory\\agentmemory\\benchmark\r\nD:\\LLM\\memory\\agentmemory\\CHANGELOG.md\r\nD:\\LLM\\memory\\agentmemory\\CODE_OF_CONDUCT.md\r\nD:\\LLM\\memory\\agentmemory\\CONTRIBUTING.md\r\nD:\\LLM\\memory\\agentmemory\\deploy\r\nD:\\LLM\\memory\\agentmemory\\DESIGN.md\r\nD:\\LLM\\memory\\agentmemory\\docker-compose.yml\r\nD:\\LLM\\memory\\agentmemory\\docs\r\nD:\\LLM\\memory\\agentmemory\\eval\r\nD:\\LLM\\memory\\agentmemory\\examples\r\nD:\\LLM\\memory\\agentmemory\\GOVERNANCE.md\r\nD:\\LLM\\memory\\agentmemory\\iii-config.docker.yaml\r\nD:\\LLM\\memory\\agentmemory\\iii-config.yaml\r\nD:\\LLM\\memory\\agentmemory\\integrations\r\nD:\\LLM\\memory\\agentmemory\\LICENSE\r\nD:\\LLM\\memory\\agentmemory\\MAINTAINERS.md\r\nD:\\LLM\\memory\\agentmemory\\package.json\r\nD:\\LLM\\memory\\agentmemory\\packages\r\nD:\\LLM\\memory\\agentmemory\\plugin\r\nD:\\LLM\\memory\\agentmemory\\README.md\r\nD:\\LLM\\memory\\agentmemory\\READMEs\r\nD:\\LLM\\memory\\agentmemory\\ROADMAP.md\r\nD:\\LLM\\memory\\agentmemory\\scripts\r\nD:\\LLM\\memory\\agentmemory\\SECURITY.md\r\nD:\\LLM\\memory\\agentmemory\\src\r\nD:\\LLM\\memory\\agentmemory\\test\r\nD:\\LLM\\memory\\agentmemory\\tsconfig.json\r\nD:\\LLM\\memory\\agentmemory\\tsdown.config.ts\r\nD:\\LLM\\memory\\agentmemory\\website\r\nD:\\LLM\\memory\\agentmemory\\架构设计.md\r\nD:\\LLM\\memory\\agentmemory\\.claude-plugin\\marketplace.json\r\nD:\\LLM\\memory\\agentmemory\\.codex-plugin\\marketplace.json\r\nD:\\LLM\\memory\\agentmemory\\assets\\agents\r\nD:\\LLM\\memory\\agentmemory\\assets\\banner.png\r\nD:\\LLM\\memory\\agentmemory\\assets\\demo.gif\r\nD:\\LLM\\memory\\agentmemory\\assets\\demo.mp4\r\nD:\\LLM\\memory\\agentmemory\\assets\\icon.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\iii-console\r\nD:\\LLM\\memory\\agentmemory\\assets\\logo.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\r\nD:\\LLM\\memory\\agentmemory\\assets\\agents\\pi.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\iii-console\\states.png\r\nD:\\LLM\\memory\\agentmemory\\assets\\iii-console\\traces-waterfall.png\r\nD:\\LLM\\memory\\agentmemory\\assets\\iii-console\\workers.png\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\divider.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\light\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\new-v082.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-beta.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-hook.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-mcp.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-new.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-plugin.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-secure.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-skill.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-stable.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-agents.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-api.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-architecture.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-benchmarks.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-competitors.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-config.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-development.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-how.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-license.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-mcp.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-quickstart.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-search.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-viewer.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-why.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-deps.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-hooks.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-recall.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-tests.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-tokens.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-tools.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\light\\divider.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\light\\new-v082.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\light\\pill-beta.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\light\\pill-hook.svg\r\nD:...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:02:24.440822",
+  "updated_at": "2026-05-29T14:02:24.440822",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [
+    "D:\\LLM\\memory\\agentmemory\\AGENTS.md",
+    "D:\\LLM\\memory\\agentmemory\\CHANGELOG.md",
+    "D:\\LLM\\memory\\agentmemory\\CODE_OF_CONDUCT.md",
+    "D:\\LLM\\memory\\agentmemory\\CONTRIBUTING.md",
+    "D:\\LLM\\memory\\agentmemory\\DESIGN.md",
+    "D:\\LLM\\memory\\agentmemory\\docker-compose.yml",
+    "D:\\LLM\\memory\\agentmemory\\GOVERNANCE.md",
+    "D:\\LLM\\memory\\agentmemory\\iii-config.docker.yaml",
+    "D:\\LLM\\memory\\agentmemory\\iii-config.yaml",
+    "D:\\LLM\\memory\\agentmemory\\MAINTAINERS.md",
+    "D:\\LLM\\memory\\agentmemory\\package.json",
+    "D:\\LLM\\memory\\agentmemory\\README.md",
+    "D:\\LLM\\memory\\agentmemory\\ROADMAP.md",
+    "D:\\LLM\\memory\\agentmemory\\SECURITY.md",
+    "D:\\LLM\\memory\\agentmemory\\tsconfig.json",
+    "D:\\LLM\\memory\\agentmemory\\架构设计.md",
+    "D:\\LLM\\memory\\agentmemory\\.claude-plugin\\marketplace.json",
+    "D:\\LLM\\memory\\agentmemory\\.codex-plugin\\marketplace.json",
+    "D:\\LLM\\memory\\agentmemory\\benchmark\\COMPARISON.md",
+    "D:\\LLM\\memory\\agentmemory\\benchmark\\LONGMEMEVAL.md"
+  ],
+  "source_observation_ids": [
+    "obs_8832aaf516da4ffaa584bb7d7fed8530"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_8832aaf516da4ffaa584bb7d7fed8530",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:02:24.440822",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "cd /d D:\\LLM\\memory\\agentmemory && dir /s /b | findstr /v \"node_modules .git dist build\" | more"
+      },
+      "tool_output": "STDOUT:\nD:\\LLM\\memory\\agentmemory\\.claude-plugin\r\nD:\\LLM\\memory\\agentmemory\\.codex-plugin\r\nD:\\LLM\\memory\\agentmemory\\.env.example\r\nD:\\LLM\\memory\\agentmemory\\AGENTS.md\r\nD:\\LLM\\memory\\agentmemory\\assets\r\nD:\\LLM\\memory\\agentmemory\\benchmark\r\nD:\\LLM\\memory\\agentmemory\\CHANGELOG.md\r\nD:\\LLM\\memory\\agentmemory\\CODE_OF_CONDUCT.md\r\nD:\\LLM\\memory\\agentmemory\\CONTRIBUTING.md\r\nD:\\LLM\\memory\\agentmemory\\deploy\r\nD:\\LLM\\memory\\agentmemory\\DESIGN.md\r\nD:\\LLM\\memory\\agentmemory\\docker-compose.yml\r\nD:\\LLM\\memory\\agentmemory\\docs\r\nD:\\LLM\\memory\\agentmemory\\eval\r\nD:\\LLM\\memory\\agentmemory\\examples\r\nD:\\LLM\\memory\\agentmemory\\GOVERNANCE.md\r\nD:\\LLM\\memory\\agentmemory\\iii-config.docker.yaml\r\nD:\\LLM\\memory\\agentmemory\\iii-config.yaml\r\nD:\\LLM\\memory\\agentmemory\\integrations\r\nD:\\LLM\\memory\\agentmemory\\LICENSE\r\nD:\\LLM\\memory\\agentmemory\\MAINTAINERS.md\r\nD:\\LLM\\memory\\agentmemory\\package.json\r\nD:\\LLM\\memory\\agentmemory\\packages\r\nD:\\LLM\\memory\\agentmemory\\plugin\r\nD:\\LLM\\memory\\agentmemory\\README.md\r\nD:\\LLM\\memory\\agentmemory\\READMEs\r\nD:\\LLM\\memory\\agentmemory\\ROADMAP.md\r\nD:\\LLM\\memory\\agentmemory\\scripts\r\nD:\\LLM\\memory\\agentmemory\\SECURITY.md\r\nD:\\LLM\\memory\\agentmemory\\src\r\nD:\\LLM\\memory\\agentmemory\\test\r\nD:\\LLM\\memory\\agentmemory\\tsconfig.json\r\nD:\\LLM\\memory\\agentmemory\\tsdown.config.ts\r\nD:\\LLM\\memory\\agentmemory\\website\r\nD:\\LLM\\memory\\agentmemory\\架构设计.md\r\nD:\\LLM\\memory\\agentmemory\\.claude-plugin\\marketplace.json\r\nD:\\LLM\\memory\\agentmemory\\.codex-plugin\\marketplace.json\r\nD:\\LLM\\memory\\agentmemory\\assets\\agents\r\nD:\\LLM\\memory\\agentmemory\\assets\\banner.png\r\nD:\\LLM\\memory\\agentmemory\\assets\\demo.gif\r\nD:\\LLM\\memory\\agentmemory\\assets\\demo.mp4\r\nD:\\LLM\\memory\\agentmemory\\assets\\icon.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\iii-console\r\nD:\\LLM\\memory\\agentmemory\\assets\\logo.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\r\nD:\\LLM\\memory\\agentmemory\\assets\\agents\\pi.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\iii-console\\states.png\r\nD:\\LLM\\memory\\agentmemory\\assets\\iii-console\\traces-waterfall.png\r\nD:\\LLM\\memory\\agentmemory\\assets\\iii-console\\workers.png\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\divider.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\light\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\new-v082.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-beta.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-hook.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-mcp.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-new.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-plugin.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-secure.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-skill.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\pill-stable.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-agents.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-api.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-architecture.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-benchmarks.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-competitors.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-config.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-development.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-how.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-license.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-mcp.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-quickstart.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-search.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-viewer.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\section-why.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-deps.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-hooks.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-recall.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-tests.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-tokens.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\stat-tools.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\light\\divider.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\light\\new-v082.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\light\\pill-beta.svg\r\nD:\\LLM\\memory\\agentmemory\\assets\\tags\\light\\pill-hook.svg\r\nD:...",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "D:\\LLM\\memory\\agentmemory\\AGENTS.md",
+        "D:\\LLM\\memory\\agentmemory\\CHANGELOG.md",
+        "D:\\LLM\\memory\\agentmemory\\CODE_OF_CONDUCT.md",
+        "D:\\LLM\\memory\\agentmemory\\CONTRIBUTING.md",
+        "D:\\LLM\\memory\\agentmemory\\DESIGN.md",
+        "D:\\LLM\\memory\\agentmemory\\docker-compose.yml",
+        "D:\\LLM\\memory\\agentmemory\\GOVERNANCE.md",
+        "D:\\LLM\\memory\\agentmemory\\iii-config.docker.yaml",
+        "D:\\LLM\\memory\\agentmemory\\iii-config.yaml",
+        "D:\\LLM\\memory\\agentmemory\\MAINTAINERS.md",
+        "D:\\LLM\\memory\\agentmemory\\package.json",
+        "D:\\LLM\\memory\\agentmemory\\README.md",
+        "D:\\LLM\\memory\\agentmemory\\ROADMAP.md",
+        "D:\\LLM\\memory\\agentmemory\\SECURITY.md",
+        "D:\\LLM\\memory\\agentmemory\\tsconfig.json",
+        "D:\\LLM\\memory\\agentmemory\\架构设计.md",
+        "D:\\LLM\\memory\\agentmemory\\.claude-plugin\\marketplace.json",
+        "D:\\LLM\\memory\\agentmemory\\.codex-plugin\\marketplace.json",
+        "D:\\LLM\\memory\\agentmemory\\benchmark\\COMPARISON.md",
+        "D:\\LLM\\memory\\agentmemory\\benchmark\\LONGMEMEVAL.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

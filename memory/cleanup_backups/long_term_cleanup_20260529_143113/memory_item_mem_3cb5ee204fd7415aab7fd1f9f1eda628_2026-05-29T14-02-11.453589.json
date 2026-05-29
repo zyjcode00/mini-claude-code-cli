@@ -1,0 +1,64 @@
+{
+  "id": "mem_3cb5ee204fd7415aab7fd1f9f1eda628",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 61 处匹配，分布在 3 个文件中\n\n================================================================================\n\n[FILE] examples\\python\\observe_and_recall.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       2 | \n       3 | Pattern: send hook-style observations during a coding session, then ask\n>>>    4 | agentmemory to render the most relevant context back at a fixed token budget.\n       5 | \n       6 | Prerequisites:\n    [上下文]\n       6 | Prerequisites:\n       7 |     pip install iii-sdk\n>>>    8 |     npx -y @agentmemory/agentmemory\n       9 | \n      10 | Run:\n\n[FILE] examples\\python\\quickstart.py (5 处匹配)\n--------------------------------------------------------------------------------\n>>>    1 | \"\"\"Minimal agentmemory usage via iii-sdk.\n       2 | \n       3 | Prerequisites:\n    [上下文]\n       3 | Prerequisites:\n       4 |     pip install iii-sdk\n>>>    5 |     npx -y @agentmemory/agentmemory  # daemon at ws://localhost:49134\n       6 | \n       7 | Run:\n    [上下文]\n      30 |     hits = iii.trigger(\n      31 |         {\n>>>   32 |             \"function_id\": \"mem::smart-search\",\n      33 |             \"payload\": {\n      34 |                 \"project\": \"demo\",\n    [上下文]\n      39 |     )\n      40 | \n>>>   41 |     for memory in hits.get(\"results\", []):\n      42 |         print(f\"[{memory.get('score', 0):.3f}] {memory.get('title')}: {memory.get('content')}\")\n      43 | \n    [上下文]\n      40 | \n      41 |     for memory in hits.get(\"results\", []):\n>>>   42 |         print(f\"[{memory.get('score', 0):.3f}] {memory.get('title')}: {memory.get('content')}\")\n      43 | \n      44 | \n\n[FILE] integrations\\hermes\\__init__.py (54 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       1 | \"\"\"\n>>>    2 | agentmemory memory provider for Hermes Agent.\n       3 | \n       4 | Drop this folder into ~/.hermes/plugins/agentmemory/\n    [上下文]\n       2 | agentmemory memory provider for Hermes Agent.\n       3 | \n>>>    4 | Drop this folder into ~/.hermes/plugins/agentmemory/\n       5 | or install via: hermes plugin install agentmemory\n       6 | \n    [上下文]\n       3 | \n       4 | Drop this folder into ~/.hermes/plugins/agentmemory/\n>>>    5 | or install via: hermes plugin install agentmemory\n       6 | \n       7 | Requires agentmemory server running: npx @agentmemory/agentmemory\n    [上下文]\n       5 | or install via: hermes plugin install agentmemory\n       6 | \n>>>    7 | Requires agentmemory server running: npx @agentmemory/agentmemory\n       8 | \"\"\"\n       9 | \n    [上下文]\n      22 | \n      23 | try:\n>>>   24 |     from agent.memory_provider import MemoryProvider\n      25 | except ImportError:\n      26 |     from abc import ABC, abstractmethod\n    [上下文]\n      26 |     from abc import ABC, abstractmethod\n      27 | \n>>>   28 |     class MemoryProvider(ABC):\n      29 |         @property\n      30 |         @abstractmethod\n    [上下文]\n      46 |         def on_session_end(self, messages: list, **kwargs: Any) -> None: pass\n      47 |         def on_pre_compress(self, messages: list, **kwargs: Any) -> None: pass\n>>>   48 |         def on_memory_write(self, action: str, target: str, content: str, **kwargs: Any) -> None: pass\n      49 |         def shutdown(self, **kwargs: Any) -> None: pass\n      50 | \n    [上下文]\n      55 | _plaintext_bearer_warned = False\n      56 | \n>>>   57 | # agentmemory's documented runtime config lives at ~/.agentmemory/.env.\n      58 | # When agentmemory is launched as a systemd user service (or any other\n      59 | # process manager that loads that file directly), those values never\n    [上下文]\n      56 | \n      57 | # agentmemory's documented runtime config lives at ~/.agentmemory/.env.\n>>>   58 | # When agentmemory is launched as a systemd user service (or any other\n      59 | # process manager that loads that file directly), those values never\n      60 | # reach an interactive shell. `hermes memory status` then reads\n    [上下文]\n      58 ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:02:11.453589",
+  "updated_at": "2026-05-29T14:02:11.453589",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    "D:\\LLM\\memory\\agentmemory",
+    "examples\\python\\observe_and_recall.py",
+    "examples\\python\\quickstart.py",
+    "integrations\\hermes\\__init__.py",
+    "agentmemory.json"
+  ],
+  "source_observation_ids": [
+    "obs_7559a5545cae4959a509aedc6f6af108"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_7559a5545cae4959a509aedc6f6af108",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:02:11.453589",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 2,
+        "file_pattern": "*.py",
+        "path": "D:\\LLM\\memory\\agentmemory",
+        "pattern": "memory|retriev|search|index|embed"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 61 处匹配，分布在 3 个文件中\n\n================================================================================\n\n[FILE] examples\\python\\observe_and_recall.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       2 | \n       3 | Pattern: send hook-style observations during a coding session, then ask\n>>>    4 | agentmemory to render the most relevant context back at a fixed token budget.\n       5 | \n       6 | Prerequisites:\n    [上下文]\n       6 | Prerequisites:\n       7 |     pip install iii-sdk\n>>>    8 |     npx -y @agentmemory/agentmemory\n       9 | \n      10 | Run:\n\n[FILE] examples\\python\\quickstart.py (5 处匹配)\n--------------------------------------------------------------------------------\n>>>    1 | \"\"\"Minimal agentmemory usage via iii-sdk.\n       2 | \n       3 | Prerequisites:\n    [上下文]\n       3 | Prerequisites:\n       4 |     pip install iii-sdk\n>>>    5 |     npx -y @agentmemory/agentmemory  # daemon at ws://localhost:49134\n       6 | \n       7 | Run:\n    [上下文]\n      30 |     hits = iii.trigger(\n      31 |         {\n>>>   32 |             \"function_id\": \"mem::smart-search\",\n      33 |             \"payload\": {\n      34 |                 \"project\": \"demo\",\n    [上下文]\n      39 |     )\n      40 | \n>>>   41 |     for memory in hits.get(\"results\", []):\n      42 |         print(f\"[{memory.get('score', 0):.3f}] {memory.get('title')}: {memory.get('content')}\")\n      43 | \n    [上下文]\n      40 | \n      41 |     for memory in hits.get(\"results\", []):\n>>>   42 |         print(f\"[{memory.get('score', 0):.3f}] {memory.get('title')}: {memory.get('content')}\")\n      43 | \n      44 | \n\n[FILE] integrations\\hermes\\__init__.py (54 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       1 | \"\"\"\n>>>    2 | agentmemory memory provider for Hermes Agent.\n       3 | \n       4 | Drop this folder into ~/.hermes/plugins/agentmemory/\n    [上下文]\n       2 | agentmemory memory provider for Hermes Agent.\n       3 | \n>>>    4 | Drop this folder into ~/.hermes/plugins/agentmemory/\n       5 | or install via: hermes plugin install agentmemory\n       6 | \n    [上下文]\n       3 | \n       4 | Drop this folder into ~/.hermes/plugins/agentmemory/\n>>>    5 | or install via: hermes plugin install agentmemory\n       6 | \n       7 | Requires agentmemory server running: npx @agentmemory/agentmemory\n    [上下文]\n       5 | or install via: hermes plugin install agentmemory\n       6 | \n>>>    7 | Requires agentmemory server running: npx @agentmemory/agentmemory\n       8 | \"\"\"\n       9 | \n    [上下文]\n      22 | \n      23 | try:\n>>>   24 |     from agent.memory_provider import MemoryProvider\n      25 | except ImportError:\n      26 |     from abc import ABC, abstractmethod\n    [上下文]\n      26 |     from abc import ABC, abstractmethod\n      27 | \n>>>   28 |     class MemoryProvider(ABC):\n      29 |         @property\n      30 |         @abstractmethod\n    [上下文]\n      46 |         def on_session_end(self, messages: list, **kwargs: Any) -> None: pass\n      47 |         def on_pre_compress(self, messages: list, **kwargs: Any) -> None: pass\n>>>   48 |         def on_memory_write(self, action: str, target: str, content: str, **kwargs: Any) -> None: pass\n      49 |         def shutdown(self, **kwargs: Any) -> None: pass\n      50 | \n    [上下文]\n      55 | _plaintext_bearer_warned = False\n      56 | \n>>>   57 | # agentmemory's documented runtime config lives at ~/.agentmemory/.env.\n      58 | # When agentmemory is launched as a systemd user service (or any other\n      59 | # process manager that loads that file directly), those values never\n    [上下文]\n      56 | \n      57 | # agentmemory's documented runtime config lives at ~/.agentmemory/.env.\n>>>   58 | # When agentmemory is launched as a systemd user service (or any other\n      59 | # process manager that loads that file directly), those values never\n      60 | # reach an interactive shell. `hermes memory status` then reads\n    [上下文]\n      58 ...",
+      "files": [
+        "D:\\LLM\\memory\\agentmemory",
+        "examples\\python\\observe_and_recall.py",
+        "examples\\python\\quickstart.py",
+        "integrations\\hermes\\__init__.py",
+        "agentmemory.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

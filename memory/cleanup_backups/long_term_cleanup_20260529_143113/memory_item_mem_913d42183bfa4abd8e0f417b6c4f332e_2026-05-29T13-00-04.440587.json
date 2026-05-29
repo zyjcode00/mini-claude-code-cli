@@ -1,0 +1,55 @@
+{
+  "id": "mem_913d42183bfa4abd8e0f417b6c4f332e",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_layers.py (第 261 至 570 行，共 570 行) ---\n 261 |                         self.item_index[item_id] = item_file\n 262 | \n 263 |                         keywords = self._extract_item_keywords(data)\n 264 |                         for keyword in keywords:\n 265 |                             if keyword not in self.item_inverted_index:\n 266 |                                 self.item_inverted_index[keyword] = []\n 267 |                             if item_id not in self.item_inverted_index[keyword]:\n 268 |                                 self.item_inverted_index[keyword].append(item_id)\n 269 |             except Exception as e:\n 270 |                 print(f\"⚠️ 重建 MemoryItem 索引时跳过文件 {item_file}: {e}\")\n 271 | \n 272 |         # 保存索引\n 273 |         self._save_index()\n 274 | \n 275 |     def _extract_keywords(self, data: Dict[str, Any]) -> List[str]:\n 276 |         \"\"\"从摘要数据中提取关键词\"\"\"\n 277 |         keywords = []\n 278 | \n 279 |         # 从摘要文本中提取\n 280 |         summary_text = data.get(\"summary_text\", \"\")\n 281 |         keywords.extend(self._tokenize(summary_text))\n 282 | \n 283 |         # 从任务目标中提取\n 284 |         task_goal = data.get(\"task_goal\", \"\")\n 285 |         keywords.extend(self._tokenize(task_goal))\n 286 | \n 287 |         # 从文件路径中提取\n 288 |         files_changed = data.get(\"files_changed\", [])\n 289 |         for fc in files_changed:\n 290 |             if not isinstance(fc, dict):\n 291 |                 continue\n 292 |             # FileChange 当前规范字段是 path；兼容旧数据中可能存在的 file_path\n 293 |             file_path = fc.get(\"path\") or fc.get(\"file_path\", \"\")\n 294 |             keywords.extend(self._tokenize(file_path))\n 295 | \n 296 |         return list(set(keywords))\n 297 | \n 298 |     def _extract_item_keywords(self, data: Dict[str, Any]) -> List[str]:\n 299 |         \"\"\"从 MemoryItem 数据中提取关键词。\"\"\"\n 300 |         keywords = []\n 301 | \n 302 |         for field_name in (\"kind\", \"type\", \"title\", \"content\", \"project\", \"status\"):\n 303 |             keywords.extend(self._tokenize(str(data.get(field_name, \"\"))))\n 304 | \n 305 |         for concept in data.get(\"concepts\", []):\n 306 |             keywords.extend(self._tokenize(str(concept)))\n 307 | \n 308 |         for file_path in data.get(\"files\", []):\n 309 |             keywords.extend(self._tokenize(str(file_path)))\n 310 | \n 311 |         for session_id in data.get(\"source_session_ids\", []):\n 312 |             keywords.extend(self._tokenize(str(session_id)))\n 313 | \n 314 |         return list(set(keywords))\n 315 | \n 316 |     def _tokenize(self, text: str) -> List[str]:\n 317 |         \"\"\"简单分词（支持中英文）\"\"\"\n 318 |         import re\n 319 | \n 320 |         # 英文/路径片段：保留下划线文件名（如 memory_layers），同时拆分为普通英文词\n 321 |         raw_words = re.findall(r'\\b[a-zA-Z][a-zA-Z0-9_]{1,}\\b', text.lower())\n 322 |         words = []\n 323 |         for word in raw_words:\n 324 |             words.append(word)\n 325 |             words.extend(part for part in word.split('_') if len(part) >= 2)\n 326 | \n 327 |         # 中文分词（简单实现：提取 2-3 字的片段）\n 328 |         # 注意：这是简化版本，实际应用中应使用 jieba 等分词工具\n 329 |         chinese_2char = re.findall(r'[\\u4e00-\\u9fa5]{2}', text)\n 330 |         chinese_3char = re.findall(r'[\\u4e00-\\u9fa5]{3}', text)\n 331 | \n 332 |         # 合并并去重\n 333 |         chinese = list(set(chinese_2char + chinese_3char))\n 334 | \n 335 |         return words + chinese\n 336 | \n 337 |     def store(self, summary: SessionSummary) -> str:\n 338 |         \"\"\"\n 339 |         存储摘要到长期记忆\n 340 | \n 341 |         Args:\n 342 |             summary: 会话摘要\n 343 | \n 344 |         Returns:\n 345 |             存储的文件路径\n 346 |         \"\"\"\n 347 |         # 生成文件名\n 348 |         timestamp = summary.timestamp.replace(\":\", \"-\").replace(\" \", \"_\")\n 349 |         filename = f\"summary_{summary.session_id}_{timestamp}.json\"\n 350 |         file_path = self.storage_dir / filename\n 351 | \n 352 |         # 保存到磁盘\n 353 |         try:\n 354 |             with open(file_path, 'w', encoding='utf-8') as f:\n 355 |                 json.dump(summary.to_dict(), f, ensure...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:00:04.440587",
+  "updated_at": "2026-05-29T13:00:04.440587",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_b9ad3e5fe112489692eeef77ec4856a9"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_b9ad3e5fe112489692eeef77ec4856a9",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:00:04.440587",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 570,
+        "path": "core/memory_layers.py",
+        "raw_mode": false,
+        "start_line": 261
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_layers.py (第 261 至 570 行，共 570 行) ---\n 261 |                         self.item_index[item_id] = item_file\n 262 | \n 263 |                         keywords = self._extract_item_keywords(data)\n 264 |                         for keyword in keywords:\n 265 |                             if keyword not in self.item_inverted_index:\n 266 |                                 self.item_inverted_index[keyword] = []\n 267 |                             if item_id not in self.item_inverted_index[keyword]:\n 268 |                                 self.item_inverted_index[keyword].append(item_id)\n 269 |             except Exception as e:\n 270 |                 print(f\"⚠️ 重建 MemoryItem 索引时跳过文件 {item_file}: {e}\")\n 271 | \n 272 |         # 保存索引\n 273 |         self._save_index()\n 274 | \n 275 |     def _extract_keywords(self, data: Dict[str, Any]) -> List[str]:\n 276 |         \"\"\"从摘要数据中提取关键词\"\"\"\n 277 |         keywords = []\n 278 | \n 279 |         # 从摘要文本中提取\n 280 |         summary_text = data.get(\"summary_text\", \"\")\n 281 |         keywords.extend(self._tokenize(summary_text))\n 282 | \n 283 |         # 从任务目标中提取\n 284 |         task_goal = data.get(\"task_goal\", \"\")\n 285 |         keywords.extend(self._tokenize(task_goal))\n 286 | \n 287 |         # 从文件路径中提取\n 288 |         files_changed = data.get(\"files_changed\", [])\n 289 |         for fc in files_changed:\n 290 |             if not isinstance(fc, dict):\n 291 |                 continue\n 292 |             # FileChange 当前规范字段是 path；兼容旧数据中可能存在的 file_path\n 293 |             file_path = fc.get(\"path\") or fc.get(\"file_path\", \"\")\n 294 |             keywords.extend(self._tokenize(file_path))\n 295 | \n 296 |         return list(set(keywords))\n 297 | \n 298 |     def _extract_item_keywords(self, data: Dict[str, Any]) -> List[str]:\n 299 |         \"\"\"从 MemoryItem 数据中提取关键词。\"\"\"\n 300 |         keywords = []\n 301 | \n 302 |         for field_name in (\"kind\", \"type\", \"title\", \"content\", \"project\", \"status\"):\n 303 |             keywords.extend(self._tokenize(str(data.get(field_name, \"\"))))\n 304 | \n 305 |         for concept in data.get(\"concepts\", []):\n 306 |             keywords.extend(self._tokenize(str(concept)))\n 307 | \n 308 |         for file_path in data.get(\"files\", []):\n 309 |             keywords.extend(self._tokenize(str(file_path)))\n 310 | \n 311 |         for session_id in data.get(\"source_session_ids\", []):\n 312 |             keywords.extend(self._tokenize(str(session_id)))\n 313 | \n 314 |         return list(set(keywords))\n 315 | \n 316 |     def _tokenize(self, text: str) -> List[str]:\n 317 |         \"\"\"简单分词（支持中英文）\"\"\"\n 318 |         import re\n 319 | \n 320 |         # 英文/路径片段：保留下划线文件名（如 memory_layers），同时拆分为普通英文词\n 321 |         raw_words = re.findall(r'\\b[a-zA-Z][a-zA-Z0-9_]{1,}\\b', text.lower())\n 322 |         words = []\n 323 |         for word in raw_words:\n 324 |             words.append(word)\n 325 |             words.extend(part for part in word.split('_') if len(part) >= 2)\n 326 | \n 327 |         # 中文分词（简单实现：提取 2-3 字的片段）\n 328 |         # 注意：这是简化版本，实际应用中应使用 jieba 等分词工具\n 329 |         chinese_2char = re.findall(r'[\\u4e00-\\u9fa5]{2}', text)\n 330 |         chinese_3char = re.findall(r'[\\u4e00-\\u9fa5]{3}', text)\n 331 | \n 332 |         # 合并并去重\n 333 |         chinese = list(set(chinese_2char + chinese_3char))\n 334 | \n 335 |         return words + chinese\n 336 | \n 337 |     def store(self, summary: SessionSummary) -> str:\n 338 |         \"\"\"\n 339 |         存储摘要到长期记忆\n 340 | \n 341 |         Args:\n 342 |             summary: 会话摘要\n 343 | \n 344 |         Returns:\n 345 |             存储的文件路径\n 346 |         \"\"\"\n 347 |         # 生成文件名\n 348 |         timestamp = summary.timestamp.replace(\":\", \"-\").replace(\" \", \"_\")\n 349 |         filename = f\"summary_{summary.session_id}_{timestamp}.json\"\n 350 |         file_path = self.storage_dir / filename\n 351 | \n 352 |         # 保存到磁盘\n 353 |         try:\n 354 |             with open(file_path, 'w', encoding='utf-8') as f:\n 355 |                 json.dump(summary.to_dict(), f, ensure...",
+      "files": [
+        "core/memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

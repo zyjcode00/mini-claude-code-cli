@@ -1,0 +1,54 @@
+{
+  "id": "mem_3656396d69354a7db296734f67a869e2",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nhello\r\n[WindowsPath('memory/long_term/index.json')]\r\n Volume in drive D has no label.\r\n Volume Serial Number is 06B2-F622\r\n\r\n Directory of D:\\LLM\\mini-claude-code-cli\\memory\\long_term\r\n\r\n2026/05/29  13:17         2,820,374 index.json\r\n               1 File(s)      2,820,374 bytes\r\n               0 Dir(s)  42,813,796,352 bytes free\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:17:26.149341",
+  "updated_at": "2026-05-29T13:17:26.149341",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [
+    "memory/long_term/index.json",
+    "index.json"
+  ],
+  "source_observation_ids": [
+    "obs_420904fd650c45ceb5731619bf207e20"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_420904fd650c45ceb5731619bf207e20",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:17:26.149341",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -c \"import pathlib,json; print('hello'); print(list(pathlib.Path('memory').rglob('index.json')))\" && dir memory\\long_term\\index.json"
+      },
+      "tool_output": "STDOUT:\nhello\r\n[WindowsPath('memory/long_term/index.json')]\r\n Volume in drive D has no label.\r\n Volume Serial Number is 06B2-F622\r\n\r\n Directory of D:\\LLM\\mini-claude-code-cli\\memory\\long_term\r\n\r\n2026/05/29  13:17         2,820,374 index.json\r\n               1 File(s)      2,820,374 bytes\r\n               0 Dir(s)  42,813,796,352 bytes free\r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "memory/long_term/index.json",
+        "index.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

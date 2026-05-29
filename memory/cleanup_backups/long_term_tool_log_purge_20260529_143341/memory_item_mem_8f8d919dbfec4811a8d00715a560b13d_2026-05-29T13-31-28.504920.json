@@ -1,0 +1,54 @@
+{
+  "id": "mem_8f8d919dbfec4811a8d00715a560b13d",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 core/memory_layers.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:31:28.504920",
+  "updated_at": "2026-05-29T13:31:28.504920",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "core/memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_68747b766d4847ea96a4cf8d47e9fea3"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_68747b766d4847ea96a4cf8d47e9fea3",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:31:28.504920",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "import json\nimport os\nimport tempfile\nimport time\nfrom datetime import datetime",
+        "old_str": "import json\nimport os\nimport tempfile\nfrom datetime import datetime",
+        "path": "core/memory_layers.py"
+      },
+      "tool_output": "成功: 已更新 core/memory_layers.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

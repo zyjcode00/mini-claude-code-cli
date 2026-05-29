@@ -1,0 +1,52 @@
+{
+  "id": "mem_31024b5d534446119f040e0359e5de9d",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: run_pytest",
+  "content": "❌ 测试失败 (Exit Code 1):\nSTDOUT:\nNone\nSTDERR:\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:09:37.013884",
+  "updated_at": "2026-05-29T12:09:37.013884",
+  "concepts": [
+    "tool_failure",
+    "run_pytest"
+  ],
+  "files": [
+    "tests/test_turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_bcad8b4133124dd69e632e48e3e6b32d"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_bcad8b4133124dd69e632e48e3e6b32d",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:09:37.013884",
+      "event_type": "tool_failure",
+      "tool_name": "run_pytest",
+      "tool_input": {
+        "path": "tests/test_turn_builder.py"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "❌ 测试失败 (Exit Code 1):\nSTDOUT:\nNone\nSTDERR:\n",
+      "files": [
+        "tests/test_turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

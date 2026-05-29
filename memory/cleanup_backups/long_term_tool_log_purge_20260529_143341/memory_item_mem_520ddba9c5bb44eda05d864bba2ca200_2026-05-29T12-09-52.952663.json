@@ -1,0 +1,52 @@
+{
+  "id": "mem_520ddba9c5bb44eda05d864bba2ca200",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: run_pytest",
+  "content": "✅ 测试通过！\n============================= test session starts =============================\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\ncachedir: .pytest_cache\nrootdir: D:\\LLM\\mini-claude-code-cli\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 9 items\n\ntests/test_turn_builder.py::test_turn_builder_keeps_plain_messages_as_individual_turns PASSED [ 11%]\ntests/test_turn_builder.py::test_turn_builder_groups_complete_openai_tool_call_pair_atomically PASSED [ 22%]\ntests/test_turn_builder.py::test_turn_builder_marks_missing_tool_response_incomplete PASSED [ 33%]\ntests/test_turn_builder.py::test_turn_builder_marks_orphan_tool_message_incomplete PASSED [ 44%]\ntests/test_turn_builder.py::test_turn_builder_build_complete_messages_drops_incomplete_tool_turns PASSED [ 55%]\ntests/test_turn_builder.py::test_sliding_window_selects_complete_turns_without_splitting_tool_pair PASSED [ 66%]\ntests/test_turn_builder.py::test_sanitizer_uses_turn_builder_to_remove_missing_and_orphan_tool_turns PASSED [ 77%]\ntests/test_turn_builder.py::test_keyframe_uses_turn_metadata_and_keeps_tool_pairs_atomic PASSED [ 88%]\ntests/test_turn_builder.py::test_llm_summary_uses_metadata_filtered_summary_candidates_and_recent_complete_turns PASSED [100%]\n\n============================== 9 passed in 0.07s ==============================\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:09:52.952663",
+  "updated_at": "2026-05-29T12:09:52.952663",
+  "concepts": [
+    "test_result",
+    "run_pytest"
+  ],
+  "files": [
+    "tests/test_turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_7a555aae9cbf433ba7a331bce12f0a81"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_7a555aae9cbf433ba7a331bce12f0a81",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:09:52.952663",
+      "event_type": "test_result",
+      "tool_name": "run_pytest",
+      "tool_input": {
+        "path": "tests/test_turn_builder.py"
+      },
+      "tool_output": "✅ 测试通过！\n============================= test session starts =============================\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\ncachedir: .pytest_cache\nrootdir: D:\\LLM\\mini-claude-code-cli\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 9 items\n\ntests/test_turn_builder.py::test_turn_builder_keeps_plain_messages_as_individual_turns PASSED [ 11%]\ntests/test_turn_builder.py::test_turn_builder_groups_complete_openai_tool_call_pair_atomically PASSED [ 22%]\ntests/test_turn_builder.py::test_turn_builder_marks_missing_tool_response_incomplete PASSED [ 33%]\ntests/test_turn_builder.py::test_turn_builder_marks_orphan_tool_message_incomplete PASSED [ 44%]\ntests/test_turn_builder.py::test_turn_builder_build_complete_messages_drops_incomplete_tool_turns PASSED [ 55%]\ntests/test_turn_builder.py::test_sliding_window_selects_complete_turns_without_splitting_tool_pair PASSED [ 66%]\ntests/test_turn_builder.py::test_sanitizer_uses_turn_builder_to_remove_missing_and_orphan_tool_turns PASSED [ 77%]\ntests/test_turn_builder.py::test_keyframe_uses_turn_metadata_and_keeps_tool_pairs_atomic PASSED [ 88%]\ntests/test_turn_builder.py::test_llm_summary_uses_metadata_filtered_summary_candidates_and_recent_complete_turns PASSED [100%]\n\n============================== 9 passed in 0.07s ==============================\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

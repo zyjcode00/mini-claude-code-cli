@@ -1,0 +1,55 @@
+{
+  "id": "mem_c816bc0100c84f70af2e6f471e38d1d7",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/compression_engine.py (第 1 至 360 行，共 1554 行) ---\n   1 | # core/compression_engine.py\n   2 | \"\"\"\n   3 | 多策略压缩引擎\n   4 | \n   5 | Phase 3 增强功能：\n   6 | - 支持多种压缩策略（LLM_SUMMARY/KEYFRAME/SLIDING_WINDOW/IMPORTANCE_FILTER）\n   7 | - 根据消息特征智能选择策略\n   8 | - 可配置压缩比\n   9 | \"\"\"\n  10 | \n  11 | from typing import List, Dict, Any, Optional, Callable\n  12 | from enum import Enum\n  13 | from dataclasses import dataclass, field\n  14 | import json\n  15 | import hashlib\n  16 | import time\n  17 | import re\n  18 | from datetime import datetime\n  19 | \n  20 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n  21 | from core.memory_items import MemoryItem, MemoryKind\n  22 | from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2\n  23 | from core.turn_builder import ConversationTurn, TurnBuilder\n  24 | \n  25 | \n  26 | class CompressionStrategy(Enum):\n  27 |     \"\"\"压缩策略枚举\"\"\"\n  28 |     LLM_SUMMARY = \"llm_summary\"           # 调用 LLM 生成摘要\n  29 |     KEYFRAME = \"keyframe\"                # 提取关键帧（工具调用、错误消息）\n  30 |     SLIDING_WINDOW = \"sliding_window\"    # 滑动窗口保留最近消息\n  31 | \n  32 | \n  33 | @dataclass\n  34 | class CompressedSessionState:\n  35 |     \"\"\"Structured, deterministic state extracted from compressed turns.\"\"\"\n  36 | \n  37 |     task_goal: str = \"\"\n  38 |     current_status: str = \"in_progress\"\n  39 |     completed_steps: List[str] = field(default_factory=list)\n  40 |     pending_steps: List[str] = field(default_factory=list)\n  41 |     files_changed: List[Dict[str, Any]] = field(default_factory=list)\n  42 |     files_read: List[Dict[str, Any]] = field(default_factory=list)\n  43 |     commands_run: List[Dict[str, Any]] = field(default_factory=list)\n  44 |     tests_run: List[Dict[str, Any]] = field(default_factory=list)\n  45 |     errors_encountered: List[Dict[str, Any]] = field(default_factory=list)\n  46 |     key_decisions: List[str] = field(default_factory=list)\n  47 |     user_preferences: List[str] = field(default_factory=list)\n  48 |     tool_safety_notes: List[str] = field(default_factory=list)\n  49 |     dropped_content_summary: str = \"\"\n  50 |     source_turn_ids: List[str] = field(default_factory=list)\n  51 |     created_at: str = field(default_factory=lambda: datetime.now().isoformat())\n  52 | \n  53 |     def to_dict(self) -> Dict[str, Any]:\n  54 |         return {\n  55 |             \"task_goal\": self.task_goal,\n  56 |             \"current_status\": self.current_status,\n  57 |             \"completed_steps\": self.completed_steps,\n  58 |             \"pending_steps\": self.pending_steps,\n  59 |             \"files_changed\": self.files_changed,\n  60 |             \"files_read\": self.files_read,\n  61 |             \"commands_run\": self.commands_run,\n  62 |             \"tests_run\": self.tests_run,\n  63 |             \"errors_encountered\": self.errors_encountered,\n  64 |             \"key_decisions\": self.key_decisions,\n  65 |             \"user_preferences\": self.user_preferences,\n  66 |             \"tool_safety_notes\": self.tool_safety_notes,\n  67 |             \"dropped_content_summary\": self.dropped_content_summary,\n  68 |             \"source_turn_ids\": self.source_turn_ids,\n  69 |             \"created_at\": self.created_at,\n  70 |         }\n  71 | \n  72 |     @classmethod\n  73 |     def from_dict(cls, data: Dict[str, Any]) -> \"CompressedSessionState\":\n  74 |         return cls(\n  75 |             task_goal=data.get(\"task_goal\", \"\"),\n  76 |             current_status=data.get(\"current_status\", \"in_progress\"),\n  77 |             completed_steps=list(data.get(\"completed_steps\", [])),\n  78 |             pending_steps=list(data.get(\"pending_steps\", [])),\n  79 |             files_changed=list(data.get(\"files_changed\", [])),\n  80 |             files_read=list(data.get(\"files_read\", [])),\n  81 |             commands_run=list(data.get(\"commands_run\", [])),\n  82 |             tests_run=list(data.get(\"tests_run\", [])),\n  83 |             errors_encountered=list(data.get(\"errors_encountered\", [])),\n  84 |             key_decis...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:40:51.606459",
+  "updated_at": "2026-05-29T13:40:51.607457",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_30432aa70a614be48779e470d4c4c813"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_30432aa70a614be48779e470d4c4c813",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:40:51.606459",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 360,
+        "path": "core/compression_engine.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/compression_engine.py (第 1 至 360 行，共 1554 行) ---\n   1 | # core/compression_engine.py\n   2 | \"\"\"\n   3 | 多策略压缩引擎\n   4 | \n   5 | Phase 3 增强功能：\n   6 | - 支持多种压缩策略（LLM_SUMMARY/KEYFRAME/SLIDING_WINDOW/IMPORTANCE_FILTER）\n   7 | - 根据消息特征智能选择策略\n   8 | - 可配置压缩比\n   9 | \"\"\"\n  10 | \n  11 | from typing import List, Dict, Any, Optional, Callable\n  12 | from enum import Enum\n  13 | from dataclasses import dataclass, field\n  14 | import json\n  15 | import hashlib\n  16 | import time\n  17 | import re\n  18 | from datetime import datetime\n  19 | \n  20 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n  21 | from core.memory_items import MemoryItem, MemoryKind\n  22 | from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2\n  23 | from core.turn_builder import ConversationTurn, TurnBuilder\n  24 | \n  25 | \n  26 | class CompressionStrategy(Enum):\n  27 |     \"\"\"压缩策略枚举\"\"\"\n  28 |     LLM_SUMMARY = \"llm_summary\"           # 调用 LLM 生成摘要\n  29 |     KEYFRAME = \"keyframe\"                # 提取关键帧（工具调用、错误消息）\n  30 |     SLIDING_WINDOW = \"sliding_window\"    # 滑动窗口保留最近消息\n  31 | \n  32 | \n  33 | @dataclass\n  34 | class CompressedSessionState:\n  35 |     \"\"\"Structured, deterministic state extracted from compressed turns.\"\"\"\n  36 | \n  37 |     task_goal: str = \"\"\n  38 |     current_status: str = \"in_progress\"\n  39 |     completed_steps: List[str] = field(default_factory=list)\n  40 |     pending_steps: List[str] = field(default_factory=list)\n  41 |     files_changed: List[Dict[str, Any]] = field(default_factory=list)\n  42 |     files_read: List[Dict[str, Any]] = field(default_factory=list)\n  43 |     commands_run: List[Dict[str, Any]] = field(default_factory=list)\n  44 |     tests_run: List[Dict[str, Any]] = field(default_factory=list)\n  45 |     errors_encountered: List[Dict[str, Any]] = field(default_factory=list)\n  46 |     key_decisions: List[str] = field(default_factory=list)\n  47 |     user_preferences: List[str] = field(default_factory=list)\n  48 |     tool_safety_notes: List[str] = field(default_factory=list)\n  49 |     dropped_content_summary: str = \"\"\n  50 |     source_turn_ids: List[str] = field(default_factory=list)\n  51 |     created_at: str = field(default_factory=lambda: datetime.now().isoformat())\n  52 | \n  53 |     def to_dict(self) -> Dict[str, Any]:\n  54 |         return {\n  55 |             \"task_goal\": self.task_goal,\n  56 |             \"current_status\": self.current_status,\n  57 |             \"completed_steps\": self.completed_steps,\n  58 |             \"pending_steps\": self.pending_steps,\n  59 |             \"files_changed\": self.files_changed,\n  60 |             \"files_read\": self.files_read,\n  61 |             \"commands_run\": self.commands_run,\n  62 |             \"tests_run\": self.tests_run,\n  63 |             \"errors_encountered\": self.errors_encountered,\n  64 |             \"key_decisions\": self.key_decisions,\n  65 |             \"user_preferences\": self.user_preferences,\n  66 |             \"tool_safety_notes\": self.tool_safety_notes,\n  67 |             \"dropped_content_summary\": self.dropped_content_summary,\n  68 |             \"source_turn_ids\": self.source_turn_ids,\n  69 |             \"created_at\": self.created_at,\n  70 |         }\n  71 | \n  72 |     @classmethod\n  73 |     def from_dict(cls, data: Dict[str, Any]) -> \"CompressedSessionState\":\n  74 |         return cls(\n  75 |             task_goal=data.get(\"task_goal\", \"\"),\n  76 |             current_status=data.get(\"current_status\", \"in_progress\"),\n  77 |             completed_steps=list(data.get(\"completed_steps\", [])),\n  78 |             pending_steps=list(data.get(\"pending_steps\", [])),\n  79 |             files_changed=list(data.get(\"files_changed\", [])),\n  80 |             files_read=list(data.get(\"files_read\", [])),\n  81 |             commands_run=list(data.get(\"commands_run\", [])),\n  82 |             tests_run=list(data.get(\"tests_run\", [])),\n  83 |             errors_encountered=list(data.get(\"errors_encountered\", [])),\n  84 |             key_decis...",
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

@@ -1,0 +1,56 @@
+{
+  "id": "mem_414bf91046a24c94a3d1db357caa1fca",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\n D tmp_inspect_session.py\n D tmp_ranges.py\n D tmp_stats.py\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:06:02.499026",
+  "updated_at": "2026-05-29T13:06:02.499026",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [
+    "tmp_inspect_session.py",
+    "tmp_ranges.py",
+    "tmp_stats.py"
+  ],
+  "source_observation_ids": [
+    "obs_a632916f147148949d94156700d9ab52"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_a632916f147148949d94156700d9ab52",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:06:02.499026",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "del tmp_inspect_session.py tmp_ranges.py tmp_stats.py 2>nul & git status --short"
+      },
+      "tool_output": "STDOUT:\n D tmp_inspect_session.py\n D tmp_ranges.py\n D tmp_stats.py\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tmp_inspect_session.py",
+        "tmp_ranges.py",
+        "tmp_stats.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

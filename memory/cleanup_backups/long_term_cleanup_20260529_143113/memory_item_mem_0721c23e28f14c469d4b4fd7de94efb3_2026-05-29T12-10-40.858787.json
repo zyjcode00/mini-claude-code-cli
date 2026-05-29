@@ -1,0 +1,48 @@
+{
+  "id": "mem_0721c23e28f14c469d4b4fd7de94efb3",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\n....................................                                     [100%]\r\n36 passed in 1.56s\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:10:40.858787",
+  "updated_at": "2026-05-29T12:10:40.858787",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_a45bb673e7d948a7beec8c9647f5e7d5"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_a45bb673e7d948a7beec8c9647f5e7d5",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:10:40.858787",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -m pytest tests/test_turn_builder.py tests/test_compression_engine.py tests/test_openai_tool_pairing.py -q"
+      },
+      "tool_output": "STDOUT:\n....................................                                     [100%]\r\n36 passed in 1.56s\r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "mem_98dbde98a8f0480a89b3ccbf28654c3d",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_retrieval.py (第 420 至 633 行，共 633 行) ---\n 420 |             recency_weight = self._recency_weight(doc.timestamp)\n 421 |             type_weight = self._type_weight(doc.kind, query)\n 422 |             score = bm25_score + importance_weight + recency_weight + file_match + error_match + type_weight\n 423 | \n 424 |             reasons = []\n 425 |             if bm25_score:\n 426 |                 reasons.append(f\"匹配关键词/文本相关 {bm25_score:.2f}\")\n 427 |             if importance_weight:\n 428 |                 reasons.append(f\"重要性 {importance_weight:.2f}\")\n 429 |             if recency_weight:\n 430 |                 reasons.append(f\"时间 {recency_weight:.2f}\")\n 431 |             if file_match:\n 432 |                 reasons.append(f\"文件匹配 {file_match:.2f}\")\n 433 |             if error_match:\n 434 |                 reasons.append(f\"错误匹配 {error_match:.2f}\")\n 435 |             if type_weight:\n 436 |                 reasons.append(f\"类型匹配 {type_weight:.2f}\")\n 437 | \n 438 |             if score > 0 or not query_terms:\n 439 |                 ranked.append((doc, score, reasons or [\"默认召回\"]))\n 440 | \n 441 |         ranked.sort(key=lambda item: item[1], reverse=True)\n 442 |         results: List[MemoryRecallResult] = []\n 443 |         seen = set()\n 444 |         for doc, score, reasons in ranked:\n 445 |             if doc.id in seen:\n 446 |                 continue\n 447 |             seen.add(doc.id)\n 448 |             results.append(MemoryRecallResult(\n 449 |                 item=doc.to_memory_item(),\n 450 |                 score=score,\n 451 |                 source=doc.source_type,\n 452 |                 reason=\"; \".join(reasons),\n 453 |             ))\n 454 |             if len(results) >= top_k:\n 455 |                 break\n 456 |         return results\n 457 | \n 458 |     def _build_documents(self, include_summaries: bool = True, include_items: bool = True) -> List[MemoryDocument]:\n 459 |         documents: List[MemoryDocument] = []\n 460 |         if include_items:\n 461 |             documents.extend(MemoryDocument.from_memory_item(item) for item in self.long_term_memory.get_all_items())\n 462 |         if include_summaries:\n 463 |             documents.extend(MemoryDocument.from_session_summary(summary, source_type=\"summary_compat\") for summary in self.episodic_memory.get_all())\n 464 |             for session_id in self.long_term_memory.get_all_session_ids():\n 465 |                 summary = self.long_term_memory.retrieve(session_id)\n 466 |                 if summary:\n 467 |                     documents.append(MemoryDocument.from_session_summary(summary, source_type=\"summary_compat\"))\n 468 |         return documents\n 469 | \n 470 |     def _calculate_text_bm25_score(self, query_terms: List[str], text: str) -> float:\n 471 |         doc_terms = self._tokenize(text)\n 472 |         if not query_terms or not doc_terms:\n 473 |             return 0.0\n 474 |         term_freq: Dict[str, int] = {}\n 475 |         for term in doc_terms:\n 476 |             term_freq[term] = term_freq.get(term, 0) + 1\n 477 |         score = 0.0\n 478 |         for term in query_terms:\n 479 |             if term in term_freq:\n 480 |                 tf = term_freq[term]\n 481 |                 score += (tf * 2.5) / (tf + 1.5)\n 482 |         return score\n 483 | \n 484 |     def _file_match_score(self, doc: MemoryDocument, normalized_file: str) -> float:\n 485 |         for candidate in doc.files:\n 486 |             normalized_candidate = self._normalize_path(candidate)\n 487 |             if normalized_candidate == normalized_file:\n 488 |                 return 1.2\n 489 |             if normalized_file in normalized_candidate or normalized_candidate in normalized_file:\n 490 |                 return 0.75\n 491 |             if normalized_candidate.split(\"/\")[-1] == normalized_file.split(\"/\")[-1]:\n 492 |                 return 0.45\n 493 |         return 0.0\n 494 | \n 495 |     def _error_match_score(self, doc: MemoryDocument, normalized_error: str) -> float:\n 496 |     ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:40:32.603679",
+  "updated_at": "2026-05-29T13:40:32.603679",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_retrieval.py"
+  ],
+  "source_observation_ids": [
+    "obs_54ccdd85b85f4fdd8798bb8815b880ec"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_54ccdd85b85f4fdd8798bb8815b880ec",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:40:32.603679",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 680,
+        "path": "core/memory_retrieval.py",
+        "raw_mode": false,
+        "start_line": 420
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_retrieval.py (第 420 至 633 行，共 633 行) ---\n 420 |             recency_weight = self._recency_weight(doc.timestamp)\n 421 |             type_weight = self._type_weight(doc.kind, query)\n 422 |             score = bm25_score + importance_weight + recency_weight + file_match + error_match + type_weight\n 423 | \n 424 |             reasons = []\n 425 |             if bm25_score:\n 426 |                 reasons.append(f\"匹配关键词/文本相关 {bm25_score:.2f}\")\n 427 |             if importance_weight:\n 428 |                 reasons.append(f\"重要性 {importance_weight:.2f}\")\n 429 |             if recency_weight:\n 430 |                 reasons.append(f\"时间 {recency_weight:.2f}\")\n 431 |             if file_match:\n 432 |                 reasons.append(f\"文件匹配 {file_match:.2f}\")\n 433 |             if error_match:\n 434 |                 reasons.append(f\"错误匹配 {error_match:.2f}\")\n 435 |             if type_weight:\n 436 |                 reasons.append(f\"类型匹配 {type_weight:.2f}\")\n 437 | \n 438 |             if score > 0 or not query_terms:\n 439 |                 ranked.append((doc, score, reasons or [\"默认召回\"]))\n 440 | \n 441 |         ranked.sort(key=lambda item: item[1], reverse=True)\n 442 |         results: List[MemoryRecallResult] = []\n 443 |         seen = set()\n 444 |         for doc, score, reasons in ranked:\n 445 |             if doc.id in seen:\n 446 |                 continue\n 447 |             seen.add(doc.id)\n 448 |             results.append(MemoryRecallResult(\n 449 |                 item=doc.to_memory_item(),\n 450 |                 score=score,\n 451 |                 source=doc.source_type,\n 452 |                 reason=\"; \".join(reasons),\n 453 |             ))\n 454 |             if len(results) >= top_k:\n 455 |                 break\n 456 |         return results\n 457 | \n 458 |     def _build_documents(self, include_summaries: bool = True, include_items: bool = True) -> List[MemoryDocument]:\n 459 |         documents: List[MemoryDocument] = []\n 460 |         if include_items:\n 461 |             documents.extend(MemoryDocument.from_memory_item(item) for item in self.long_term_memory.get_all_items())\n 462 |         if include_summaries:\n 463 |             documents.extend(MemoryDocument.from_session_summary(summary, source_type=\"summary_compat\") for summary in self.episodic_memory.get_all())\n 464 |             for session_id in self.long_term_memory.get_all_session_ids():\n 465 |                 summary = self.long_term_memory.retrieve(session_id)\n 466 |                 if summary:\n 467 |                     documents.append(MemoryDocument.from_session_summary(summary, source_type=\"summary_compat\"))\n 468 |         return documents\n 469 | \n 470 |     def _calculate_text_bm25_score(self, query_terms: List[str], text: str) -> float:\n 471 |         doc_terms = self._tokenize(text)\n 472 |         if not query_terms or not doc_terms:\n 473 |             return 0.0\n 474 |         term_freq: Dict[str, int] = {}\n 475 |         for term in doc_terms:\n 476 |             term_freq[term] = term_freq.get(term, 0) + 1\n 477 |         score = 0.0\n 478 |         for term in query_terms:\n 479 |             if term in term_freq:\n 480 |                 tf = term_freq[term]\n 481 |                 score += (tf * 2.5) / (tf + 1.5)\n 482 |         return score\n 483 | \n 484 |     def _file_match_score(self, doc: MemoryDocument, normalized_file: str) -> float:\n 485 |         for candidate in doc.files:\n 486 |             normalized_candidate = self._normalize_path(candidate)\n 487 |             if normalized_candidate == normalized_file:\n 488 |                 return 1.2\n 489 |             if normalized_file in normalized_candidate or normalized_candidate in normalized_file:\n 490 |                 return 0.75\n 491 |             if normalized_candidate.split(\"/\")[-1] == normalized_file.split(\"/\")[-1]:\n 492 |                 return 0.45\n 493 |         return 0.0\n 494 | \n 495 |     def _error_match_score(self, doc: MemoryDocument, normalized_error: str) -> float:\n 496 |     ...",
+      "files": [
+        "core/memory_retrieval.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

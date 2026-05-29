@@ -1,0 +1,55 @@
+{
+  "id": "mem_8b21b9215d804fc480b7a6f0ea886d72",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "class ContextManager:\n    \"\"\"\n    上下文管理器\n\n    Phase 1 增强功能：\n    - 结构化摘要存储（session_summaries）\n    - 兼容旧版纯文本摘要（history_summary）\n\n    Phase 2 增强功能：\n    - 三层记忆架构（working_memory / episodic_memory / long_term_memory）\n    - 自动流转和淘汰\n\n    Phase 3 增强功能：\n    - 多策略压缩引擎（CompressionEngine）\n    - 根据消息特征自动选择压缩策略\n    - 支持 3 种压缩策略：LLM_SUMMARY/KEYFRAME/SLIDING_WINDOW\n    \"\"\"\n\n    def __init__(self, max_history=100, min_keep=4, plan_manager=None):\n        self.max_history = max_history\n        self.min_keep = min_keep\n        self.plan_manager = plan_manager  # 🔥 新增：保存 Plan 状态引用\n\n        # 旧版摘要（纯文本，向后兼容）\n        self.history_summary = \"\"\n\n        # Phase 1: 结构化摘要列表（将被 Phase 2 替代，但保持向后兼容）\n        self.session_summaries: List[SessionSummary] = []\n\n        # Phase 2: 三层记忆架构统一由 MemoryManager 编排\n        self.memory_manager = MemoryManager(plan_manager=plan_manager)\n        self.working_memory = self.memory_manager.working_memory\n        self.episodic_memory = self.memory_manager.episodic_memory\n        self.long_term_memory = self.memory_manager.long_term_memory\n        self.compression_engine = self.memory_manager.compression_engine\n\n        # 消息列表（保留，用于兼容）\n        self.messages = []\n\n        # 🔥🔥🔥 Phase 4 新增：并发锁，保护 messages 访问\n        self.messages_lock = asyncio.Lock()\n\n        # 会话 ID（用于生成摘要 ID）\n        self._session_id_counter = 0\n\n        # Phase 2: 是否启用三层记忆（默认启用）\n        self._enable_memory_layers = True\n\n    def add_message(self, message):\n        \"\"\"\n        添加消息到上下文（Phase 2 增强版）\n\n        流程：\n        1. 添加到消息列表（兼容）\n        2. 添加到工作记忆\n        3. 如果工作记忆满了，自动触发压缩和流转\n\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:22:12.628626",
+  "updated_at": "2026-05-29T13:22:12.628626",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/context.py"
+  ],
+  "source_observation_ids": [
+    "obs_db7a51012cb14e9d81a13fbbf85501c6"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_db7a51012cb14e9d81a13fbbf85501c6",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:22:12.628626",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 90,
+        "path": "core/context.py",
+        "raw_mode": true,
+        "start_line": 34
+      },
+      "tool_output": "class ContextManager:\n    \"\"\"\n    上下文管理器\n\n    Phase 1 增强功能：\n    - 结构化摘要存储（session_summaries）\n    - 兼容旧版纯文本摘要（history_summary）\n\n    Phase 2 增强功能：\n    - 三层记忆架构（working_memory / episodic_memory / long_term_memory）\n    - 自动流转和淘汰\n\n    Phase 3 增强功能：\n    - 多策略压缩引擎（CompressionEngine）\n    - 根据消息特征自动选择压缩策略\n    - 支持 3 种压缩策略：LLM_SUMMARY/KEYFRAME/SLIDING_WINDOW\n    \"\"\"\n\n    def __init__(self, max_history=100, min_keep=4, plan_manager=None):\n        self.max_history = max_history\n        self.min_keep = min_keep\n        self.plan_manager = plan_manager  # 🔥 新增：保存 Plan 状态引用\n\n        # 旧版摘要（纯文本，向后兼容）\n        self.history_summary = \"\"\n\n        # Phase 1: 结构化摘要列表（将被 Phase 2 替代，但保持向后兼容）\n        self.session_summaries: List[SessionSummary] = []\n\n        # Phase 2: 三层记忆架构统一由 MemoryManager 编排\n        self.memory_manager = MemoryManager(plan_manager=plan_manager)\n        self.working_memory = self.memory_manager.working_memory\n        self.episodic_memory = self.memory_manager.episodic_memory\n        self.long_term_memory = self.memory_manager.long_term_memory\n        self.compression_engine = self.memory_manager.compression_engine\n\n        # 消息列表（保留，用于兼容）\n        self.messages = []\n\n        # 🔥🔥🔥 Phase 4 新增：并发锁，保护 messages 访问\n        self.messages_lock = asyncio.Lock()\n\n        # 会话 ID（用于生成摘要 ID）\n        self._session_id_counter = 0\n\n        # Phase 2: 是否启用三层记忆（默认启用）\n        self._enable_memory_layers = True\n\n    def add_message(self, message):\n        \"\"\"\n        添加消息到上下文（Phase 2 增强版）\n\n        流程：\n        1. 添加到消息列表（兼容）\n        2. 添加到工作记忆\n        3. 如果工作记忆满了，自动触发压缩和流转\n\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/context.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

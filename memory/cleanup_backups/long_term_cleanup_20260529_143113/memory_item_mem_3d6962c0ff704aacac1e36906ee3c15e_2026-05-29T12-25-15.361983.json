@@ -1,0 +1,55 @@
+{
+  "id": "mem_3d6962c0ff704aacac1e36906ee3c15e",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_models.py (第 220 至 330 行，共 387 行) ---\n 220 |     tools_used: List[ToolUsage] = field(default_factory=list)  # 工具使用列表\n 221 |     key_decisions: List[str] = field(default_factory=list)  # 关键决策列表\n 222 | \n 223 |     # 元数据\n 224 |     importance: float = 0.5  # 整体重要性分数 [0, 1]\n 225 |     message_count: int = 0  # 压缩前的消息数量\n 226 |     token_count: int = 0  # 压缩前的 Token 数量\n 227 | \n 228 |     def __post_init__(self):\n 229 |         \"\"\"初始化后统一任务状态，避免旧别名污染记忆系统。\"\"\"\n 230 |         self.task_status = normalize_task_status(self.task_status)\n 231 | \n 232 |     def to_dict(self) -> Dict[str, Any]:\n 233 |         \"\"\"序列化为字典\"\"\"\n 234 |         self.task_status = normalize_task_status(self.task_status)\n 235 |         return {\n 236 |             \"session_id\": self.session_id,\n 237 |             \"timestamp\": self.timestamp,\n 238 |             \"summary_text\": self.summary_text,\n 239 |             \"task_goal\": self.task_goal,\n 240 |             \"task_status\": self.task_status,\n 241 |             \"files_changed\": [fc.to_dict() for fc in self.files_changed],\n 242 |             \"errors_encountered\": [er.to_dict() for er in self.errors_encountered],\n 243 |             \"tools_used\": [tu.to_dict() for tu in self.tools_used],\n 244 |             \"key_decisions\": self.key_decisions,\n 245 |             \"importance\": self.importance,\n 246 |             \"message_count\": self.message_count,\n 247 |             \"token_count\": self.token_count\n 248 |         }\n 249 | \n 250 |     @classmethod\n 251 |     def from_dict(cls, data: Dict[str, Any]) -> \"SessionSummary\":\n 252 |         \"\"\"从字典反序列化\"\"\"\n 253 |         return cls(\n 254 |             session_id=data[\"session_id\"],\n 255 |             timestamp=data[\"timestamp\"],\n 256 |             summary_text=data[\"summary_text\"],\n 257 |             task_goal=data[\"task_goal\"],\n 258 |             task_status=normalize_task_status(data.get(\"task_status\")),\n 259 |             files_changed=[FileChange.from_dict(fc) for fc in data.get(\"files_changed\", [])],\n 260 |             errors_encountered=[ErrorRecord.from_dict(er) for er in data.get(\"errors_encountered\", [])],\n 261 |             tools_used=[ToolUsage.from_dict(tu) for tu in data.get(\"tools_used\", [])],\n 262 |             key_decisions=data.get(\"key_decisions\", []),\n 263 |             importance=data.get(\"importance\", 0.5),\n 264 |             message_count=data.get(\"message_count\", 0),\n 265 |             token_count=data.get(\"token_count\", 0)\n 266 |         )\n 267 | \n 268 |     def to_json(self, indent: int = 2) -> str:\n 269 |         \"\"\"序列化为 JSON 字符串\"\"\"\n 270 |         return json.dumps(self.to_dict(), ensure_ascii=False, indent=indent)\n 271 | \n 272 |     @classmethod\n 273 |     def from_json(cls, json_str: str) -> \"SessionSummary\":\n 274 |         \"\"\"从 JSON 字符串反序列化\"\"\"\n 275 |         data = json.loads(json_str)\n 276 |         return cls.from_dict(data)\n 277 | \n 278 |     def get_file_paths(self) -> List[str]:\n 279 |         \"\"\"获取所有涉及的文件路径\"\"\"\n 280 |         paths = []\n 281 |         for fc in self.files_changed:\n 282 |             paths.append(fc.path)\n 283 |         for er in self.errors_encountered:\n 284 |             if er.file_path:\n 285 |                 paths.append(er.file_path)\n 286 |         return list(set(paths))  # 去重\n 287 | \n 288 |     def get_keywords(self) -> List[str]:\n 289 |         \"\"\"\n 290 |         提取关键词（用于检索）\n 291 | \n 292 |         提取规则：\n 293 |         1. 任务目标中的关键词（中文/英文）\n 294 |         2. 文件路径\n 295 |         3. 错误类型\n 296 |         4. 工具名称\n 297 |         \"\"\"\n 298 |         keywords = []\n 299 | \n 300 |         # 从任务目标中提取关键词\n 301 |         # 中文：按字符切分（简单实现）\n 302 |         # 英文：按空格切分\n 303 |         import re\n 304 | \n 305 |         # 提取英文单词（长度 > 2）\n 306 |         english_words = re.findall(r'[a-zA-Z]{3,}', self.task_goal)\n 307 |         keywords.extend(english_words)\n 308 | \n 309 |         # 提取中文词汇（长度 > 1，简单按字切分）\n 310 |         chinese_chars = re.findall(r'[\\u4e00-\\u9fff]+', self.task_goal)\n 311 |         for word in chinese_chars:\n 312 |          ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:25:15.361983",
+  "updated_at": "2026-05-29T12:25:15.361983",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_models.py"
+  ],
+  "source_observation_ids": [
+    "obs_fbc7ae24b59148709832e82e1b8687ec"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_fbc7ae24b59148709832e82e1b8687ec",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:25:15.361983",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 330,
+        "path": "core/memory_models.py",
+        "raw_mode": false,
+        "start_line": 220
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_models.py (第 220 至 330 行，共 387 行) ---\n 220 |     tools_used: List[ToolUsage] = field(default_factory=list)  # 工具使用列表\n 221 |     key_decisions: List[str] = field(default_factory=list)  # 关键决策列表\n 222 | \n 223 |     # 元数据\n 224 |     importance: float = 0.5  # 整体重要性分数 [0, 1]\n 225 |     message_count: int = 0  # 压缩前的消息数量\n 226 |     token_count: int = 0  # 压缩前的 Token 数量\n 227 | \n 228 |     def __post_init__(self):\n 229 |         \"\"\"初始化后统一任务状态，避免旧别名污染记忆系统。\"\"\"\n 230 |         self.task_status = normalize_task_status(self.task_status)\n 231 | \n 232 |     def to_dict(self) -> Dict[str, Any]:\n 233 |         \"\"\"序列化为字典\"\"\"\n 234 |         self.task_status = normalize_task_status(self.task_status)\n 235 |         return {\n 236 |             \"session_id\": self.session_id,\n 237 |             \"timestamp\": self.timestamp,\n 238 |             \"summary_text\": self.summary_text,\n 239 |             \"task_goal\": self.task_goal,\n 240 |             \"task_status\": self.task_status,\n 241 |             \"files_changed\": [fc.to_dict() for fc in self.files_changed],\n 242 |             \"errors_encountered\": [er.to_dict() for er in self.errors_encountered],\n 243 |             \"tools_used\": [tu.to_dict() for tu in self.tools_used],\n 244 |             \"key_decisions\": self.key_decisions,\n 245 |             \"importance\": self.importance,\n 246 |             \"message_count\": self.message_count,\n 247 |             \"token_count\": self.token_count\n 248 |         }\n 249 | \n 250 |     @classmethod\n 251 |     def from_dict(cls, data: Dict[str, Any]) -> \"SessionSummary\":\n 252 |         \"\"\"从字典反序列化\"\"\"\n 253 |         return cls(\n 254 |             session_id=data[\"session_id\"],\n 255 |             timestamp=data[\"timestamp\"],\n 256 |             summary_text=data[\"summary_text\"],\n 257 |             task_goal=data[\"task_goal\"],\n 258 |             task_status=normalize_task_status(data.get(\"task_status\")),\n 259 |             files_changed=[FileChange.from_dict(fc) for fc in data.get(\"files_changed\", [])],\n 260 |             errors_encountered=[ErrorRecord.from_dict(er) for er in data.get(\"errors_encountered\", [])],\n 261 |             tools_used=[ToolUsage.from_dict(tu) for tu in data.get(\"tools_used\", [])],\n 262 |             key_decisions=data.get(\"key_decisions\", []),\n 263 |             importance=data.get(\"importance\", 0.5),\n 264 |             message_count=data.get(\"message_count\", 0),\n 265 |             token_count=data.get(\"token_count\", 0)\n 266 |         )\n 267 | \n 268 |     def to_json(self, indent: int = 2) -> str:\n 269 |         \"\"\"序列化为 JSON 字符串\"\"\"\n 270 |         return json.dumps(self.to_dict(), ensure_ascii=False, indent=indent)\n 271 | \n 272 |     @classmethod\n 273 |     def from_json(cls, json_str: str) -> \"SessionSummary\":\n 274 |         \"\"\"从 JSON 字符串反序列化\"\"\"\n 275 |         data = json.loads(json_str)\n 276 |         return cls.from_dict(data)\n 277 | \n 278 |     def get_file_paths(self) -> List[str]:\n 279 |         \"\"\"获取所有涉及的文件路径\"\"\"\n 280 |         paths = []\n 281 |         for fc in self.files_changed:\n 282 |             paths.append(fc.path)\n 283 |         for er in self.errors_encountered:\n 284 |             if er.file_path:\n 285 |                 paths.append(er.file_path)\n 286 |         return list(set(paths))  # 去重\n 287 | \n 288 |     def get_keywords(self) -> List[str]:\n 289 |         \"\"\"\n 290 |         提取关键词（用于检索）\n 291 | \n 292 |         提取规则：\n 293 |         1. 任务目标中的关键词（中文/英文）\n 294 |         2. 文件路径\n 295 |         3. 错误类型\n 296 |         4. 工具名称\n 297 |         \"\"\"\n 298 |         keywords = []\n 299 | \n 300 |         # 从任务目标中提取关键词\n 301 |         # 中文：按字符切分（简单实现）\n 302 |         # 英文：按空格切分\n 303 |         import re\n 304 | \n 305 |         # 提取英文单词（长度 > 2）\n 306 |         english_words = re.findall(r'[a-zA-Z]{3,}', self.task_goal)\n 307 |         keywords.extend(english_words)\n 308 | \n 309 |         # 提取中文词汇（长度 > 1，简单按字切分）\n 310 |         chinese_chars = re.findall(r'[\\u4e00-\\u9fff]+', self.task_goal)\n 311 |         for word in chinese_chars:\n 312 |          ...",
+      "files": [
+        "core/memory_models.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

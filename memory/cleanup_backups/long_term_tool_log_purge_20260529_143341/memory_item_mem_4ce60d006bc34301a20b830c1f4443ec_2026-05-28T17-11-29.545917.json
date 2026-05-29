@@ -1,0 +1,57 @@
+{
+  "id": "mem_4ce60d006bc34301a20b830c1f4443ec",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "import json\nimport os\nimport re\nfrom pathlib import Path\nfrom typing import List, Dict, Any\nimport anthropic\nimport openai\nimport asyncio\nfrom tools.base import BaseTool\nfrom core.prompts import get_system_prompt\nfrom core.context import ContextManager  # <--- 导入新管家\nfrom core.memory_items import MemoryKind, ObservationType, RawObservation\n\n# Git 自动化保险导入\nfrom tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes, start_task_branch, finalize_task, start_plan_branch, finalize_plan\n\n# 检索增强导入\nfrom core.keyword_indexer import KeywordIndexer\nfrom core.bm25_retriever import BM25Retriever\n\nclass AgentEngine:\n    def __init__(self, tools: List[BaseTool], model: str, plan_manager, # <--- 传入管家\n                 base_url: str = None, api_key: str = None,\n                 max_history: int = 100, min_keep: int = 4, session_id=\"default\"):\n        self.tools = tools\n        self.model = model\n        self.plan_manager = plan_manager  # <--- 保存管家引用\n        self.tool_map = {t.name: t for t in tools}\n        self.tool_specs = [t.to_anthropic_spec() for t in tools]\n\n        # --- 核心修改：使用 ContextManager 替代原有的 self.messages ---\n        # 🔥 新增：传入 plan_manager，让压缩引擎能查询真实任务状态\n        self.context = ContextManager(max_history=max_history, min_keep=min_keep, plan_manager=plan_manager)\n        self.last_oa_msg = None\n        self.session_id = session_id\n        self.session_path = f\"sessions/{session_id}.json\"\n        # ----------------------------------------------------------\n\n        # ========== 检索增强：初始化检索器 ==========\n        self.keyword_indexer = KeywordIndexer()\n        self.bm25_retriever = BM25Retriever()\n        self.retrieval_enabled = True  # 检索增强开关\n        # ===========================================\n\n        # ========== Git 自动化保险状态追踪 ==========\n        self.edit_failures = {}  # {\"file_path\": failure_count}\n        self.last_snapshot_plan_step = None  # 记录上次快照时的计划步骤\n        self.current_plan_branch = None  # 当前 Plan 影子分支对应的 plan_id；必须先初始化，execute_query 会读取\n        # Phase 5: Prompt 记忆注入预算配置\n        self.memory_token_budget = 1500\n        self.memory_recall_top_k = 8\n\n        self.is_openai_compat = base_url is not None or \"claude\" not in model.lower()\n\n        # --- 异步适配：使用 Async 客户端 ---\n        if self.is_openai_compat:\n            self.client = openai.AsyncOpenAI(api_key=api_key or os.getenv(\"OPENAI_API_KEY\"), base_url=base_url)\n        else:\n            self.client = anthropic.AsyncAnthropic(api_key=api_key or os.getenv(\"ANTHROPIC_API_KEY\"))\n\n        os.makedirs(\"sessions\", exist_ok=True)\n        self.load_session()\n\n\n\n    async def _call_llm(self, relevant_history: str = \"\", user_input: str = \"\"):\n        \"\"\"核心推理：改为异步调用\"\"\"\n        current_plan = self.plan_manager.get_formatted_plan()\n\n        # Phase 2/3: 获取三层记忆数据\n        episodic_memories = self.context.episodic_memory.get_all() if self.context._enable_memory_layers else []\n        session_summaries = self.context.session_summaries\n\n        # 🔥🔥🔥 跨会话长期记忆检索：从磁盘检索所有会话的长期记忆\n        long_term_memories = []\n        if self.context._enable_memory_layers and user_input:\n            try:\n                # 从长期记忆中检索与当前任务相关的摘要（跨所有会话）\n                long_term_memories = self.context.memory_manager.search_long_term(\n                    query=user_input,\n                    top_k=5  # 检索最相关的 5 条长期记忆\n                )\n                if long_term_memories:\n                    print(f\" [🧠] 检索到 {len(long_term_memories)} 条跨会话长期记忆\")\n            except Exception as e:\n                print(f\" [⚠️] 长期记忆检索失败: {e}\")\n\n        # 🔥 新增：获取已完成任务列表\n        completed_goals = self.plan_manager.get_completed_goals()\n\n        system_ptr = get_system_prompt(\n            summary=self.context.history_summary,\n            plan=current_plan,\n            episodic_memories=episodic_memories,\n            session_summaries=session_summaries,\n            long_term_memories=long_term_memories,  # 🔥🔥🔥 新增参数：跨会话长期记忆\n            completed_goals=completed_goals,  # 🔥 新增参数\n            user_input=user_input  # 🔥 新...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T17:11:29.545917",
+  "updated_at": "2026-05-28T17:11:29.545917",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/engine.py",
+    "CLAUDE.md"
+  ],
+  "source_observation_ids": [
+    "obs_c17a96d1e17649e183457bc17e018c9a"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_c17a96d1e17649e183457bc17e018c9a",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T17:11:29.545917",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "path": "core/engine.py",
+        "start_line": 1,
+        "end_line": 220,
+        "raw_mode": true
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "import json\nimport os\nimport re\nfrom pathlib import Path\nfrom typing import List, Dict, Any\nimport anthropic\nimport openai\nimport asyncio\nfrom tools.base import BaseTool\nfrom core.prompts import get_system_prompt\nfrom core.context import ContextManager  # <--- 导入新管家\nfrom core.memory_items import MemoryKind, ObservationType, RawObservation\n\n# Git 自动化保险导入\nfrom tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes, start_task_branch, finalize_task, start_plan_branch, finalize_plan\n\n# 检索增强导入\nfrom core.keyword_indexer import KeywordIndexer\nfrom core.bm25_retriever import BM25Retriever\n\nclass AgentEngine:\n    def __init__(self, tools: List[BaseTool], model: str, plan_manager, # <--- 传入管家\n                 base_url: str = None, api_key: str = None,\n                 max_history: int = 100, min_keep: int = 4, session_id=\"default\"):\n        self.tools = tools\n        self.model = model\n        self.plan_manager = plan_manager  # <--- 保存管家引用\n        self.tool_map = {t.name: t for t in tools}\n        self.tool_specs = [t.to_anthropic_spec() for t in tools]\n\n        # --- 核心修改：使用 ContextManager 替代原有的 self.messages ---\n        # 🔥 新增：传入 plan_manager，让压缩引擎能查询真实任务状态\n        self.context = ContextManager(max_history=max_history, min_keep=min_keep, plan_manager=plan_manager)\n        self.last_oa_msg = None\n        self.session_id = session_id\n        self.session_path = f\"sessions/{session_id}.json\"\n        # ----------------------------------------------------------\n\n        # ========== 检索增强：初始化检索器 ==========\n        self.keyword_indexer = KeywordIndexer()\n        self.bm25_retriever = BM25Retriever()\n        self.retrieval_enabled = True  # 检索增强开关\n        # ===========================================\n\n        # ========== Git 自动化保险状态追踪 ==========\n        self.edit_failures = {}  # {\"file_path\": failure_count}\n        self.last_snapshot_plan_step = None  # 记录上次快照时的计划步骤\n        self.current_plan_branch = None  # 当前 Plan 影子分支对应的 plan_id；必须先初始化，execute_query 会读取\n        # Phase 5: Prompt 记忆注入预算配置\n        self.memory_token_budget = 1500\n        self.memory_recall_top_k = 8\n\n        self.is_openai_compat = base_url is not None or \"claude\" not in model.lower()\n\n        # --- 异步适配：使用 Async 客户端 ---\n        if self.is_openai_compat:\n            self.client = openai.AsyncOpenAI(api_key=api_key or os.getenv(\"OPENAI_API_KEY\"), base_url=base_url)\n        else:\n            self.client = anthropic.AsyncAnthropic(api_key=api_key or os.getenv(\"ANTHROPIC_API_KEY\"))\n\n        os.makedirs(\"sessions\", exist_ok=True)\n        self.load_session()\n\n\n\n    async def _call_llm(self, relevant_history: str = \"\", user_input: str = \"\"):\n        \"\"\"核心推理：改为异步调用\"\"\"\n        current_plan = self.plan_manager.get_formatted_plan()\n\n        # Phase 2/3: 获取三层记忆数据\n        episodic_memories = self.context.episodic_memory.get_all() if self.context._enable_memory_layers else []\n        session_summaries = self.context.session_summaries\n\n        # 🔥🔥🔥 跨会话长期记忆检索：从磁盘检索所有会话的长期记忆\n        long_term_memories = []\n        if self.context._enable_memory_layers and user_input:\n            try:\n                # 从长期记忆中检索与当前任务相关的摘要（跨所有会话）\n                long_term_memories = self.context.memory_manager.search_long_term(\n                    query=user_input,\n                    top_k=5  # 检索最相关的 5 条长期记忆\n                )\n                if long_term_memories:\n                    print(f\" [🧠] 检索到 {len(long_term_memories)} 条跨会话长期记忆\")\n            except Exception as e:\n                print(f\" [⚠️] 长期记忆检索失败: {e}\")\n\n        # 🔥 新增：获取已完成任务列表\n        completed_goals = self.plan_manager.get_completed_goals()\n\n        system_ptr = get_system_prompt(\n            summary=self.context.history_summary,\n            plan=current_plan,\n            episodic_memories=episodic_memories,\n            session_summaries=session_summaries,\n            long_term_memories=long_term_memories,  # 🔥🔥🔥 新增参数：跨会话长期记忆\n            completed_goals=completed_goals,  # 🔥 新增参数\n            user_input=user_input  # 🔥 新...",
+      "files": [
+        "core/engine.py",
+        "CLAUDE.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

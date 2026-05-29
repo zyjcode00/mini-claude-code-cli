@@ -1,0 +1,55 @@
+{
+  "id": "mem_2ee97c736b43494c909e8de01934af38",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "错误: 找不到文件 core/agent.py",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:58:48.586902",
+  "updated_at": "2026-05-29T12:58:48.586902",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/agent.py"
+  ],
+  "source_observation_ids": [
+    "obs_f9add7b2e1d24a58bc27e3b028b933c9"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f9add7b2e1d24a58bc27e3b028b933c9",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:58:48.586902",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 760,
+        "path": "core/agent.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": "错误: 找不到文件 core/agent.py",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/agent.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

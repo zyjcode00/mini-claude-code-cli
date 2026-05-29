@@ -1,0 +1,55 @@
+{
+  "id": "mem_b33710b5c99e4feba2fcbe9e127b008c",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: tests/test_memory_layers.py (第 1 至 219 行，共 396 行) ---\n   1 | \"\"\"\n   2 | 测试三层记忆架构\n   3 | \n   4 | 测试 WorkingMemory / EpisodicMemory / LongTermMemory 的基本功能。\n   5 | \"\"\"\n   6 | \n   7 | import pytest\n   8 | import tempfile\n   9 | import shutil\n  10 | from pathlib import Path\n  11 | \n  12 | from core.memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory\n  13 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n  14 | \n  15 | \n  16 | class TestWorkingMemory:\n  17 |     \"\"\"测试工作记忆\"\"\"\n  18 | \n  19 |     def test_init(self):\n  20 |         \"\"\"测试初始化\"\"\"\n  21 |         wm = WorkingMemory(max_size=10)\n  22 |         assert len(wm) == 0\n  23 |         assert wm.max_size == 10\n  24 | \n  25 |     def test_add_message(self):\n  26 |         \"\"\"测试添加消息\"\"\"\n  27 |         wm = WorkingMemory(max_size=5)\n  28 | \n  29 |         msg1 = {\"role\": \"user\", \"content\": \"Hello\"}\n  30 |         result = wm.add(msg1)\n  31 | \n  32 |         assert len(wm) == 1\n  33 |         assert result is None  # 未满，不淘汰\n  34 |         assert wm.get_all() == [msg1]\n  35 | \n  36 |     def test_fifo_eviction(self):\n  37 |         \"\"\"测试 FIFO 淘汰\"\"\"\n  38 |         wm = WorkingMemory(max_size=3)\n  39 | \n  40 |         msg1 = {\"role\": \"user\", \"content\": \"Message 1\"}\n  41 |         msg2 = {\"role\": \"user\", \"content\": \"Message 2\"}\n  42 |         msg3 = {\"role\": \"user\", \"content\": \"Message 3\"}\n  43 |         msg4 = {\"role\": \"user\", \"content\": \"Message 4\"}\n  44 | \n  45 |         # 添加 3 条消息\n  46 |         wm.add(msg1)\n  47 |         wm.add(msg2)\n  48 |         wm.add(msg3)\n  49 | \n  50 |         assert len(wm) == 3\n  51 | \n  52 |         # 添加第 4 条，应该淘汰第 1 条\n  53 |         evicted = wm.add(msg4)\n  54 | \n  55 |         assert len(wm) == 3\n  56 |         assert evicted == msg1\n  57 |         assert msg1 not in wm.get_all()\n  58 |         assert msg4 in wm.get_all()\n  59 | \n  60 |     def test_get_recent(self):\n  61 |         \"\"\"测试获取最近消息\"\"\"\n  62 |         wm = WorkingMemory(max_size=10)\n  63 | \n  64 |         for i in range(5):\n  65 |             wm.add({\"role\": \"user\", \"content\": f\"Message {i}\"})\n  66 | \n  67 |         recent = wm.get_recent(3)\n  68 |         assert len(recent) == 3\n  69 |         assert recent[0][\"content\"] == \"Message 2\"\n  70 |         assert recent[2][\"content\"] == \"Message 4\"\n  71 | \n  72 |     def test_clear(self):\n  73 |         \"\"\"测试清空\"\"\"\n  74 |         wm = WorkingMemory(max_size=10)\n  75 | \n  76 |         for i in range(5):\n  77 |             wm.add({\"role\": \"user\", \"content\": f\"Message {i}\"})\n  78 | \n  79 |         wm.clear()\n  80 |         assert len(wm) == 0\n  81 | \n  82 | \n  83 | class TestEpisodicMemory:\n  84 |     \"\"\"测试情景记忆\"\"\"\n  85 | \n  86 |     def test_init(self):\n  87 |         \"\"\"测试初始化\"\"\"\n  88 |         em = EpisodicMemory(max_size=10)\n  89 |         assert len(em) == 0\n  90 |         assert em.max_size == 10\n  91 | \n  92 |     def test_add_summary(self):\n  93 |         \"\"\"测试添加摘要\"\"\"\n  94 |         em = EpisodicMemory(max_size=5)\n  95 | \n  96 |         summary = SessionSummary(\n  97 |             session_id=\"test_1\",\n  98 |             timestamp=\"2024-01-01T00:00:00\",\n  99 |             summary_text=\"Test summary\",\n 100 |             task_goal=\"Test task\",\n 101 |             task_status=\"completed\"\n 102 |         )\n 103 | \n 104 |         result = em.add(summary)\n 105 | \n 106 |         assert len(em) == 1\n 107 |         assert result is None\n 108 |         assert summary in em.get_all()\n 109 | \n 110 |     def test_importance_eviction(self):\n 111 |         \"\"\"测试基于重要性淘汰\"\"\"\n 112 |         em = EpisodicMemory(max_size=3)\n 113 | \n 114 |         # 创建 3 个摘要，重要性不同\n 115 |         summary1 = SessionSummary(\n 116 |             session_id=\"test_1\",\n 117 |             timestamp=\"2024-01-01T00:00:00\",\n 118 |             summary_text=\"Summary 1\",\n 119 |             task_goal=\"Task 1\",\n 120 |             task_status=\"completed\",\n 121 |             importance=0.9  # 高重要性\n 122 |         )\n 123 | \n 124 |         summary2 = Sessio...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:18:23.891393",
+  "updated_at": "2026-05-29T13:18:23.891393",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "tests/test_memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_f56d337eb1d940828f504f41b5f2a448"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f56d337eb1d940828f504f41b5f2a448",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:18:23.891393",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 219,
+        "path": "tests/test_memory_layers.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: tests/test_memory_layers.py (第 1 至 219 行，共 396 行) ---\n   1 | \"\"\"\n   2 | 测试三层记忆架构\n   3 | \n   4 | 测试 WorkingMemory / EpisodicMemory / LongTermMemory 的基本功能。\n   5 | \"\"\"\n   6 | \n   7 | import pytest\n   8 | import tempfile\n   9 | import shutil\n  10 | from pathlib import Path\n  11 | \n  12 | from core.memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory\n  13 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n  14 | \n  15 | \n  16 | class TestWorkingMemory:\n  17 |     \"\"\"测试工作记忆\"\"\"\n  18 | \n  19 |     def test_init(self):\n  20 |         \"\"\"测试初始化\"\"\"\n  21 |         wm = WorkingMemory(max_size=10)\n  22 |         assert len(wm) == 0\n  23 |         assert wm.max_size == 10\n  24 | \n  25 |     def test_add_message(self):\n  26 |         \"\"\"测试添加消息\"\"\"\n  27 |         wm = WorkingMemory(max_size=5)\n  28 | \n  29 |         msg1 = {\"role\": \"user\", \"content\": \"Hello\"}\n  30 |         result = wm.add(msg1)\n  31 | \n  32 |         assert len(wm) == 1\n  33 |         assert result is None  # 未满，不淘汰\n  34 |         assert wm.get_all() == [msg1]\n  35 | \n  36 |     def test_fifo_eviction(self):\n  37 |         \"\"\"测试 FIFO 淘汰\"\"\"\n  38 |         wm = WorkingMemory(max_size=3)\n  39 | \n  40 |         msg1 = {\"role\": \"user\", \"content\": \"Message 1\"}\n  41 |         msg2 = {\"role\": \"user\", \"content\": \"Message 2\"}\n  42 |         msg3 = {\"role\": \"user\", \"content\": \"Message 3\"}\n  43 |         msg4 = {\"role\": \"user\", \"content\": \"Message 4\"}\n  44 | \n  45 |         # 添加 3 条消息\n  46 |         wm.add(msg1)\n  47 |         wm.add(msg2)\n  48 |         wm.add(msg3)\n  49 | \n  50 |         assert len(wm) == 3\n  51 | \n  52 |         # 添加第 4 条，应该淘汰第 1 条\n  53 |         evicted = wm.add(msg4)\n  54 | \n  55 |         assert len(wm) == 3\n  56 |         assert evicted == msg1\n  57 |         assert msg1 not in wm.get_all()\n  58 |         assert msg4 in wm.get_all()\n  59 | \n  60 |     def test_get_recent(self):\n  61 |         \"\"\"测试获取最近消息\"\"\"\n  62 |         wm = WorkingMemory(max_size=10)\n  63 | \n  64 |         for i in range(5):\n  65 |             wm.add({\"role\": \"user\", \"content\": f\"Message {i}\"})\n  66 | \n  67 |         recent = wm.get_recent(3)\n  68 |         assert len(recent) == 3\n  69 |         assert recent[0][\"content\"] == \"Message 2\"\n  70 |         assert recent[2][\"content\"] == \"Message 4\"\n  71 | \n  72 |     def test_clear(self):\n  73 |         \"\"\"测试清空\"\"\"\n  74 |         wm = WorkingMemory(max_size=10)\n  75 | \n  76 |         for i in range(5):\n  77 |             wm.add({\"role\": \"user\", \"content\": f\"Message {i}\"})\n  78 | \n  79 |         wm.clear()\n  80 |         assert len(wm) == 0\n  81 | \n  82 | \n  83 | class TestEpisodicMemory:\n  84 |     \"\"\"测试情景记忆\"\"\"\n  85 | \n  86 |     def test_init(self):\n  87 |         \"\"\"测试初始化\"\"\"\n  88 |         em = EpisodicMemory(max_size=10)\n  89 |         assert len(em) == 0\n  90 |         assert em.max_size == 10\n  91 | \n  92 |     def test_add_summary(self):\n  93 |         \"\"\"测试添加摘要\"\"\"\n  94 |         em = EpisodicMemory(max_size=5)\n  95 | \n  96 |         summary = SessionSummary(\n  97 |             session_id=\"test_1\",\n  98 |             timestamp=\"2024-01-01T00:00:00\",\n  99 |             summary_text=\"Test summary\",\n 100 |             task_goal=\"Test task\",\n 101 |             task_status=\"completed\"\n 102 |         )\n 103 | \n 104 |         result = em.add(summary)\n 105 | \n 106 |         assert len(em) == 1\n 107 |         assert result is None\n 108 |         assert summary in em.get_all()\n 109 | \n 110 |     def test_importance_eviction(self):\n 111 |         \"\"\"测试基于重要性淘汰\"\"\"\n 112 |         em = EpisodicMemory(max_size=3)\n 113 | \n 114 |         # 创建 3 个摘要，重要性不同\n 115 |         summary1 = SessionSummary(\n 116 |             session_id=\"test_1\",\n 117 |             timestamp=\"2024-01-01T00:00:00\",\n 118 |             summary_text=\"Summary 1\",\n 119 |             task_goal=\"Task 1\",\n 120 |             task_status=\"completed\",\n 121 |             importance=0.9  # 高重要性\n 122 |         )\n 123 | \n 124 |         summary2 = Sessio...",
+      "files": [
+        "tests/test_memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

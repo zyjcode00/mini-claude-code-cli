@@ -1,0 +1,54 @@
+{
+  "id": "mem_e79852c65d5c47a7af2330750c10056b",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 D:\\LLM\\mini-claude-code-cli\\tests\\test_memory_manager_phase2.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:21:25.479999",
+  "updated_at": "2026-05-29T14:21:25.479999",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "D:\\LLM\\mini-claude-code-cli\\tests\\test_memory_manager_phase2.py"
+  ],
+  "source_observation_ids": [
+    "obs_b1a0f4c735f645f08697fc4647d27a86"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_b1a0f4c735f645f08697fc4647d27a86",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:21:25.479999",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "        exported = manager.export_memories(history_summary=\"历史摘要\", include_memory_items=True)\n        assert exported[\"memory_items\"][0][\"id\"] == \"mem-export\"\n        assert exported[\"history_summary\"] == \"历史摘要\"\n\n        restored = MemoryManager(long_term_storage_dir=Path(temp_dir) / \"restored\")\n        restored.import_memories(exported, import_memory_items=True)\n        recall_results = restored.recall(\"SessionSummary 兼容\", top_k=1, include_summaries=False)",
+        "old_str": "        exported = manager.export_memories(history_summary=\"历史摘要\")\n        assert exported[\"memory_items\"][0][\"id\"] == \"mem-export\"\n        assert exported[\"history_summary\"] == \"历史摘要\"\n\n        restored = MemoryManager(long_term_storage_dir=Path(temp_dir) / \"restored\")\n        restored.import_memories(exported)\n        recall_results = restored.recall(\"SessionSummary 兼容\", top_k=1, include_summaries=False)",
+        "path": "D:\\LLM\\mini-claude-code-cli\\tests\\test_memory_manager_phase2.py"
+      },
+      "tool_output": "成功: 已更新 D:\\LLM\\mini-claude-code-cli\\tests\\test_memory_manager_phase2.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "D:\\LLM\\mini-claude-code-cli\\tests\\test_memory_manager_phase2.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

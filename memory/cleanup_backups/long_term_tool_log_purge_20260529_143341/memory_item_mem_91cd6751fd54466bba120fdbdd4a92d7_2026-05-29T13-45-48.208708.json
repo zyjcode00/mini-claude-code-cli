@@ -1,0 +1,50 @@
+{
+  "id": "mem_91cd6751fd54466bba120fdbdd4a92d7",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: get_git_status",
+  "content": "📍 分支: main\n📌 最新提交: 3f31c7a 🎯 [Plan-85de5db5] 阅读并理解 D:\\LLM\\mini-claude-code-cli 项目，向用户总结项目结构、核心流程与关键模块\n\n⚪ 未跟踪 (1 个文件):\n  ? tmp_probe_after.py",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:45:48.208708",
+  "updated_at": "2026-05-29T13:45:48.208708",
+  "concepts": [
+    "post_tool_use",
+    "get_git_status"
+  ],
+  "files": [
+    "tmp_probe_after.py"
+  ],
+  "source_observation_ids": [
+    "obs_201842c8a6b14ba8ad15fc54c2dcefcb"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_201842c8a6b14ba8ad15fc54c2dcefcb",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:45:48.208708",
+      "event_type": "post_tool_use",
+      "tool_name": "get_git_status",
+      "tool_input": {},
+      "tool_output": "📍 分支: main\n📌 最新提交: 3f31c7a 🎯 [Plan-85de5db5] 阅读并理解 D:\\LLM\\mini-claude-code-cli 项目，向用户总结项目结构、核心流程与关键模块\n\n⚪ 未跟踪 (1 个文件):\n  ? tmp_probe_after.py",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tmp_probe_after.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

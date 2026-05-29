@@ -1,0 +1,55 @@
+{
+  "id": "mem_23b098e82f9e4e2bad449754945db4c4",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/compression_engine.py (第 720 至 1110 行，共 1554 行) ---\n 720 |                 tool_name = msg.get(\"name\", \"unknown\")\n 721 |                 tool_counts[tool_name] = tool_counts.get(tool_name, 0) + 1\n 722 | \n 723 |         for tool_name, count in tool_counts.items():\n 724 |             tools_used.append(ToolUsage(\n 725 |                 tool_name=tool_name,\n 726 |                 parameters={},\n 727 |                 result_summary=f\"调用了 {count} 次\",\n 728 |                 timestamp=datetime.now().isoformat(),\n 729 |                 success=True,\n 730 |                 importance=0.5\n 731 |             ))\n 732 | \n 733 |         # 生成摘要文本（改进版：提取关键帧的实际内容）\n 734 |         summary_parts = []\n 735 |         task_goal = None\n 736 |         key_decisions = []\n 737 | \n 738 |         # 1. 提取用户消息（任务目标）\n 739 |         user_messages = [msg for msg in messages if msg.get(\"role\") == \"user\"]\n 740 |         if user_messages:\n 741 |             first_user_msg = user_messages[0].get(\"content\", \"\")\n 742 |             if isinstance(first_user_msg, str):\n 743 |                 task_goal = first_user_msg[:100]  # 提取前100字符作为任务目标\n 744 |                 summary_parts.append(f\"任务: {task_goal}\")\n 745 | \n 746 |         # 2. 提取关键消息的实际内容\n 747 |         key_content_count = 0\n 748 |         for msg in messages:\n 749 |             if key_content_count >= 5:  # 只提取前5条关键内容\n 750 |                 break\n 751 | \n 752 |             content = msg.get(\"content\", \"\")\n 753 |             if not isinstance(content, str):\n 754 |                 continue\n 755 | \n 756 |             role = msg.get(\"role\", \"\")\n 757 | \n 758 |             # 提取错误消息\n 759 |             if any(keyword in content for keyword in [\"Error\", \"错误\", \"Exception\", \"失败\", \"Traceback\"]):\n 760 |                 error_preview = content[:80].replace(\"\\n\", \" \").strip()\n 761 |                 summary_parts.append(f\"错误: {error_preview}...\")\n 762 |                 key_content_count += 1\n 763 | \n 764 |             # 提取关键决策（assistant 消息中的关键内容）\n 765 |             elif role == \"assistant\" and len(content) > 20:\n 766 |                 # 检测关键决策关键词\n 767 |                 decision_keywords = [\"已完成\", \"已创建\", \"已修改\", \"成功\", \"完成\", \"建议\", \"决策\", \"选择\"]\n 768 |                 if any(keyword in content for keyword in decision_keywords):\n 769 |                     decision_preview = content[:80].replace(\"\\n\", \" \").strip()\n 770 |                     summary_parts.append(f\"进展: {decision_preview}...\")\n 771 |                     key_decisions.append(decision_preview)\n 772 |                     key_content_count += 1\n 773 | \n 774 |         # 3. 统计数据作为补充\n 775 |         stats_parts = []\n 776 |         stats_parts.append(f\"压缩了 {len(messages)} 条消息\")\n 777 |         if files_changed:\n 778 |             stats_parts.append(f\"{len(files_changed)} 个文件变更\")\n 779 |         if errors_encountered:\n 780 |             stats_parts.append(f\"{len(errors_encountered)} 个错误\")\n 781 |         if tools_used:\n 782 |             stats_parts.append(f\"使用 {len(tools_used)} 种工具\")\n 783 | \n 784 |         summary_text = \"\\n\".join(summary_parts + [\"统计: \" + \"，\".join(stats_parts)])\n 785 | \n 786 |         # 如果没有提取到任何关键内容，使用简化版摘要\n 787 |         if not summary_parts:\n 788 |             summary_text = f\"使用{strategy.value}策略压缩了 {len(messages)} 条消息（无关键内容提取）\"\n 789 | \n 790 |         # 🔥 新增：检测任务状态（优先使用真实 Plan 状态）\n 791 |         task_status = \"in_progress\"  # 默认值\n 792 | \n 793 |         # 🔥🔥🔥 关键修复：优先检查 Plan 状态（真实数据源）\n 794 |         if self.plan_manager and hasattr(self.plan_manager, 'is_plan_complete'):\n 795 |             if self.plan_manager.is_plan_complete():\n 796 |                 # Plan 已全部完成，强制使用 \"completed\" 状态\n 797 |                 task_status = \"completed\"\n 798 |                 print(f\"   [Phase 3] ✅ 检测到 Plan 已完成，状态同步为 completed\")\n 799 |             elif self.plan_manager.has_incomplete_tasks():\n 800 |                 # Plan 还有未完成的步骤，强制使用 \"in_progress\"\n 801 |                 task_status = \"in_progress\"\n 802 |                 print(f\"   [Phase 3] ⏳ Plan 尚未完成，状态保持 in_progress\"...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:40:06.563134",
+  "updated_at": "2026-05-29T13:40:06.563134",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_34f13c6d925a4d1880171363b3eadc55"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_34f13c6d925a4d1880171363b3eadc55",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:40:06.563134",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 1110,
+        "path": "core/compression_engine.py",
+        "raw_mode": false,
+        "start_line": 720
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/compression_engine.py (第 720 至 1110 行，共 1554 行) ---\n 720 |                 tool_name = msg.get(\"name\", \"unknown\")\n 721 |                 tool_counts[tool_name] = tool_counts.get(tool_name, 0) + 1\n 722 | \n 723 |         for tool_name, count in tool_counts.items():\n 724 |             tools_used.append(ToolUsage(\n 725 |                 tool_name=tool_name,\n 726 |                 parameters={},\n 727 |                 result_summary=f\"调用了 {count} 次\",\n 728 |                 timestamp=datetime.now().isoformat(),\n 729 |                 success=True,\n 730 |                 importance=0.5\n 731 |             ))\n 732 | \n 733 |         # 生成摘要文本（改进版：提取关键帧的实际内容）\n 734 |         summary_parts = []\n 735 |         task_goal = None\n 736 |         key_decisions = []\n 737 | \n 738 |         # 1. 提取用户消息（任务目标）\n 739 |         user_messages = [msg for msg in messages if msg.get(\"role\") == \"user\"]\n 740 |         if user_messages:\n 741 |             first_user_msg = user_messages[0].get(\"content\", \"\")\n 742 |             if isinstance(first_user_msg, str):\n 743 |                 task_goal = first_user_msg[:100]  # 提取前100字符作为任务目标\n 744 |                 summary_parts.append(f\"任务: {task_goal}\")\n 745 | \n 746 |         # 2. 提取关键消息的实际内容\n 747 |         key_content_count = 0\n 748 |         for msg in messages:\n 749 |             if key_content_count >= 5:  # 只提取前5条关键内容\n 750 |                 break\n 751 | \n 752 |             content = msg.get(\"content\", \"\")\n 753 |             if not isinstance(content, str):\n 754 |                 continue\n 755 | \n 756 |             role = msg.get(\"role\", \"\")\n 757 | \n 758 |             # 提取错误消息\n 759 |             if any(keyword in content for keyword in [\"Error\", \"错误\", \"Exception\", \"失败\", \"Traceback\"]):\n 760 |                 error_preview = content[:80].replace(\"\\n\", \" \").strip()\n 761 |                 summary_parts.append(f\"错误: {error_preview}...\")\n 762 |                 key_content_count += 1\n 763 | \n 764 |             # 提取关键决策（assistant 消息中的关键内容）\n 765 |             elif role == \"assistant\" and len(content) > 20:\n 766 |                 # 检测关键决策关键词\n 767 |                 decision_keywords = [\"已完成\", \"已创建\", \"已修改\", \"成功\", \"完成\", \"建议\", \"决策\", \"选择\"]\n 768 |                 if any(keyword in content for keyword in decision_keywords):\n 769 |                     decision_preview = content[:80].replace(\"\\n\", \" \").strip()\n 770 |                     summary_parts.append(f\"进展: {decision_preview}...\")\n 771 |                     key_decisions.append(decision_preview)\n 772 |                     key_content_count += 1\n 773 | \n 774 |         # 3. 统计数据作为补充\n 775 |         stats_parts = []\n 776 |         stats_parts.append(f\"压缩了 {len(messages)} 条消息\")\n 777 |         if files_changed:\n 778 |             stats_parts.append(f\"{len(files_changed)} 个文件变更\")\n 779 |         if errors_encountered:\n 780 |             stats_parts.append(f\"{len(errors_encountered)} 个错误\")\n 781 |         if tools_used:\n 782 |             stats_parts.append(f\"使用 {len(tools_used)} 种工具\")\n 783 | \n 784 |         summary_text = \"\\n\".join(summary_parts + [\"统计: \" + \"，\".join(stats_parts)])\n 785 | \n 786 |         # 如果没有提取到任何关键内容，使用简化版摘要\n 787 |         if not summary_parts:\n 788 |             summary_text = f\"使用{strategy.value}策略压缩了 {len(messages)} 条消息（无关键内容提取）\"\n 789 | \n 790 |         # 🔥 新增：检测任务状态（优先使用真实 Plan 状态）\n 791 |         task_status = \"in_progress\"  # 默认值\n 792 | \n 793 |         # 🔥🔥🔥 关键修复：优先检查 Plan 状态（真实数据源）\n 794 |         if self.plan_manager and hasattr(self.plan_manager, 'is_plan_complete'):\n 795 |             if self.plan_manager.is_plan_complete():\n 796 |                 # Plan 已全部完成，强制使用 \"completed\" 状态\n 797 |                 task_status = \"completed\"\n 798 |                 print(f\"   [Phase 3] ✅ 检测到 Plan 已完成，状态同步为 completed\")\n 799 |             elif self.plan_manager.has_incomplete_tasks():\n 800 |                 # Plan 还有未完成的步骤，强制使用 \"in_progress\"\n 801 |                 task_status = \"in_progress\"\n 802 |                 print(f\"   [Phase 3] ⏳ Plan 尚未完成，状态保持 in_progress\"...",
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

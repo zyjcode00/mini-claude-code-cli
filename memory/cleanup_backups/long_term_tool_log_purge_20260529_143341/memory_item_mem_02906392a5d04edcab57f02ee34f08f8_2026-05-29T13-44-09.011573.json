@@ -1,0 +1,52 @@
+{
+  "id": "mem_02906392a5d04edcab57f02ee34f08f8",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: run_pytest",
+  "content": "✅ 测试通过！\n============================= test session starts =============================\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\ncachedir: .pytest_cache\nrootdir: D:\\LLM\\mini-claude-code-cli\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 3 items\n\ntests/test_shared_memory_manager.py::test_context_manager_accepts_injected_memory_manager PASSED [ 33%]\ntests/test_shared_memory_manager.py::test_agent_engine_and_memory_tools_share_injected_memory_manager PASSED [ 66%]\ntests/test_shared_memory_manager.py::test_agent_engine_keeps_existing_default_memory_manager_behavior PASSED [100%]\n\n============================== 3 passed in 2.66s ==============================\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:44:09.011573",
+  "updated_at": "2026-05-29T13:44:09.011573",
+  "concepts": [
+    "test_result",
+    "run_pytest"
+  ],
+  "files": [
+    "tests/test_shared_memory_manager.py"
+  ],
+  "source_observation_ids": [
+    "obs_a0d90670f8c447b7b5dfb13c17766f5c"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_a0d90670f8c447b7b5dfb13c17766f5c",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:44:09.011573",
+      "event_type": "test_result",
+      "tool_name": "run_pytest",
+      "tool_input": {
+        "path": "tests/test_shared_memory_manager.py"
+      },
+      "tool_output": "✅ 测试通过！\n============================= test session starts =============================\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\ncachedir: .pytest_cache\nrootdir: D:\\LLM\\mini-claude-code-cli\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 3 items\n\ntests/test_shared_memory_manager.py::test_context_manager_accepts_injected_memory_manager PASSED [ 33%]\ntests/test_shared_memory_manager.py::test_agent_engine_and_memory_tools_share_injected_memory_manager PASSED [ 66%]\ntests/test_shared_memory_manager.py::test_agent_engine_keeps_existing_default_memory_manager_behavior PASSED [100%]\n\n============================== 3 passed in 2.66s ==============================\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_shared_memory_manager.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

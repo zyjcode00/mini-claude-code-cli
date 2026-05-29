@@ -1,0 +1,55 @@
+{
+  "id": "mem_6a5f11e558204a5ca086c4c5a01c9b5d",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_layers.py (第 376 至 520 行，共 570 行) ---\n 376 |     def store_item(self, item: MemoryItem) -> str:\n 377 |         \"\"\"\n 378 |         存储 MemoryItem 到长期记忆。\n 379 | \n 380 |         Args:\n 381 |             item: 长期知识条目\n 382 | \n 383 |         Returns:\n 384 |             存储的文件路径\n 385 |         \"\"\"\n 386 |         timestamp = item.updated_at.replace(\":\", \"-\").replace(\" \", \"_\")\n 387 |         filename = f\"memory_item_{item.id}_{timestamp}.json\"\n 388 |         file_path = self.storage_dir / filename\n 389 | \n 390 |         try:\n 391 |             with open(file_path, 'w', encoding='utf-8') as f:\n 392 |                 json.dump(item.to_dict(), f, ensure_ascii=False, indent=2)\n 393 | \n 394 |             old_file = self.item_index.get(item.id)\n 395 |             if old_file and old_file != file_path and old_file.exists():\n 396 |                 old_file.unlink()\n 397 | \n 398 |             self.item_index[item.id] = file_path\n 399 |             self._remove_id_from_inverted_index(self.item_inverted_index, item.id)\n 400 | \n 401 |             keywords = self._extract_item_keywords(item.to_dict())\n 402 |             for keyword in keywords:\n 403 |                 if keyword not in self.item_inverted_index:\n 404 |                     self.item_inverted_index[keyword] = []\n 405 |                 if item.id not in self.item_inverted_index[keyword]:\n 406 |                     self.item_inverted_index[keyword].append(item.id)\n 407 | \n 408 |             self._save_index()\n 409 |             return str(file_path)\n 410 |         except Exception as e:\n 411 |             print(f\"⚠️ 存储 MemoryItem 失败: {e}\")\n 412 |             return \"\"\n 413 | \n 414 |     def retrieve_item(self, item_id: str) -> Optional[MemoryItem]:\n 415 |         \"\"\"根据 item_id 检索 MemoryItem。\"\"\"\n 416 |         file_path = self.item_index.get(item_id)\n 417 |         if not file_path or not file_path.exists():\n 418 |             return None\n 419 | \n 420 |         try:\n 421 |             with open(file_path, 'r', encoding='utf-8') as f:\n 422 |                 data = json.load(f)\n 423 |                 return MemoryItem.from_dict(data)\n 424 |         except Exception as e:\n 425 |             print(f\"⚠️ 读取 MemoryItem 失败: {e}\")\n 426 |             return None\n 427 | \n 428 |     def search_items(self, query: str, top_k: int = 10, include_archived: bool = False) -> List[MemoryRecallResult]:\n 429 |         \"\"\"关键词检索 MemoryItem，返回统一召回结果。\"\"\"\n 430 |         query_keywords = self._tokenize(query)\n 431 |         if not query_keywords:\n 432 |             return []\n 433 | \n 434 |         scores: Dict[str, float] = {}\n 435 |         matched_terms: Dict[str, List[str]] = {}\n 436 |         for keyword in query_keywords:\n 437 |             for item_id in self.item_inverted_index.get(keyword, []):\n 438 |                 scores[item_id] = scores.get(item_id, 0.0) + 1.0\n 439 |                 matched_terms.setdefault(item_id, []).append(keyword)\n 440 | \n 441 |         results: List[MemoryRecallResult] = []\n 442 |         for item_id, keyword_score in scores.items():\n 443 |             item = self.retrieve_item(item_id)\n 444 |             if not item:\n 445 |                 continue\n 446 |             if not include_archived and item.status != MemoryStatus.ACTIVE.value:\n 447 |                 continue\n 448 | \n 449 |             normalized_score = keyword_score + item.importance + item.confidence * 0.5\n 450 |             reason = \"匹配关键词: \" + \", \".join(sorted(set(matched_terms.get(item_id, []))))\n 451 |             results.append(MemoryRecallResult(\n 452 |                 item=item,\n 453 |                 score=normalized_score,\n 454 |                 source=\"long_term_items\",\n 455 |                 reason=reason,\n 456 |             ))\n 457 | \n 458 |         results.sort(key=lambda result: result.score, reverse=True)\n 459 |         return results[:top_k]\n 460 | \n 461 |     def get_all_items(self) -> List[MemoryItem]:\n 462 |         \"\"\"获取所有 MemoryItem。\"\"\"\n 463 |         items = []\n 464 |         for...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:35:38.015853",
+  "updated_at": "2026-05-29T12:35:38.015853",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_7df0cbee2743433d819521297bca38ac"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_7df0cbee2743433d819521297bca38ac",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:35:38.015853",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 520,
+        "path": "core/memory_layers.py",
+        "raw_mode": false,
+        "start_line": 376
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_layers.py (第 376 至 520 行，共 570 行) ---\n 376 |     def store_item(self, item: MemoryItem) -> str:\n 377 |         \"\"\"\n 378 |         存储 MemoryItem 到长期记忆。\n 379 | \n 380 |         Args:\n 381 |             item: 长期知识条目\n 382 | \n 383 |         Returns:\n 384 |             存储的文件路径\n 385 |         \"\"\"\n 386 |         timestamp = item.updated_at.replace(\":\", \"-\").replace(\" \", \"_\")\n 387 |         filename = f\"memory_item_{item.id}_{timestamp}.json\"\n 388 |         file_path = self.storage_dir / filename\n 389 | \n 390 |         try:\n 391 |             with open(file_path, 'w', encoding='utf-8') as f:\n 392 |                 json.dump(item.to_dict(), f, ensure_ascii=False, indent=2)\n 393 | \n 394 |             old_file = self.item_index.get(item.id)\n 395 |             if old_file and old_file != file_path and old_file.exists():\n 396 |                 old_file.unlink()\n 397 | \n 398 |             self.item_index[item.id] = file_path\n 399 |             self._remove_id_from_inverted_index(self.item_inverted_index, item.id)\n 400 | \n 401 |             keywords = self._extract_item_keywords(item.to_dict())\n 402 |             for keyword in keywords:\n 403 |                 if keyword not in self.item_inverted_index:\n 404 |                     self.item_inverted_index[keyword] = []\n 405 |                 if item.id not in self.item_inverted_index[keyword]:\n 406 |                     self.item_inverted_index[keyword].append(item.id)\n 407 | \n 408 |             self._save_index()\n 409 |             return str(file_path)\n 410 |         except Exception as e:\n 411 |             print(f\"⚠️ 存储 MemoryItem 失败: {e}\")\n 412 |             return \"\"\n 413 | \n 414 |     def retrieve_item(self, item_id: str) -> Optional[MemoryItem]:\n 415 |         \"\"\"根据 item_id 检索 MemoryItem。\"\"\"\n 416 |         file_path = self.item_index.get(item_id)\n 417 |         if not file_path or not file_path.exists():\n 418 |             return None\n 419 | \n 420 |         try:\n 421 |             with open(file_path, 'r', encoding='utf-8') as f:\n 422 |                 data = json.load(f)\n 423 |                 return MemoryItem.from_dict(data)\n 424 |         except Exception as e:\n 425 |             print(f\"⚠️ 读取 MemoryItem 失败: {e}\")\n 426 |             return None\n 427 | \n 428 |     def search_items(self, query: str, top_k: int = 10, include_archived: bool = False) -> List[MemoryRecallResult]:\n 429 |         \"\"\"关键词检索 MemoryItem，返回统一召回结果。\"\"\"\n 430 |         query_keywords = self._tokenize(query)\n 431 |         if not query_keywords:\n 432 |             return []\n 433 | \n 434 |         scores: Dict[str, float] = {}\n 435 |         matched_terms: Dict[str, List[str]] = {}\n 436 |         for keyword in query_keywords:\n 437 |             for item_id in self.item_inverted_index.get(keyword, []):\n 438 |                 scores[item_id] = scores.get(item_id, 0.0) + 1.0\n 439 |                 matched_terms.setdefault(item_id, []).append(keyword)\n 440 | \n 441 |         results: List[MemoryRecallResult] = []\n 442 |         for item_id, keyword_score in scores.items():\n 443 |             item = self.retrieve_item(item_id)\n 444 |             if not item:\n 445 |                 continue\n 446 |             if not include_archived and item.status != MemoryStatus.ACTIVE.value:\n 447 |                 continue\n 448 | \n 449 |             normalized_score = keyword_score + item.importance + item.confidence * 0.5\n 450 |             reason = \"匹配关键词: \" + \", \".join(sorted(set(matched_terms.get(item_id, []))))\n 451 |             results.append(MemoryRecallResult(\n 452 |                 item=item,\n 453 |                 score=normalized_score,\n 454 |                 source=\"long_term_items\",\n 455 |                 reason=reason,\n 456 |             ))\n 457 | \n 458 |         results.sort(key=lambda result: result.score, reverse=True)\n 459 |         return results[:top_k]\n 460 | \n 461 |     def get_all_items(self) -> List[MemoryItem]:\n 462 |         \"\"\"获取所有 MemoryItem。\"\"\"\n 463 |         items = []\n 464 |         for...",
+      "files": [
+        "core/memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

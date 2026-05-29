@@ -1,0 +1,57 @@
+{
+  "id": "mem_53575de0182445709e09606c9fb0cb5d",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/prompts.py (第 1 至 559 行，共 797 行) ---\n   1 | import os\n   2 | import platform\n   3 | from datetime import datetime\n   4 | from typing import List, Optional, Dict, Set, TYPE_CHECKING\n   5 | \n   6 | if TYPE_CHECKING:\n   7 |     from core.memory_models import SessionSummary\n   8 | \n   9 | \n  10 | # ==================== 优化 1: 记忆去重工具函数 ====================\n  11 | \n  12 | def estimate_tokens(text: str) -> int:\n  13 |     \"\"\"\n  14 |     估算文本的 Token 数量（简单估算：1 token ≈ 4 字符）\n  15 | \n  16 |     Args:\n  17 |         text: 待估算的文本\n  18 | \n  19 |     Returns:\n  20 |         估算的 Token 数量\n  21 |     \"\"\"\n  22 |     return len(text) // 4\n  23 | \n  24 | \n  25 | def extract_keywords(text: str, min_length: int = 3) -> Set[str]:\n  26 |     \"\"\"\n  27 |     从文本中提取关键词（简单实现：基于词频和长度）\n  28 | \n  29 |     Args:\n  30 |         text: 待提取的文本\n  31 |         min_length: 关键词最小长度\n  32 | \n  33 |     Returns:\n  34 |         关键词集合\n  35 |     \"\"\"\n  36 |     # 过滤常见停用词\n  37 |     stop_words = {\n  38 |         'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',\n  39 |         'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',\n  40 |         'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare',\n  41 |         'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as',\n  42 |         'into', 'through', 'during', 'before', 'after', 'above', 'below',\n  43 |         'and', 'but', 'or', 'nor', 'so', 'yet', 'both', 'either', 'neither',\n  44 |         'not', 'only', 'own', 'same', 'than', 'too', 'very', 'just',\n  45 |         '的', '了', '是', '在', '和', '与', '或', '有', '个', '这', '那',\n  46 |         '要', '会', '对', '为', '能', '也', '都', '而', '可', '如', '但',\n  47 |         '文件', '任务', '功能', '系统', '代码', '方法', '进行', '实现',\n  48 |     }\n  49 | \n  50 |     keywords = set()\n  51 |     words = text.split()\n  52 | \n  53 |     for word in words:\n  54 |         # 清理标点符号\n  55 |         clean_word = word.strip('.,!?;:()[]{}\"\\'-')\n  56 | \n  57 |         # 过滤短词和停用词\n  58 |         if len(clean_word) >= min_length and clean_word.lower() not in stop_words:\n  59 |             keywords.add(clean_word.lower())\n  60 | \n  61 |     return keywords\n  62 | \n  63 | \n  64 | def is_covered_by_summary(\n  65 |     memory_item: \"SessionSummary\",\n  66 |     long_term_summary: str,\n  67 |     threshold: float = 0.5\n  68 | ) -> bool:\n  69 |     \"\"\"\n  70 |     检查记忆项是否已被长期摘要覆盖（基于关键词重叠度）\n  71 | \n  72 |     Args:\n  73 |         memory_item: 待检查的记忆项（情景记忆或会话摘要）\n  74 |         long_term_summary: 长期记忆摘要\n  75 |         threshold: 重叠度阈值（默认 0.5）\n  76 | \n  77 |     Returns:\n  78 |         是否被覆盖\n  79 |     \"\"\"\n  80 |     if not long_term_summary:\n  81 |         return False\n  82 | \n  83 |     # 提取关键词\n  84 |     memory_keywords = extract_keywords(memory_item.summary_text or memory_item.task_goal)\n  85 |     summary_keywords = extract_keywords(long_term_summary)\n  86 | \n  87 |     if not memory_keywords:\n  88 |         return False\n  89 | \n  90 |     # 计算重叠度\n  91 |     overlap = len(memory_keywords & summary_keywords) / len(memory_keywords)\n  92 | \n  93 |     return overlap >= threshold\n  94 | \n  95 | \n  96 | def extract_keywords_from_goals(\n  97 |     completed_goals: List[Dict],\n  98 |     max_keywords: int = 5\n  99 | ) -> List[str]:\n 100 |     \"\"\"\n 101 |     从已完成任务列表中提取关键词（优化版：关键词化而非完整描述）\n 102 | \n 103 |     Args:\n 104 |         completed_goals: 已完成任务列表\n 105 |         max_keywords: 最多返回多少个关键词\n 106 | \n 107 |     Returns:\n 108 |         关键词列表（去重）\n 109 |     \"\"\"\n 110 |     keywords = set()\n 111 | \n 112 |     for goal in completed_goals[-10:]:  # 只分析最近 10 条\n 113 |         goal_text = goal.get(\"goal\", \"\")\n 114 | \n 115 |         # 提取关键词\n 116 |         extracted = extract_keywords(goal_text, min_length=3)\n 117 |         keywords.update(extracted)\n 118 | \n 119 |         # 如果关键词已足够，提前退出\n 120 |         if len(keywords) >= max_keywords * 2:\n 121 |             break\n 122 | \n 123 |     # 转为列表并限制数量\n 124 |     return list(keywords)[:max_keywords]\n 125 | \n 126 | \n 127 | def should_inject_...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:01:16.662918",
+  "updated_at": "2026-05-29T13:01:16.662918",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/prompts.py",
+    "CLAUDE.md"
+  ],
+  "source_observation_ids": [
+    "obs_c995200601a941d88b00b51cf69b70a2"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_c995200601a941d88b00b51cf69b70a2",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:01:16.662918",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 559,
+        "path": "core/prompts.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/prompts.py (第 1 至 559 行，共 797 行) ---\n   1 | import os\n   2 | import platform\n   3 | from datetime import datetime\n   4 | from typing import List, Optional, Dict, Set, TYPE_CHECKING\n   5 | \n   6 | if TYPE_CHECKING:\n   7 |     from core.memory_models import SessionSummary\n   8 | \n   9 | \n  10 | # ==================== 优化 1: 记忆去重工具函数 ====================\n  11 | \n  12 | def estimate_tokens(text: str) -> int:\n  13 |     \"\"\"\n  14 |     估算文本的 Token 数量（简单估算：1 token ≈ 4 字符）\n  15 | \n  16 |     Args:\n  17 |         text: 待估算的文本\n  18 | \n  19 |     Returns:\n  20 |         估算的 Token 数量\n  21 |     \"\"\"\n  22 |     return len(text) // 4\n  23 | \n  24 | \n  25 | def extract_keywords(text: str, min_length: int = 3) -> Set[str]:\n  26 |     \"\"\"\n  27 |     从文本中提取关键词（简单实现：基于词频和长度）\n  28 | \n  29 |     Args:\n  30 |         text: 待提取的文本\n  31 |         min_length: 关键词最小长度\n  32 | \n  33 |     Returns:\n  34 |         关键词集合\n  35 |     \"\"\"\n  36 |     # 过滤常见停用词\n  37 |     stop_words = {\n  38 |         'the', 'a', 'an', 'is', 'are', 'was', 'were', 'be', 'been', 'being',\n  39 |         'have', 'has', 'had', 'do', 'does', 'did', 'will', 'would', 'could',\n  40 |         'should', 'may', 'might', 'must', 'shall', 'can', 'need', 'dare',\n  41 |         'to', 'of', 'in', 'for', 'on', 'with', 'at', 'by', 'from', 'as',\n  42 |         'into', 'through', 'during', 'before', 'after', 'above', 'below',\n  43 |         'and', 'but', 'or', 'nor', 'so', 'yet', 'both', 'either', 'neither',\n  44 |         'not', 'only', 'own', 'same', 'than', 'too', 'very', 'just',\n  45 |         '的', '了', '是', '在', '和', '与', '或', '有', '个', '这', '那',\n  46 |         '要', '会', '对', '为', '能', '也', '都', '而', '可', '如', '但',\n  47 |         '文件', '任务', '功能', '系统', '代码', '方法', '进行', '实现',\n  48 |     }\n  49 | \n  50 |     keywords = set()\n  51 |     words = text.split()\n  52 | \n  53 |     for word in words:\n  54 |         # 清理标点符号\n  55 |         clean_word = word.strip('.,!?;:()[]{}\"\\'-')\n  56 | \n  57 |         # 过滤短词和停用词\n  58 |         if len(clean_word) >= min_length and clean_word.lower() not in stop_words:\n  59 |             keywords.add(clean_word.lower())\n  60 | \n  61 |     return keywords\n  62 | \n  63 | \n  64 | def is_covered_by_summary(\n  65 |     memory_item: \"SessionSummary\",\n  66 |     long_term_summary: str,\n  67 |     threshold: float = 0.5\n  68 | ) -> bool:\n  69 |     \"\"\"\n  70 |     检查记忆项是否已被长期摘要覆盖（基于关键词重叠度）\n  71 | \n  72 |     Args:\n  73 |         memory_item: 待检查的记忆项（情景记忆或会话摘要）\n  74 |         long_term_summary: 长期记忆摘要\n  75 |         threshold: 重叠度阈值（默认 0.5）\n  76 | \n  77 |     Returns:\n  78 |         是否被覆盖\n  79 |     \"\"\"\n  80 |     if not long_term_summary:\n  81 |         return False\n  82 | \n  83 |     # 提取关键词\n  84 |     memory_keywords = extract_keywords(memory_item.summary_text or memory_item.task_goal)\n  85 |     summary_keywords = extract_keywords(long_term_summary)\n  86 | \n  87 |     if not memory_keywords:\n  88 |         return False\n  89 | \n  90 |     # 计算重叠度\n  91 |     overlap = len(memory_keywords & summary_keywords) / len(memory_keywords)\n  92 | \n  93 |     return overlap >= threshold\n  94 | \n  95 | \n  96 | def extract_keywords_from_goals(\n  97 |     completed_goals: List[Dict],\n  98 |     max_keywords: int = 5\n  99 | ) -> List[str]:\n 100 |     \"\"\"\n 101 |     从已完成任务列表中提取关键词（优化版：关键词化而非完整描述）\n 102 | \n 103 |     Args:\n 104 |         completed_goals: 已完成任务列表\n 105 |         max_keywords: 最多返回多少个关键词\n 106 | \n 107 |     Returns:\n 108 |         关键词列表（去重）\n 109 |     \"\"\"\n 110 |     keywords = set()\n 111 | \n 112 |     for goal in completed_goals[-10:]:  # 只分析最近 10 条\n 113 |         goal_text = goal.get(\"goal\", \"\")\n 114 | \n 115 |         # 提取关键词\n 116 |         extracted = extract_keywords(goal_text, min_length=3)\n 117 |         keywords.update(extracted)\n 118 | \n 119 |         # 如果关键词已足够，提前退出\n 120 |         if len(keywords) >= max_keywords * 2:\n 121 |             break\n 122 | \n 123 |     # 转为列表并限制数量\n 124 |     return list(keywords)[:max_keywords]\n 125 | \n 126 | \n 127 | def should_inject_...",
+      "files": [
+        "core/prompts.py",
+        "CLAUDE.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

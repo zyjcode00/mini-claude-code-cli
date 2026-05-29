@@ -1,0 +1,55 @@
+{
+  "id": "mem_ef6888216a3248f68781aeacf834d014",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "错误: 找不到文件 core/prompt_manager.py",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:57:05.952943",
+  "updated_at": "2026-05-29T12:57:05.952943",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/prompt_manager.py"
+  ],
+  "source_observation_ids": [
+    "obs_f98bc63215a64589958f298031053dcb"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f98bc63215a64589958f298031053dcb",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:57:05.952943",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 260,
+        "path": "core/prompt_manager.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": "错误: 找不到文件 core/prompt_manager.py",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/prompt_manager.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

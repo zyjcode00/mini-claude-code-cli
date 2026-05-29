@@ -1,0 +1,55 @@
+{
+  "id": "mem_eec3981af7404f35b3b00de23221d762",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: manage_plan",
+  "content": "规划已更新：\n目标: 对照 GitHub 最新 main，把本地新增修改按规范 commit 并 push 到 main 分支\n1. ⏳ 检查当前 Git 状态、分支、远端配置，并拉取/对照 GitHub 最新 main\n2. ⏳ 梳理本地相对远端 main 的新增修改，确认变更范围与提交说明\n3. ⏳ 按项目规范运行必要测试，确保当前代码可提交\n4. ⏳ 创建规范化 commit，详细记录本地新增修改\n5. ⏳ 将提交推送到 GitHub main 分支并确认远端状态",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:19:50.561906",
+  "updated_at": "2026-05-29T14:19:50.561906",
+  "concepts": [
+    "post_tool_use",
+    "manage_plan"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_672cf00465de482596db9de7a2c43935"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_672cf00465de482596db9de7a2c43935",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:19:50.560910",
+      "event_type": "post_tool_use",
+      "tool_name": "manage_plan",
+      "tool_input": {
+        "goal": "对照 GitHub 最新 main，把本地新增修改按规范 commit 并 push 到 main 分支",
+        "steps": [
+          "检查当前 Git 状态、分支、远端配置，并拉取/对照 GitHub 最新 main",
+          "梳理本地相对远端 main 的新增修改，确认变更范围与提交说明",
+          "按项目规范运行必要测试，确保当前代码可提交",
+          "创建规范化 commit，详细记录本地新增修改",
+          "将提交推送到 GitHub main 分支并确认远端状态"
+        ]
+      },
+      "tool_output": "规划已更新：\n目标: 对照 GitHub 最新 main，把本地新增修改按规范 commit 并 push 到 main 分支\n1. ⏳ 检查当前 Git 状态、分支、远端配置，并拉取/对照 GitHub 最新 main\n2. ⏳ 梳理本地相对远端 main 的新增修改，确认变更范围与提交说明\n3. ⏳ 按项目规范运行必要测试，确保当前代码可提交\n4. ⏳ 创建规范化 commit，详细记录本地新增修改\n5. ⏳ 将提交推送到 GitHub main 分支并确认远端状态",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

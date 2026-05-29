@@ -1,0 +1,54 @@
+{
+  "id": "mem_ec7f3ec8cc5e447f9fc76ec81c6fb5aa",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "错误: 在文件中找不到 old_str。\n建议：\n1. 使用 read_file(raw_mode=True) 获取原始内容\n2. 检查是否有多余的空格或换行符\n3. 如果文件较大，考虑使用 write_full_file 全量覆盖",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T18:55:43.519533",
+  "updated_at": "2026-05-28T18:55:43.519533",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "tests/test_memory_phase5.py"
+  ],
+  "source_observation_ids": [
+    "obs_3d37500591d043b1b59e1a6a71036a12"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_3d37500591d043b1b59e1a6a71036a12",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T18:55:43.519533",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "from tools.memory_tool import MemoryRecallTool, MemoryStatsTool",
+        "old_str": "from tools.memory_tool import MemoryStatsTool",
+        "path": "tests/test_memory_phase5.py"
+      },
+      "tool_output": "错误: 在文件中找不到 old_str。\n建议：\n1. 使用 read_file(raw_mode=True) 获取原始内容\n2. 检查是否有多余的空格或换行符\n3. 如果文件较大，考虑使用 write_full_file 全量覆盖",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_memory_phase5.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

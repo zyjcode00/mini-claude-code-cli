@@ -1,0 +1,48 @@
+{
+  "id": "mem_dcfb4e628e8c4283b2e52c17840aa939",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nok\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:44:53.141604",
+  "updated_at": "2026-05-29T13:44:53.141604",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_4830885c62214ef8ac7d1f3c26d59fb5"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_4830885c62214ef8ac7d1f3c26d59fb5",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:44:53.141604",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -c \"import core.memory_manager; print('ok')\""
+      },
+      "tool_output": "STDOUT:\nok\r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

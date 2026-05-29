@@ -1,0 +1,55 @@
+{
+  "id": "mem_fd374ce46c4c41bfa6e7049203937e8b",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "错误: 找不到文件 core/hybrid_memory.py",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:56:33.865093",
+  "updated_at": "2026-05-29T12:56:33.865093",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/hybrid_memory.py"
+  ],
+  "source_observation_ids": [
+    "obs_824f923c318b4d9db6150eb6824b8658"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_824f923c318b4d9db6150eb6824b8658",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:56:33.865093",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 260,
+        "path": "core/hybrid_memory.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": "错误: 找不到文件 core/hybrid_memory.py",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/hybrid_memory.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

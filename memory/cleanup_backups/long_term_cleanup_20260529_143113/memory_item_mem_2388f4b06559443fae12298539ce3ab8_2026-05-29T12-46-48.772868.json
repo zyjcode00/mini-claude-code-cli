@@ -1,0 +1,57 @@
+{
+  "id": "mem_2388f4b06559443fae12298539ce3ab8",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "--- 文件: core/prompts.py (第 454 至 560 行，共 797 行) ---\n 454 | def get_system_prompt(\n 455 |     cwd: str = None,\n 456 |     summary: str = \"\",\n 457 |     plan: str = \"\",\n 458 |     episodic_memories: Optional[List[\"SessionSummary\"]] = None,\n 459 |     session_summaries: Optional[List[\"SessionSummary\"]] = None,\n 460 |     long_term_memories: Optional[List[\"SessionSummary\"]] = None,  # 🔥🔥🔥 新增：跨会话长期记忆\n 461 |     completed_goals: Optional[List[Dict]] = None,\n 462 |     user_input: str = \"\"  # 🔥 新增：用于 CLAUDE.md 按需注入\n 463 | ) -> str:\n 464 |     \"\"\"\n 465 |     组装动态系统提示词（优化版：减少 Token 消耗）\n 466 | \n 467 |     优化策略：\n 468 |     1. 记忆去重：检查情景记忆/会话摘要是否已被长期记忆覆盖\n 469 |     2. 条件注入：根据长期记忆长度动态调整注入量\n 470 |     3. 关键词化：已完成任务只注入关键词而非完整描述\n 471 |     4. 格式压缩：环境信息压缩为单行\n 472 |     5. 按需注入：CLAUDE.md 根据任务描述注入相关段落\n 473 | \n 474 |     包含：\n 475 |     1. 基础身份 (BASE_SYSTEM_PROMPT)\n 476 |     2. s06: 历史摘要 (Summary)\n 477 |     3. 🔥🔥🔥 跨会话长期记忆 (Long-term Memory) - 新增\n 478 |     4. Phase 2/3: 情景记忆 (Episodic Memory) - 条件注入\n 479 |     5. Phase 1: 会话摘要 (Session Summaries) - 条件注入\n 480 |     6. s13: 当前执行计划 (Plan)\n 481 |     7. 环境信息 (Env Info) - 压缩格式\n 482 |     8. s05: 项目规范 (CLAUDE.md)\n 483 |     \"\"\"\n 484 |     if cwd is None:\n 485 |         cwd = os.getcwd()\n 486 | \n 487 |     # --- s06: 注入压缩后的长期记忆 ---\n 488 |     summary_section = \"\"\n 489 |     if summary:\n 490 |         summary_section = f\"\"\"\n 491 |     ### 历史任务进展 (长期记忆):\n 492 |     {summary}\n 493 |     -----------------------------------\n 494 |     \"\"\"\n 495 | \n 496 |     # --- 🔥🔥🔥 跨会话长期记忆注入 ---\n 497 |     long_term_section = \"\"\n 498 |     if long_term_memories:\n 499 |         # 过滤已被长期摘要覆盖的条目\n 500 |         filtered_long_term = [\n 501 |             mem for mem in long_term_memories\n 502 |             if not is_covered_by_summary(mem, summary)\n 503 |         ]\n 504 | \n 505 |         if filtered_long_term:\n 506 |             long_term_section = \"\\n### 🔥 跨会话长期记忆 (所有会话共享):\\n\"\n 507 |             long_term_section += \"**提示**: 以下是从其他会话中检索到的相关历史记忆\\n\\n\"\n 508 | \n 509 |             for i, mem in enumerate(filtered_long_term[:5], 1):  # 最多 5 条\n 510 |                 timestamp = mem.timestamp[:10] if mem.timestamp else \"未知\"\n 511 |                 status_icon = \"✅\" if mem.task_status == \"completed\" else \"⏳\"\n 512 |                 long_term_section += f\"{i}. {status_icon} [{timestamp}] {mem.task_goal}\\n\"\n 513 |                 long_term_section += f\"   摘要: {mem.summary_text[:100]}...\\n\\n\"\n 514 | \n 515 |             long_term_section += \"-----------------------------------\\n\"\n 516 | \n 517 |     # --- Phase 2/3: 注入情景记忆（条件注入 + 去重）---\n 518 |     episodic_section = \"\"\n 519 |     if episodic_memories:\n 520 |         # 优化：条件注入策略\n 521 |         should_inject, max_episodic = should_inject_episodic(summary)\n 522 | \n 523 |         if should_inject:\n 524 |             # 优化：去重 - 过滤已被长期记忆覆盖的条目\n 525 |             filtered_memories = [\n 526 |                 mem for mem in episodic_memories\n 527 |                 if not is_covered_by_summary(mem, summary)\n 528 |             ]\n 529 | \n 530 |             # 限制注入数量\n 531 |             filtered_memories = filtered_memories[:max_episodic]\n 532 | \n 533 |             if filtered_memories:\n 534 |                 episodic_section = format_episodic_memory(filtered_memories, max_items=len(filtered_memories))\n 535 |                 if episodic_section:\n 536 |                     episodic_section += \"\\n-----------------------------------\\n\"\n 537 | \n 538 |     # --- Phase 1: 注入会话摘要（条件注入 + 去重）---\n 539 |     session_section = \"\"\n 540 |     if session_summaries:\n 541 |         # 优化：条件注入策略\n 542 |         episodic_count = len(episodic_memories) if episodic_memories else 0\n 543 |         should_inject, max_session = should_inject_session(summary, episodic_count)\n 544 | \n 545 |         if should_inject:\n 546 |             # 优化：去重 - 过滤已被长期记忆覆盖的条目\n 547 |             filtered_summaries = [\n 548 |                 s for s in session_summaries\n 549 |                 if not is_covered_by_summary(s, summary)\n 550 |             ]\n 551...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:46:48.772868",
+  "updated_at": "2026-05-29T12:46:48.772868",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "core/prompts.py",
+    "CLAUDE.md"
+  ],
+  "source_observation_ids": [
+    "obs_944db101160949f8b22cc74ba8d675b7"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_944db101160949f8b22cc74ba8d675b7",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:46:48.772868",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 560,
+        "path": "core/prompts.py",
+        "raw_mode": false,
+        "start_line": 454
+      },
+      "tool_output": "--- 文件: core/prompts.py (第 454 至 560 行，共 797 行) ---\n 454 | def get_system_prompt(\n 455 |     cwd: str = None,\n 456 |     summary: str = \"\",\n 457 |     plan: str = \"\",\n 458 |     episodic_memories: Optional[List[\"SessionSummary\"]] = None,\n 459 |     session_summaries: Optional[List[\"SessionSummary\"]] = None,\n 460 |     long_term_memories: Optional[List[\"SessionSummary\"]] = None,  # 🔥🔥🔥 新增：跨会话长期记忆\n 461 |     completed_goals: Optional[List[Dict]] = None,\n 462 |     user_input: str = \"\"  # 🔥 新增：用于 CLAUDE.md 按需注入\n 463 | ) -> str:\n 464 |     \"\"\"\n 465 |     组装动态系统提示词（优化版：减少 Token 消耗）\n 466 | \n 467 |     优化策略：\n 468 |     1. 记忆去重：检查情景记忆/会话摘要是否已被长期记忆覆盖\n 469 |     2. 条件注入：根据长期记忆长度动态调整注入量\n 470 |     3. 关键词化：已完成任务只注入关键词而非完整描述\n 471 |     4. 格式压缩：环境信息压缩为单行\n 472 |     5. 按需注入：CLAUDE.md 根据任务描述注入相关段落\n 473 | \n 474 |     包含：\n 475 |     1. 基础身份 (BASE_SYSTEM_PROMPT)\n 476 |     2. s06: 历史摘要 (Summary)\n 477 |     3. 🔥🔥🔥 跨会话长期记忆 (Long-term Memory) - 新增\n 478 |     4. Phase 2/3: 情景记忆 (Episodic Memory) - 条件注入\n 479 |     5. Phase 1: 会话摘要 (Session Summaries) - 条件注入\n 480 |     6. s13: 当前执行计划 (Plan)\n 481 |     7. 环境信息 (Env Info) - 压缩格式\n 482 |     8. s05: 项目规范 (CLAUDE.md)\n 483 |     \"\"\"\n 484 |     if cwd is None:\n 485 |         cwd = os.getcwd()\n 486 | \n 487 |     # --- s06: 注入压缩后的长期记忆 ---\n 488 |     summary_section = \"\"\n 489 |     if summary:\n 490 |         summary_section = f\"\"\"\n 491 |     ### 历史任务进展 (长期记忆):\n 492 |     {summary}\n 493 |     -----------------------------------\n 494 |     \"\"\"\n 495 | \n 496 |     # --- 🔥🔥🔥 跨会话长期记忆注入 ---\n 497 |     long_term_section = \"\"\n 498 |     if long_term_memories:\n 499 |         # 过滤已被长期摘要覆盖的条目\n 500 |         filtered_long_term = [\n 501 |             mem for mem in long_term_memories\n 502 |             if not is_covered_by_summary(mem, summary)\n 503 |         ]\n 504 | \n 505 |         if filtered_long_term:\n 506 |             long_term_section = \"\\n### 🔥 跨会话长期记忆 (所有会话共享):\\n\"\n 507 |             long_term_section += \"**提示**: 以下是从其他会话中检索到的相关历史记忆\\n\\n\"\n 508 | \n 509 |             for i, mem in enumerate(filtered_long_term[:5], 1):  # 最多 5 条\n 510 |                 timestamp = mem.timestamp[:10] if mem.timestamp else \"未知\"\n 511 |                 status_icon = \"✅\" if mem.task_status == \"completed\" else \"⏳\"\n 512 |                 long_term_section += f\"{i}. {status_icon} [{timestamp}] {mem.task_goal}\\n\"\n 513 |                 long_term_section += f\"   摘要: {mem.summary_text[:100]}...\\n\\n\"\n 514 | \n 515 |             long_term_section += \"-----------------------------------\\n\"\n 516 | \n 517 |     # --- Phase 2/3: 注入情景记忆（条件注入 + 去重）---\n 518 |     episodic_section = \"\"\n 519 |     if episodic_memories:\n 520 |         # 优化：条件注入策略\n 521 |         should_inject, max_episodic = should_inject_episodic(summary)\n 522 | \n 523 |         if should_inject:\n 524 |             # 优化：去重 - 过滤已被长期记忆覆盖的条目\n 525 |             filtered_memories = [\n 526 |                 mem for mem in episodic_memories\n 527 |                 if not is_covered_by_summary(mem, summary)\n 528 |             ]\n 529 | \n 530 |             # 限制注入数量\n 531 |             filtered_memories = filtered_memories[:max_episodic]\n 532 | \n 533 |             if filtered_memories:\n 534 |                 episodic_section = format_episodic_memory(filtered_memories, max_items=len(filtered_memories))\n 535 |                 if episodic_section:\n 536 |                     episodic_section += \"\\n-----------------------------------\\n\"\n 537 | \n 538 |     # --- Phase 1: 注入会话摘要（条件注入 + 去重）---\n 539 |     session_section = \"\"\n 540 |     if session_summaries:\n 541 |         # 优化：条件注入策略\n 542 |         episodic_count = len(episodic_memories) if episodic_memories else 0\n 543 |         should_inject, max_session = should_inject_session(summary, episodic_count)\n 544 | \n 545 |         if should_inject:\n 546 |             # 优化：去重 - 过滤已被长期记忆覆盖的条目\n 547 |             filtered_summaries = [\n 548 |                 s for s in session_summaries\n 549 |                 if not is_covered_by_summary(s, summary)\n 550 |             ]\n 551...",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/prompts.py",
+        "CLAUDE.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "mem_0ae2181b82d342bc84b4bac3b80d0444",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nsave_calls_on_init 0\r\ncounts 0 531\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:31:04.665437",
+  "updated_at": "2026-05-29T13:31:04.665437",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_3d0e00ec66df4c09bfb04464793e7f55"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_3d0e00ec66df4c09bfb04464793e7f55",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:31:04.665437",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -c \"from core.memory_layers import LongTermMemory; calls=[]; orig=LongTermMemory._save_index; LongTermMemory._save_index=lambda self: (calls.append(str(self.storage_dir)), orig(self))[1]; ltm=LongTermMemory('memory/long_term'); print('save_calls_on_init', len(calls)); print('counts', len(ltm.index), len(ltm.item_index))\""
+      },
+      "tool_output": "STDOUT:\nsave_calls_on_init 0\r\ncounts 0 531\r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

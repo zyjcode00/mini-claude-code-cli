@@ -1,0 +1,58 @@
+{
+  "id": "mem_852ea7c6e0fb45f185ac6a1f47cb2f7e",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: run_pytest",
+  "content": "❌ 测试失败 (Exit Code 4):\nSTDOUT:\n============================= test session starts =============================\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\ncachedir: .pytest_cache\nrootdir: D:\\LLM\\mini-claude-code-cli\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 0 items\n\n============================ no tests ran in 0.00s ============================\n\nSTDERR:\nERROR: file or directory not found: tests/test_memory_phase5.py tests/test_memory_phase3.py tests/test_memory_phase4.py\n\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T18:57:31.166116",
+  "updated_at": "2026-05-28T18:57:31.166116",
+  "concepts": [
+    "tool_failure",
+    "run_pytest"
+  ],
+  "files": [
+    "tests/test_memory_phase5.py tests/test_memory_phase3.py tests/test_memory_phase4.py",
+    "tests/test_memory_phase5.py",
+    "tests/test_memory_phase3.py",
+    "tests/test_memory_phase4.py"
+  ],
+  "source_observation_ids": [
+    "obs_2d8a3b573bfb413189ccf8475f9bf385"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_2d8a3b573bfb413189ccf8475f9bf385",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T18:57:31.166116",
+      "event_type": "tool_failure",
+      "tool_name": "run_pytest",
+      "tool_input": {
+        "path": "tests/test_memory_phase5.py tests/test_memory_phase3.py tests/test_memory_phase4.py"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "❌ 测试失败 (Exit Code 4):\nSTDOUT:\n============================= test session starts =============================\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\ncachedir: .pytest_cache\nrootdir: D:\\LLM\\mini-claude-code-cli\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 0 items\n\n============================ no tests ran in 0.00s ============================\n\nSTDERR:\nERROR: file or directory not found: tests/test_memory_phase5.py tests/test_memory_phase3.py tests/test_memory_phase4.py\n\n",
+      "files": [
+        "tests/test_memory_phase5.py tests/test_memory_phase3.py tests/test_memory_phase4.py",
+        "tests/test_memory_phase5.py",
+        "tests/test_memory_phase3.py",
+        "tests/test_memory_phase4.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

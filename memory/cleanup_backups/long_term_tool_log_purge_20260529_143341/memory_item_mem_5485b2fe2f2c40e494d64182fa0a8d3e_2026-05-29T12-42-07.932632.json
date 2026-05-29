@@ -1,0 +1,57 @@
+{
+  "id": "mem_5485b2fe2f2c40e494d64182fa0a8d3e",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "### Phase 5：ContextAssembler 统一上下文预算\n\n目标：统一 system、plan、memory、summary、recent turns 的预算和顺序。\n\n任务：\n\n1. 新增或扩展 `MemoryContextBuilder` / `ContextAssembler`；\n2. 明确各层预算；\n3. 防止长期记忆挤掉最近上下文；\n4. 注入内容只能进入 system/user 安全区域，不能插入 tool pair；\n5. 补 `tests/test_context_assembly_budget.py`。\n\n验收：\n\n- 当前用户请求永远存在；\n- 最近完整 turns 不被半截截断；\n- memory 注入有长度上限；\n- provider validator 通过。\n\n### Phase 6：可观测性与压缩质量评估\n\n目标：让压缩行为可解释、可调试。\n\n任务：\n\n1. 增加 `CompressionStats`；\n2. 输出压缩日志；\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:42:07.932632",
+  "updated_at": "2026-05-29T12:42:07.932632",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "docs/context_compression_strategy_architecture.md",
+    "tests/test_context_assembly_budget.py"
+  ],
+  "source_observation_ids": [
+    "obs_8ff338f1b6014c58b4033db4ff4212e4"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_8ff338f1b6014c58b4033db4ff4212e4",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:42:07.932632",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 680,
+        "path": "docs/context_compression_strategy_architecture.md",
+        "raw_mode": true,
+        "start_line": 654
+      },
+      "tool_output": "### Phase 5：ContextAssembler 统一上下文预算\n\n目标：统一 system、plan、memory、summary、recent turns 的预算和顺序。\n\n任务：\n\n1. 新增或扩展 `MemoryContextBuilder` / `ContextAssembler`；\n2. 明确各层预算；\n3. 防止长期记忆挤掉最近上下文；\n4. 注入内容只能进入 system/user 安全区域，不能插入 tool pair；\n5. 补 `tests/test_context_assembly_budget.py`。\n\n验收：\n\n- 当前用户请求永远存在；\n- 最近完整 turns 不被半截截断；\n- memory 注入有长度上限；\n- provider validator 通过。\n\n### Phase 6：可观测性与压缩质量评估\n\n目标：让压缩行为可解释、可调试。\n\n任务：\n\n1. 增加 `CompressionStats`；\n2. 输出压缩日志；\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "docs/context_compression_strategy_architecture.md",
+        "tests/test_context_assembly_budget.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

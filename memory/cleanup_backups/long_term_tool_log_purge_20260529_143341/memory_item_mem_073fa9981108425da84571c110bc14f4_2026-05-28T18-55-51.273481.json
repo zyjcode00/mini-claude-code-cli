@@ -1,0 +1,55 @@
+{
+  "id": "mem_073fa9981108425da84571c110bc14f4",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "\"\"\"阶段5：Prompt 注入、Token Budget、自动历史召回与统计工具测试。\"\"\"\n\nimport asyncio\nimport tempfile\n\nimport pytest\n\nfrom core.memory_context_builder import MemoryContextBuilder\nfrom core.memory_items import MemoryItem, MemoryKind\nfrom core.memory_manager import MemoryManager\nfrom tools import get_default_tools\nfrom tools.memory_tool import MemoryRecallTool, MemoryStatsTool\nfrom core.engine import AgentEngine\n\n\nclass _FakePlanManager:\n    current_goal = \"\"\n\n    def __init__(self, plan_id=None):\n        self.plan_id = plan_id\n\n    def get_formatted_plan(self):\n        return \"\"\n\n    def get_completed_goals(self):\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T18:55:51.273481",
+  "updated_at": "2026-05-28T18:55:51.273481",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "tests/test_memory_phase5.py"
+  ],
+  "source_observation_ids": [
+    "obs_1429c51f99ca453eb1d3d03c4489a359"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_1429c51f99ca453eb1d3d03c4489a359",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T18:55:51.273481",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 25,
+        "path": "tests/test_memory_phase5.py",
+        "raw_mode": true,
+        "start_line": 1
+      },
+      "tool_output": "\"\"\"阶段5：Prompt 注入、Token Budget、自动历史召回与统计工具测试。\"\"\"\n\nimport asyncio\nimport tempfile\n\nimport pytest\n\nfrom core.memory_context_builder import MemoryContextBuilder\nfrom core.memory_items import MemoryItem, MemoryKind\nfrom core.memory_manager import MemoryManager\nfrom tools import get_default_tools\nfrom tools.memory_tool import MemoryRecallTool, MemoryStatsTool\nfrom core.engine import AgentEngine\n\n\nclass _FakePlanManager:\n    current_goal = \"\"\n\n    def __init__(self, plan_id=None):\n        self.plan_id = plan_id\n\n    def get_formatted_plan(self):\n        return \"\"\n\n    def get_completed_goals(self):\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_memory_phase5.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

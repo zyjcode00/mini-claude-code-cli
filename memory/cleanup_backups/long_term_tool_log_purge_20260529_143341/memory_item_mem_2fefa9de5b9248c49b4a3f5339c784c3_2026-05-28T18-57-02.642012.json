@@ -1,0 +1,54 @@
+{
+  "id": "mem_2fefa9de5b9248c49b4a3f5339c784c3",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 core/engine.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T18:57:02.642012",
+  "updated_at": "2026-05-28T18:57:02.642012",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "core/engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_0d93a9e7f5f54b3fb9993e8b84101b7d"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_0d93a9e7f5f54b3fb9993e8b84101b7d",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T18:57:02.642012",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "        await self.context.compress(llm_summarizer)\n\n    async def _call_llm_internal(self, user_input: str): # <--- 加 async",
+        "old_str": "        await self.context.compress(llm_summarizer)\n\n        # ========== 检索增强：压缩后自动索引新摘要 ==========\n        if self.retrieval_enabled:\n            # 索引 history_summary\n            if self.context.history_summary:\n                self.index_content(\n                    f\"summary_{self.session_id}\",\n                    self.context.history_summary\n                )\n        # ===========================================\n\n    async def _call_llm_internal(self, user_input: str): # <--- 加 async",
+        "path": "core/engine.py"
+      },
+      "tool_output": "成功: 已更新 core/engine.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "mem_75ee0ae701f142418e771a222575328d",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/compression_engine.py (第 1220 至 1320 行，共 1441 行) ---\n1220 |             # 这是 GPT-5.5 严格要求的关键检查！\n1221 |             if msg.get(\"role\") == \"assistant\" and \"tool_calls\" in msg:\n1222 |                 tool_calls = msg.get(\"tool_calls\", [])\n1223 | \n1224 |                 for tc in tool_calls:\n1225 |                     tool_call_id = tc.get(\"id\")\n1226 |                     if not tool_call_id:\n1227 |                         continue\n1228 | \n1229 |                     # 向后检查紧邻的连续 tool 响应块，不能跨过 user/assistant/system 等其它消息查找。\n1230 |                     expected_ids = {tc.get(\"id\") for tc in tool_calls if tc.get(\"id\")}\n1231 |                     contiguous_tool_ids = set()\n1232 |                     j = i + 1\n1233 |                     while j < len(messages) and messages[j].get(\"role\") == \"tool\":\n1234 |                         contiguous_tool_ids.add(messages[j].get(\"tool_call_id\"))\n1235 |                         j += 1\n1236 |                     found_tool = tool_call_id in contiguous_tool_ids\n1237 | \n1238 |                     # 🔥🔥🔥 GPT-5.5 严格要求：每个 tool_call_id 都必须有对应的 tool 消息\n1239 |                     if not found_tool:\n1240 |                         print(f\"   ❌ 错误: Assistant 消息 [{i}] 的 tool_call_id={tool_call_id} 没有对应的 tool 消息\")\n1241 |                         print(f\"   💡 这是 GPT-5.5 严格要求：每个 tool_calls 都必须有对应的 tool 消息响应\")\n1242 |                         return False\n1243 | \n1244 |         return True\n1245 | \n1246 |     def _sanitize_openai_tool_pairs(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:\n1247 |         \"\"\"\n1248 |         删除 OpenAI strict tools 不接受的半截工具调用消息。\n1249 | \n1250 |         OpenAI 兼容接口要求 assistant(tool_calls) 与后续 tool 响应必须成对出现。\n1251 |         压缩、LLM 摘要超时回退、滑动窗口补齐等路径都可能只保留 pair 的一半，\n1252 |         因此发送前/压缩后统一做一次安全清理：\n1253 |         - tool 消息若找不到前置 assistant(tool_calls)，删除该 tool；\n1254 |         - assistant(tool_calls) 若任一 tool_call_id 找不到后续 tool，删除该 assistant。\n1255 |         \"\"\"\n1256 |         sanitized = [dict(msg) if isinstance(msg, dict) else msg for msg in messages]\n1257 |         turns = TurnBuilder().build(sanitized)\n1258 |         complete_messages = TurnBuilder().build_complete_messages(sanitized)\n1259 |         if len(complete_messages) != len(sanitized):\n1260 |             removed = len(sanitized) - len(complete_messages)\n1261 |             incomplete_turns = [turn for turn in turns if not turn.is_valid_openai_tool_turn]\n1262 |             print(f\"   [工具调用清理] 删除 {removed} 条半截 tool pair 消息，涉及 {len(incomplete_turns)} 个不完整 turn\")\n1263 |         return complete_messages\n1264 | \n1265 |     def _select_recent_complete_turn_messages(self, messages: List[Dict[str, Any]], target_count: int) -> List[Dict[str, Any]]:\n1266 |         \"\"\"Select recent complete turns without splitting OpenAI tool pairs.\"\"\"\n1267 |         builder = TurnBuilder()\n1268 |         complete_turns = builder.complete_turns_only(builder.build(messages))\n1269 |         selected = []\n1270 |         selected_count = 0\n1271 | \n1272 |         for turn in reversed(complete_turns):\n1273 |             turn_size = len(turn.messages)\n1274 |             if selected and selected_count >= target_count:\n1275 |                 break\n1276 |             selected.append(turn)\n1277 |             selected_count += turn_size\n1278 | \n1279 |         selected.reverse()\n1280 |         return builder.flatten(selected)\n1281 | \n1282 |     def _select_keyframe_turns(\n1283 |         self,\n1284 |         turns: List[ConversationTurn],\n1285 |         target_count: int,\n1286 |         min_keep: int,\n1287 |     ) -> List[ConversationTurn]:\n1288 |         \"\"\"Select keyframe turns using Turn metadata while preserving order.\"\"\"\n1289 |         if not turns:\n1290 |             return []\n1291 | \n1292 |         selected_by_id: Dict[str, ConversationTurn] = {}\n1293 | \n1294 |         # Always keep the most recent complete turns for task continuity.\n1295 |         recent_budget = max(min_keep, int(target_count * 0.45))\n1296 |         recent_count = 0\n1297 |      ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:05:19.225124",
+  "updated_at": "2026-05-29T13:05:19.225124",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_a7d2e11ac0954a1c8b37f3722dca0ed3"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_a7d2e11ac0954a1c8b37f3722dca0ed3",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:05:19.225124",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 1320,
+        "path": "core/compression_engine.py",
+        "raw_mode": false,
+        "start_line": 1220
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/compression_engine.py (第 1220 至 1320 行，共 1441 行) ---\n1220 |             # 这是 GPT-5.5 严格要求的关键检查！\n1221 |             if msg.get(\"role\") == \"assistant\" and \"tool_calls\" in msg:\n1222 |                 tool_calls = msg.get(\"tool_calls\", [])\n1223 | \n1224 |                 for tc in tool_calls:\n1225 |                     tool_call_id = tc.get(\"id\")\n1226 |                     if not tool_call_id:\n1227 |                         continue\n1228 | \n1229 |                     # 向后检查紧邻的连续 tool 响应块，不能跨过 user/assistant/system 等其它消息查找。\n1230 |                     expected_ids = {tc.get(\"id\") for tc in tool_calls if tc.get(\"id\")}\n1231 |                     contiguous_tool_ids = set()\n1232 |                     j = i + 1\n1233 |                     while j < len(messages) and messages[j].get(\"role\") == \"tool\":\n1234 |                         contiguous_tool_ids.add(messages[j].get(\"tool_call_id\"))\n1235 |                         j += 1\n1236 |                     found_tool = tool_call_id in contiguous_tool_ids\n1237 | \n1238 |                     # 🔥🔥🔥 GPT-5.5 严格要求：每个 tool_call_id 都必须有对应的 tool 消息\n1239 |                     if not found_tool:\n1240 |                         print(f\"   ❌ 错误: Assistant 消息 [{i}] 的 tool_call_id={tool_call_id} 没有对应的 tool 消息\")\n1241 |                         print(f\"   💡 这是 GPT-5.5 严格要求：每个 tool_calls 都必须有对应的 tool 消息响应\")\n1242 |                         return False\n1243 | \n1244 |         return True\n1245 | \n1246 |     def _sanitize_openai_tool_pairs(self, messages: List[Dict[str, Any]]) -> List[Dict[str, Any]]:\n1247 |         \"\"\"\n1248 |         删除 OpenAI strict tools 不接受的半截工具调用消息。\n1249 | \n1250 |         OpenAI 兼容接口要求 assistant(tool_calls) 与后续 tool 响应必须成对出现。\n1251 |         压缩、LLM 摘要超时回退、滑动窗口补齐等路径都可能只保留 pair 的一半，\n1252 |         因此发送前/压缩后统一做一次安全清理：\n1253 |         - tool 消息若找不到前置 assistant(tool_calls)，删除该 tool；\n1254 |         - assistant(tool_calls) 若任一 tool_call_id 找不到后续 tool，删除该 assistant。\n1255 |         \"\"\"\n1256 |         sanitized = [dict(msg) if isinstance(msg, dict) else msg for msg in messages]\n1257 |         turns = TurnBuilder().build(sanitized)\n1258 |         complete_messages = TurnBuilder().build_complete_messages(sanitized)\n1259 |         if len(complete_messages) != len(sanitized):\n1260 |             removed = len(sanitized) - len(complete_messages)\n1261 |             incomplete_turns = [turn for turn in turns if not turn.is_valid_openai_tool_turn]\n1262 |             print(f\"   [工具调用清理] 删除 {removed} 条半截 tool pair 消息，涉及 {len(incomplete_turns)} 个不完整 turn\")\n1263 |         return complete_messages\n1264 | \n1265 |     def _select_recent_complete_turn_messages(self, messages: List[Dict[str, Any]], target_count: int) -> List[Dict[str, Any]]:\n1266 |         \"\"\"Select recent complete turns without splitting OpenAI tool pairs.\"\"\"\n1267 |         builder = TurnBuilder()\n1268 |         complete_turns = builder.complete_turns_only(builder.build(messages))\n1269 |         selected = []\n1270 |         selected_count = 0\n1271 | \n1272 |         for turn in reversed(complete_turns):\n1273 |             turn_size = len(turn.messages)\n1274 |             if selected and selected_count >= target_count:\n1275 |                 break\n1276 |             selected.append(turn)\n1277 |             selected_count += turn_size\n1278 | \n1279 |         selected.reverse()\n1280 |         return builder.flatten(selected)\n1281 | \n1282 |     def _select_keyframe_turns(\n1283 |         self,\n1284 |         turns: List[ConversationTurn],\n1285 |         target_count: int,\n1286 |         min_keep: int,\n1287 |     ) -> List[ConversationTurn]:\n1288 |         \"\"\"Select keyframe turns using Turn metadata while preserving order.\"\"\"\n1289 |         if not turns:\n1290 |             return []\n1291 | \n1292 |         selected_by_id: Dict[str, ConversationTurn] = {}\n1293 | \n1294 |         # Always keep the most recent complete turns for task continuity.\n1295 |         recent_budget = max(min_keep, int(target_count * 0.45))\n1296 |         recent_count = 0\n1297 |      ...",
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

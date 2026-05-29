@@ -1,0 +1,52 @@
+{
+  "id": "mem_6f3a017d7a92433f96b648d19f2564ff",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: mark_task_done",
+  "content": "✅ 任务 4 已完成！进度: 4/5\n\n当前计划:\n目标: 继续执行上下文压缩与长期记忆系统重构 Phase 5：实现统一 ContextAssembler，上线预算化上下文装配并补充测试验证\n1. ✅ 查阅 Phase 5 文档、现有 ContextManager/AgentEngine/MemoryContextBuilder 代码，确认 ContextAssembler 接入点与消息格式约束\n2. ✅ 设计并实现 core/context_assembler.py，统一装配 system、plan、memory、compressed state、recent turns 与当前用户消息，并保证 tool_calls/tool result 原子性\n3. ✅ 将 AgentEngine 或 ContextManager 的上下文构建链路接入 ContextAssembler，保持现有行为兼容\n4. ✅ 新增或更新 Phase 5 测试，覆盖预算优先级、当前请求保留、tool pair 原子性、安全注入位置和 provider message validation\n5. ⏳ 运行相关 pytest，若失败则修复直到通过，并检查 git 状态",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:49:24.221863",
+  "updated_at": "2026-05-29T12:49:24.221863",
+  "concepts": [
+    "tool_failure",
+    "mark_task_done"
+  ],
+  "files": [
+    "core/context_assembler.py"
+  ],
+  "source_observation_ids": [
+    "obs_851b7915449a40d88961077c20bb8052"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_851b7915449a40d88961077c20bb8052",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:49:24.221863",
+      "event_type": "tool_failure",
+      "tool_name": "mark_task_done",
+      "tool_input": {
+        "task_id": 4
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "✅ 任务 4 已完成！进度: 4/5\n\n当前计划:\n目标: 继续执行上下文压缩与长期记忆系统重构 Phase 5：实现统一 ContextAssembler，上线预算化上下文装配并补充测试验证\n1. ✅ 查阅 Phase 5 文档、现有 ContextManager/AgentEngine/MemoryContextBuilder 代码，确认 ContextAssembler 接入点与消息格式约束\n2. ✅ 设计并实现 core/context_assembler.py，统一装配 system、plan、memory、compressed state、recent turns 与当前用户消息，并保证 tool_calls/tool result 原子性\n3. ✅ 将 AgentEngine 或 ContextManager 的上下文构建链路接入 ContextAssembler，保持现有行为兼容\n4. ✅ 新增或更新 Phase 5 测试，覆盖预算优先级、当前请求保留、tool pair 原子性、安全注入位置和 provider message validation\n5. ⏳ 运行相关 pytest，若失败则修复直到通过，并检查 git 状态",
+      "files": [
+        "core/context_assembler.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

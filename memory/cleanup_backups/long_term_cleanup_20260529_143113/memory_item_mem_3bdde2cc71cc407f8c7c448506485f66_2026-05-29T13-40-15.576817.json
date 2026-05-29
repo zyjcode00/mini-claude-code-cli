@@ -1,0 +1,55 @@
+{
+  "id": "mem_3bdde2cc71cc407f8c7c448506485f66",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_layers.py (第 320 至 648 行，共 648 行) ---\n 320 |                         self.index[session_id] = summary_file\n 321 | \n 322 |                         # 更新倒排索引\n 323 |                         keywords = self._extract_keywords(data)\n 324 |                         for keyword in keywords:\n 325 |                             if keyword not in self.inverted_index:\n 326 |                                 self.inverted_index[keyword] = []\n 327 |                             if session_id not in self.inverted_index[keyword]:\n 328 |                                 self.inverted_index[keyword].append(session_id)\n 329 |             except Exception as e:\n 330 |                 print(f\"⚠️ 重建索引时跳过文件 {summary_file}: {e}\")\n 331 | \n 332 |         # 遍历所有 MemoryItem 文件\n 333 |         for item_file in self.storage_dir.glob(\"memory_item_*.json\"):\n 334 |             try:\n 335 |                 with open(item_file, 'r', encoding='utf-8') as f:\n 336 |                     data = json.load(f)\n 337 |                     item_id = data.get(\"id\")\n 338 |                     if item_id:\n 339 |                         self.item_index[item_id] = item_file\n 340 | \n 341 |                         keywords = self._extract_item_keywords(data)\n 342 |                         for keyword in keywords:\n 343 |                             if keyword not in self.item_inverted_index:\n 344 |                                 self.item_inverted_index[keyword] = []\n 345 |                             if item_id not in self.item_inverted_index[keyword]:\n 346 |                                 self.item_inverted_index[keyword].append(item_id)\n 347 |             except Exception as e:\n 348 |                 print(f\"⚠️ 重建 MemoryItem 索引时跳过文件 {item_file}: {e}\")\n 349 | \n 350 |         # 保存索引\n 351 |         self._save_index()\n 352 | \n 353 |     def _extract_keywords(self, data: Dict[str, Any]) -> List[str]:\n 354 |         \"\"\"从摘要数据中提取关键词\"\"\"\n 355 |         keywords = []\n 356 | \n 357 |         # 从摘要文本中提取\n 358 |         summary_text = data.get(\"summary_text\", \"\")\n 359 |         keywords.extend(self._tokenize(summary_text))\n 360 | \n 361 |         # 从任务目标中提取\n 362 |         task_goal = data.get(\"task_goal\", \"\")\n 363 |         keywords.extend(self._tokenize(task_goal))\n 364 | \n 365 |         # 从文件路径中提取\n 366 |         files_changed = data.get(\"files_changed\", [])\n 367 |         for fc in files_changed:\n 368 |             if not isinstance(fc, dict):\n 369 |                 continue\n 370 |             # FileChange 当前规范字段是 path；兼容旧数据中可能存在的 file_path\n 371 |             file_path = fc.get(\"path\") or fc.get(\"file_path\", \"\")\n 372 |             keywords.extend(self._tokenize(file_path))\n 373 | \n 374 |         return list(set(keywords))\n 375 | \n 376 |     def _extract_item_keywords(self, data: Dict[str, Any]) -> List[str]:\n 377 |         \"\"\"从 MemoryItem 数据中提取关键词。\"\"\"\n 378 |         keywords = []\n 379 | \n 380 |         for field_name in (\"kind\", \"type\", \"title\", \"content\", \"project\", \"status\"):\n 381 |             keywords.extend(self._tokenize(str(data.get(field_name, \"\"))))\n 382 | \n 383 |         for concept in data.get(\"concepts\", []):\n 384 |             keywords.extend(self._tokenize(str(concept)))\n 385 | \n 386 |         for file_path in data.get(\"files\", []):\n 387 |             keywords.extend(self._tokenize(str(file_path)))\n 388 | \n 389 |         for session_id in data.get(\"source_session_ids\", []):\n 390 |             keywords.extend(self._tokenize(str(session_id)))\n 391 | \n 392 |         return list(set(keywords))\n 393 | \n 394 |     def _tokenize(self, text: str) -> List[str]:\n 395 |         \"\"\"简单分词（支持中英文）\"\"\"\n 396 |         import re\n 397 | \n 398 |         # 英文/路径片段：保留下划线文件名（如 memory_layers），同时拆分为普通英文词\n 399 |         raw_words = re.findall(r'\\b[a-zA-Z][a-zA-Z0-9_]{1,}\\b', text.lower())\n 400 |         words = []\n 401 |         for word in raw_words:\n 402 |             words.append(word)\n 403 |             words.extend(part for part in word.split('_') if len(part) >= 2)\n 404 | \n 405 |      ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:40:15.576817",
+  "updated_at": "2026-05-29T13:40:15.576817",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_bd9742414c5e41e0a21078640ff8c3ad"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_bd9742414c5e41e0a21078640ff8c3ad",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:40:15.576817",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 648,
+        "path": "core/memory_layers.py",
+        "raw_mode": false,
+        "start_line": 320
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_layers.py (第 320 至 648 行，共 648 行) ---\n 320 |                         self.index[session_id] = summary_file\n 321 | \n 322 |                         # 更新倒排索引\n 323 |                         keywords = self._extract_keywords(data)\n 324 |                         for keyword in keywords:\n 325 |                             if keyword not in self.inverted_index:\n 326 |                                 self.inverted_index[keyword] = []\n 327 |                             if session_id not in self.inverted_index[keyword]:\n 328 |                                 self.inverted_index[keyword].append(session_id)\n 329 |             except Exception as e:\n 330 |                 print(f\"⚠️ 重建索引时跳过文件 {summary_file}: {e}\")\n 331 | \n 332 |         # 遍历所有 MemoryItem 文件\n 333 |         for item_file in self.storage_dir.glob(\"memory_item_*.json\"):\n 334 |             try:\n 335 |                 with open(item_file, 'r', encoding='utf-8') as f:\n 336 |                     data = json.load(f)\n 337 |                     item_id = data.get(\"id\")\n 338 |                     if item_id:\n 339 |                         self.item_index[item_id] = item_file\n 340 | \n 341 |                         keywords = self._extract_item_keywords(data)\n 342 |                         for keyword in keywords:\n 343 |                             if keyword not in self.item_inverted_index:\n 344 |                                 self.item_inverted_index[keyword] = []\n 345 |                             if item_id not in self.item_inverted_index[keyword]:\n 346 |                                 self.item_inverted_index[keyword].append(item_id)\n 347 |             except Exception as e:\n 348 |                 print(f\"⚠️ 重建 MemoryItem 索引时跳过文件 {item_file}: {e}\")\n 349 | \n 350 |         # 保存索引\n 351 |         self._save_index()\n 352 | \n 353 |     def _extract_keywords(self, data: Dict[str, Any]) -> List[str]:\n 354 |         \"\"\"从摘要数据中提取关键词\"\"\"\n 355 |         keywords = []\n 356 | \n 357 |         # 从摘要文本中提取\n 358 |         summary_text = data.get(\"summary_text\", \"\")\n 359 |         keywords.extend(self._tokenize(summary_text))\n 360 | \n 361 |         # 从任务目标中提取\n 362 |         task_goal = data.get(\"task_goal\", \"\")\n 363 |         keywords.extend(self._tokenize(task_goal))\n 364 | \n 365 |         # 从文件路径中提取\n 366 |         files_changed = data.get(\"files_changed\", [])\n 367 |         for fc in files_changed:\n 368 |             if not isinstance(fc, dict):\n 369 |                 continue\n 370 |             # FileChange 当前规范字段是 path；兼容旧数据中可能存在的 file_path\n 371 |             file_path = fc.get(\"path\") or fc.get(\"file_path\", \"\")\n 372 |             keywords.extend(self._tokenize(file_path))\n 373 | \n 374 |         return list(set(keywords))\n 375 | \n 376 |     def _extract_item_keywords(self, data: Dict[str, Any]) -> List[str]:\n 377 |         \"\"\"从 MemoryItem 数据中提取关键词。\"\"\"\n 378 |         keywords = []\n 379 | \n 380 |         for field_name in (\"kind\", \"type\", \"title\", \"content\", \"project\", \"status\"):\n 381 |             keywords.extend(self._tokenize(str(data.get(field_name, \"\"))))\n 382 | \n 383 |         for concept in data.get(\"concepts\", []):\n 384 |             keywords.extend(self._tokenize(str(concept)))\n 385 | \n 386 |         for file_path in data.get(\"files\", []):\n 387 |             keywords.extend(self._tokenize(str(file_path)))\n 388 | \n 389 |         for session_id in data.get(\"source_session_ids\", []):\n 390 |             keywords.extend(self._tokenize(str(session_id)))\n 391 | \n 392 |         return list(set(keywords))\n 393 | \n 394 |     def _tokenize(self, text: str) -> List[str]:\n 395 |         \"\"\"简单分词（支持中英文）\"\"\"\n 396 |         import re\n 397 | \n 398 |         # 英文/路径片段：保留下划线文件名（如 memory_layers），同时拆分为普通英文词\n 399 |         raw_words = re.findall(r'\\b[a-zA-Z][a-zA-Z0-9_]{1,}\\b', text.lower())\n 400 |         words = []\n 401 |         for word in raw_words:\n 402 |             words.append(word)\n 403 |             words.extend(part for part in word.split('_') if len(part) >= 2)\n 404 | \n 405 |      ...",
+      "files": [
+        "core/memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

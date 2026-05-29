@@ -1,0 +1,55 @@
+{
+  "id": "mem_8ac5d7be079f4717b67556c7c25aad13",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/session_manager.py (第 1 至 94 行，共 94 行) ---\n   1 | # core/session_manager.py\n   2 | \"\"\"会话管理器，用于列出历史会话、查找未完成会话等\"\"\"\n   3 | import os\n   4 | import json\n   5 | from pathlib import Path\n   6 | from typing import List, Dict, Optional\n   7 | from datetime import datetime\n   8 | \n   9 | class SessionManager:\n  10 |     def __init__(self, sessions_dir: str = None):\n  11 |         if sessions_dir is None:\n  12 |             # 默认使用项目根目录下的 sessions 文件夹\n  13 |             project_root = Path(__file__).parent.parent\n  14 |             sessions_dir = project_root / 'sessions'\n  15 |         self.sessions_dir = Path(sessions_dir)\n  16 |         self.sessions_dir.mkdir(parents=True, exist_ok=True)\n  17 | \n  18 |     def list_sessions(self) -> List[Dict]:\n  19 |         \"\"\"列出所有历史会话，按修改时间倒序排列\"\"\"\n  20 |         sessions = []\n  21 |         for file in self.sessions_dir.glob('*.json'):\n  22 |             try:\n  23 |                 stat = file.stat()\n  24 |                 sessions.append({\n  25 |                     'filename': file.name,\n  26 |                     'path': str(file),\n  27 |                     'modified_time': datetime.fromtimestamp(stat.st_mtime),\n  28 |                     'size': stat.st_size\n  29 |                 })\n  30 |             except Exception as e:\n  31 |                 print(f\"Warning: Could not read session file {file}: {e}\")\n  32 | \n  33 |         # 按修改时间倒序排列\n  34 |         sessions.sort(key=lambda x: x['modified_time'], reverse=True)\n  35 |         return sessions\n  36 | \n  37 |     def get_session_info(self, filename: str) -> Optional[Dict]:\n  38 |         \"\"\"获取指定会话的详细信息\"\"\"\n  39 |         filepath = self.sessions_dir / filename\n  40 |         if not filepath.exists():\n  41 |             return None\n  42 | \n  43 |         try:\n  44 |             with open(filepath, 'r', encoding='utf-8') as f:\n  45 |                 data = json.load(f)\n  46 | \n  47 |             # 检查是否有未完成的任务\n  48 |             plan_data = data.get('plan', {})\n  49 |             tasks = plan_data.get('tasks', [])\n  50 |             has_incomplete = any(t.get('status') != 'done' for t in tasks)\n  51 | \n  52 |             return {\n  53 |                 'filename': filename,\n  54 |                 'path': str(filepath),\n  55 |                 'has_incomplete_tasks': has_incomplete,\n  56 |                 'goal': plan_data.get('current_goal', ''),\n  57 |                 'task_count': len(tasks),\n  58 |                 'completed_count': sum(1 for t in tasks if t.get('status') == 'done'),\n  59 |                 'summary': data.get('history_summary', '')[:200] + '...' if data.get('history_summary') else ''\n  60 |             }\n  61 |         except Exception as e:\n  62 |             print(f\"Warning: Could not parse session file {filepath}: {e}\")\n  63 |             return None\n  64 | \n  65 |     def find_latest_incomplete_session(self) -> Optional[Dict]:\n  66 |         \"\"\"查找最近的未完成会话\"\"\"\n  67 |         sessions = self.list_sessions()\n  68 |         for session in sessions:\n  69 |             info = self.get_session_info(session['filename'])\n  70 |             if info and info['has_incomplete_tasks']:\n  71 |                 return info\n  72 |         return None\n  73 | \n  74 |     def format_session_list(self) -> str:\n  75 |         \"\"\"格式化会话列表用于显示\"\"\"\n  76 |         sessions = self.list_sessions()\n  77 |         if not sessions:\n  78 |             return \"暂无历史会话。\"\n  79 | \n  80 |         lines = [\"\\n📋 历史会话列表：\"]\n  81 |         lines.append(\"-\" * 60)\n  82 | \n  83 |         for i, session in enumerate(sessions, 1):\n  84 |             info = self.get_session_info(session['filename'])\n  85 |             if info:\n  86 |                 status = \"⏳ 未完成\" if info['has_incomplete_tasks'] else \"✅ 已完成\"\n  87 |                 time_str = session['modified_time'].strftime(\"%m-%d %H:%M\")\n  88 |                 goal = info['goal'][:30] + \"...\" if len(info['goal']) > 30 else info['goal']\n  89 |                 lines.append(f\"{i}. [{status}] {session['filename'...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:39:57.437295",
+  "updated_at": "2026-05-29T13:39:57.437295",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/session_manager.py"
+  ],
+  "source_observation_ids": [
+    "obs_0d0ac316951342269a986dca8f0a9198"
+  ],
+  "source_session_ids": [
+    "default"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_0d0ac316951342269a986dca8f0a9198",
+      "session_id": "default",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:39:57.437295",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 180,
+        "path": "core/session_manager.py",
+        "raw_mode": false,
+        "start_line": 1
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/session_manager.py (第 1 至 94 行，共 94 行) ---\n   1 | # core/session_manager.py\n   2 | \"\"\"会话管理器，用于列出历史会话、查找未完成会话等\"\"\"\n   3 | import os\n   4 | import json\n   5 | from pathlib import Path\n   6 | from typing import List, Dict, Optional\n   7 | from datetime import datetime\n   8 | \n   9 | class SessionManager:\n  10 |     def __init__(self, sessions_dir: str = None):\n  11 |         if sessions_dir is None:\n  12 |             # 默认使用项目根目录下的 sessions 文件夹\n  13 |             project_root = Path(__file__).parent.parent\n  14 |             sessions_dir = project_root / 'sessions'\n  15 |         self.sessions_dir = Path(sessions_dir)\n  16 |         self.sessions_dir.mkdir(parents=True, exist_ok=True)\n  17 | \n  18 |     def list_sessions(self) -> List[Dict]:\n  19 |         \"\"\"列出所有历史会话，按修改时间倒序排列\"\"\"\n  20 |         sessions = []\n  21 |         for file in self.sessions_dir.glob('*.json'):\n  22 |             try:\n  23 |                 stat = file.stat()\n  24 |                 sessions.append({\n  25 |                     'filename': file.name,\n  26 |                     'path': str(file),\n  27 |                     'modified_time': datetime.fromtimestamp(stat.st_mtime),\n  28 |                     'size': stat.st_size\n  29 |                 })\n  30 |             except Exception as e:\n  31 |                 print(f\"Warning: Could not read session file {file}: {e}\")\n  32 | \n  33 |         # 按修改时间倒序排列\n  34 |         sessions.sort(key=lambda x: x['modified_time'], reverse=True)\n  35 |         return sessions\n  36 | \n  37 |     def get_session_info(self, filename: str) -> Optional[Dict]:\n  38 |         \"\"\"获取指定会话的详细信息\"\"\"\n  39 |         filepath = self.sessions_dir / filename\n  40 |         if not filepath.exists():\n  41 |             return None\n  42 | \n  43 |         try:\n  44 |             with open(filepath, 'r', encoding='utf-8') as f:\n  45 |                 data = json.load(f)\n  46 | \n  47 |             # 检查是否有未完成的任务\n  48 |             plan_data = data.get('plan', {})\n  49 |             tasks = plan_data.get('tasks', [])\n  50 |             has_incomplete = any(t.get('status') != 'done' for t in tasks)\n  51 | \n  52 |             return {\n  53 |                 'filename': filename,\n  54 |                 'path': str(filepath),\n  55 |                 'has_incomplete_tasks': has_incomplete,\n  56 |                 'goal': plan_data.get('current_goal', ''),\n  57 |                 'task_count': len(tasks),\n  58 |                 'completed_count': sum(1 for t in tasks if t.get('status') == 'done'),\n  59 |                 'summary': data.get('history_summary', '')[:200] + '...' if data.get('history_summary') else ''\n  60 |             }\n  61 |         except Exception as e:\n  62 |             print(f\"Warning: Could not parse session file {filepath}: {e}\")\n  63 |             return None\n  64 | \n  65 |     def find_latest_incomplete_session(self) -> Optional[Dict]:\n  66 |         \"\"\"查找最近的未完成会话\"\"\"\n  67 |         sessions = self.list_sessions()\n  68 |         for session in sessions:\n  69 |             info = self.get_session_info(session['filename'])\n  70 |             if info and info['has_incomplete_tasks']:\n  71 |                 return info\n  72 |         return None\n  73 | \n  74 |     def format_session_list(self) -> str:\n  75 |         \"\"\"格式化会话列表用于显示\"\"\"\n  76 |         sessions = self.list_sessions()\n  77 |         if not sessions:\n  78 |             return \"暂无历史会话。\"\n  79 | \n  80 |         lines = [\"\\n📋 历史会话列表：\"]\n  81 |         lines.append(\"-\" * 60)\n  82 | \n  83 |         for i, session in enumerate(sessions, 1):\n  84 |             info = self.get_session_info(session['filename'])\n  85 |             if info:\n  86 |                 status = \"⏳ 未完成\" if info['has_incomplete_tasks'] else \"✅ 已完成\"\n  87 |                 time_str = session['modified_time'].strftime(\"%m-%d %H:%M\")\n  88 |                 goal = info['goal'][:30] + \"...\" if len(info['goal']) > 30 else info['goal']\n  89 |                 lines.append(f\"{i}. [{status}] {session['filename'...",
+      "files": [
+        "core/session_manager.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "id": "mem_cd9de800bf044bff83300c8dedaa3c66",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nD:\\LLM\\mini-claude-code-cli\\memory\\long_term\r\n1310\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:30:35.144937",
+  "updated_at": "2026-05-29T14:30:35.144937",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_52268c68b157494aa25a4a283defb173"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_52268c68b157494aa25a4a283defb173",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:30:35.144937",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python -c \"from pathlib import Path; print(Path('memory/long_term').resolve()); print(len(list(Path('memory/long_term').iterdir())))\""
+      },
+      "tool_output": "STDOUT:\nD:\\LLM\\mini-claude-code-cli\\memory\\long_term\r\n1310\r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

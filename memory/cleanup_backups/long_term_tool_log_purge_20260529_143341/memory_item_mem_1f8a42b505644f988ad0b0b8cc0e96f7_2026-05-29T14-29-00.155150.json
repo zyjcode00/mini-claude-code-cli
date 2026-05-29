@@ -1,0 +1,48 @@
+{
+  "id": "mem_1f8a42b505644f988ad0b0b8cc0e96f7",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "Command executed with no output.",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:29:00.155150",
+  "updated_at": "2026-05-29T14:29:00.155150",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_5bbb93b74157473981ebc1965fe64e57"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_5bbb93b74157473981ebc1965fe64e57",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:29:00.155150",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python - <<'PY'\nimport json, os, glob\nfrom pathlib import Path\nfrom collections import Counter, defaultdict\nbase=Path('memory/long_term')\nprint('BASE', base.resolve())\nfiles=list(base.iterdir()) if base.exists() else []\nprint('total files', len(files))\nprint('suffix/name categories')\ncat=Counter()\nfor p in files:\n    if p.name=='index.json': cat['index.json']+=1\n    elif p.name=='index.pending.json': cat['index.pending.json']+=1\n    elif p.name.startswith('index.') and p.name.endswith('.tmp'): cat['index.*.tmp']+=1\n    elif '.corrupt_' in p.name and p.name.endswith('.bak'): cat['corrupt bak']+=1\n    elif p.name.startswith('memory_item_') and p.suffix=='.json': cat['memory_item json']+=1\n    elif p.name.startswith('summary_') and p.suffix=='.json': cat['summary json']+=1\n    else: cat['other']+=1\nprint(cat)\nprint('\\nother/tmp/bak files:')\nfor p in files:\n    if not ((p.name=='index.json') or (p.name.startswith('memory_item_') and p.suffix=='.json') or (p.name.startswith('summary_') and p.suffix=='.json')):\n        print(p.name, p.stat().st_size)\n\nitems=[]; bad=[]; summaries=[]\nfor p in base.glob('memory_item_*.json'):\n    try:\n        data=json.loads(p.read_text(encoding='utf-8'))\n        items.append((p,data))\n    except Exception as e:\n        bad.append((p,str(e)))\nfor p in base.glob('summary_*.json'):\n    try:\n        data=json.loads(p.read_text(encoding='utf-8'))\n        summaries.append((p,data))\n    except Exception as e:\n        bad.append((p,str(e)))\nprint('\\nparse bad', len(bad))\nfor p,e in bad[:20]: print('BAD',p.name,e)\nprint('items',len(items),'summaries',len(summaries))\n\n# schema/key stats\nkind=Counter(str(d.get('kind') or d.get('type') or '') for _,d in items)\nstatus=Counter(str(d.get('status') or '') for _,d in items)\nprint('kind',kind)\nprint('status',status)\n\nmissing=[]\nfor p,d in items:\n    req=['id','title','content','created_at','updated_at','importance','confidence','status']\n    miss=[k for k in req if k not in d or d.get(k) in (None,'')]\n    if miss: missing.append((p.name,miss,d.get('title','')[:60]))\nprint('missing/empty required-ish', len(missing))\nfor row in missing[:30]: print(row)\n\n# duplicate IDs and duplicate title/content hash\nids=defaultdict(list)\nfp=defaultdict(list)\nfor p,d in items:\n    ids[d.get('id')].append(p.name)\n    key=(str(d.get('kind') or d.get('type') or ''), str(d.get('title','')).strip(), str(d.get('content','')).strip())\n    fp[key].append((p.name,d.get('updated_at',''),d.get('status',''),d.get('importance')))\nprint('\\nduplicate ids', sum(1 for v in ids.values() if len(v)>1))\nfor k,v in list(ids.items()):\n    if len(v)>1: print('DUPID',k,v)\nprint('duplicate exact content groups', sum(1 for v in fp.values() if len(v)>1))\nfor k,v in fp.items():\n    if len(v)>1:\n        print('DUPCONTENT',k[0],k[1][:80], 'count',len(v))\n        for x in v[:10]: print(' ',x)\n\n# low quality heuristics\nlow=[]\nfor p,d in items:\n    title=str(d.get('title','')).strip(); content=str(d.get('content','')).strip()\n    if len(title)<5 or len(content)<20 or title.startswith('工具执行') or '工具执行成功' in title or '工具执行失败' in title or content.startswith('STDOUT:') or content.startswith('[SEARCH]') or content.startswith('--- 文件:'):\n        low.append((p.name,d.get('kind') or d.get('type'),title[:80],len(content),d.get('importance'),d.get('status')))\nprint('\\nlow-quality heuristic',len(low))\nfor row in low[:80]: print(row)\n\n# index consistency quick\nidx=base/'index.json'\nif idx.exists():\n    data=json.loads(idx.read_text(encoding='utf-8'))\n    print('\\nindex counts', {k: len(v) if isinstance(v,dict) else len(v) for k,v in data.items()})\n    missing_paths=[]\n    for id_, path in data.get('item_index',{}).items():\n        if not Path(path).exists(): missing_paths.append((id_,path))\n    print('index missing item paths',len(missing_paths))\nPY"
+      },
+      "tool_output": "Command executed with no output.",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

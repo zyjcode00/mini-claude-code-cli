@@ -1,0 +1,55 @@
+{
+  "id": "mem_826d9ba37abe4845957321190db42b14",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/compression_engine.py (第 180 至 430 行，共 948 行) ---\n 180 |             print(f\"   [策略选择] 工具密集 → KEYFRAME\")\n 181 |             return CompressionStrategy.KEYFRAME\n 182 | \n 183 |         print(f\"   [策略选择] 一般对话 → SLIDING_WINDOW\")\n 184 |         return CompressionStrategy.SLIDING_WINDOW\n 185 | \n 186 |     # ========== 策略 1: LLM 摘要 ==========\n 187 | \n 188 |     async def _compress_with_llm(\n 189 |         self,\n 190 |         messages: List[Dict[str, Any]],\n 191 |         llm_summarizer_func: Optional[Callable],\n 192 |         existing_summary: str,\n 193 |         min_keep: int\n 194 |     ) -> CompressionResult:\n 195 |         \"\"\"\n 196 |         使用 LLM 生成摘要（当前策略）\n 197 | \n 198 |         🔥 Phase 2 优化：\n 199 |         - 添加缓存机制（避免重复调用）\n 200 |         - 添加频率限制（每小时最多 10 次）\n 201 |         - 超限时降级到 SLIDING_WINDOW\n 202 | \n 203 |         Args:\n 204 |             messages: 消息列表\n 205 |             llm_summarizer_func: LLM 摘要函数\n 206 |             existing_summary: 已有的摘要\n 207 |             min_keep: 最少保留的消息数量\n 208 | \n 209 |         Returns:\n 210 |             CompressionResult\n 211 |         \"\"\"\n 212 |         if not llm_summarizer_func:\n 213 |             print(\"   [警告] LLM_SUMMARY 策略需要 llm_summarizer_func，降级到 SLIDING_WINDOW\")\n 214 |             return self._compress_with_sliding_window(messages, 0.3, min_keep)\n 215 | \n 216 |         # 划分消息：最近完整 turn 原样保留，较旧完整 turn 作为摘要候选。\n 217 |         keep_messages = self._select_recent_complete_turn_messages(messages, min_keep)\n 218 |         keep_start = len(messages)\n 219 |         if keep_messages:\n 220 |             keep_start = min(\n 221 |                 messages.index(msg)\n 222 |                 for msg in keep_messages\n 223 |                 if msg in messages\n 224 |             )\n 225 |         to_summarize = self._select_summary_candidate_messages(messages[:keep_start])\n 226 | \n 227 |         # 🔥 Phase 2: 检查缓存\n 228 |         messages_hash = self._get_messages_hash(to_summarize)\n 229 |         if messages_hash in self.summary_cache:\n 230 |             print(f\"   ✅ 命中缓存：直接使用已有摘要\")\n 231 |             cached_summary = self.summary_cache[messages_hash]\n 232 |             return CompressionResult(\n 233 |                 success=True,\n 234 |                 strategy=CompressionStrategy.LLM_SUMMARY,\n 235 |                 compressed_messages=keep_messages,\n 236 |                 summary=cached_summary,\n 237 |                 compression_ratio=len(keep_messages) / len(messages) if messages else 0,\n 238 |                 original_count=len(messages),\n 239 |                 compressed_count=len(keep_messages),\n 240 |                 metadata={\"from_cache\": True, \"cache_hit\": messages_hash}\n 241 |             )\n 242 | \n 243 |         # 🔥 Phase 2: 检查频率限制\n 244 |         if not self._should_call_llm():\n 245 |             print(f\"   ⚠️  LLM 调用超限，降级到 SLIDING_WINDOW\")\n 246 |             return self._compress_with_sliding_window(messages, 0.3, min_keep)\n 247 | \n 248 |         # 生成摘要\n 249 |         prompt = SUMMARY_PROMPT_TEMPLATE_V2.format(\n 250 |             existing_summary=existing_summary or \"无\",\n 251 |             messages_to_summarize=str(to_summarize)\n 252 |         )\n 253 | \n 254 |         try:\n 255 |             summary_text = await llm_summarizer_func(prompt)\n 256 | \n 257 |             # 🔥 Phase 2: 记录调用\n 258 |             self._record_llm_call()\n 259 | \n 260 |             if not summary_text:\n 261 |                 return CompressionResult(\n 262 |                     success=False,\n 263 |                     strategy=CompressionStrategy.LLM_SUMMARY,\n 264 |                     compressed_messages=keep_messages,\n 265 |                     original_count=len(messages),\n 266 |                     compressed_count=len(keep_messages)\n 267 |                 )\n 268 | \n 269 |             # 解析结构化摘要\n 270 |             summary = self._parse_structured_summary(\n 271 |                 summary_text, to_summarize, 0.5\n 272 |             )\n 273 | \n 274 |             # 🔥 Phase 2: 缓存结果\n 275 |             if len(sel...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:24:53.879593",
+  "updated_at": "2026-05-29T12:24:53.879593",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/compression_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_4f0375d945b34d5b83d325a15b58f5a0"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_4f0375d945b34d5b83d325a15b58f5a0",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:24:53.879593",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 430,
+        "path": "core/compression_engine.py",
+        "raw_mode": false,
+        "start_line": 180
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/compression_engine.py (第 180 至 430 行，共 948 行) ---\n 180 |             print(f\"   [策略选择] 工具密集 → KEYFRAME\")\n 181 |             return CompressionStrategy.KEYFRAME\n 182 | \n 183 |         print(f\"   [策略选择] 一般对话 → SLIDING_WINDOW\")\n 184 |         return CompressionStrategy.SLIDING_WINDOW\n 185 | \n 186 |     # ========== 策略 1: LLM 摘要 ==========\n 187 | \n 188 |     async def _compress_with_llm(\n 189 |         self,\n 190 |         messages: List[Dict[str, Any]],\n 191 |         llm_summarizer_func: Optional[Callable],\n 192 |         existing_summary: str,\n 193 |         min_keep: int\n 194 |     ) -> CompressionResult:\n 195 |         \"\"\"\n 196 |         使用 LLM 生成摘要（当前策略）\n 197 | \n 198 |         🔥 Phase 2 优化：\n 199 |         - 添加缓存机制（避免重复调用）\n 200 |         - 添加频率限制（每小时最多 10 次）\n 201 |         - 超限时降级到 SLIDING_WINDOW\n 202 | \n 203 |         Args:\n 204 |             messages: 消息列表\n 205 |             llm_summarizer_func: LLM 摘要函数\n 206 |             existing_summary: 已有的摘要\n 207 |             min_keep: 最少保留的消息数量\n 208 | \n 209 |         Returns:\n 210 |             CompressionResult\n 211 |         \"\"\"\n 212 |         if not llm_summarizer_func:\n 213 |             print(\"   [警告] LLM_SUMMARY 策略需要 llm_summarizer_func，降级到 SLIDING_WINDOW\")\n 214 |             return self._compress_with_sliding_window(messages, 0.3, min_keep)\n 215 | \n 216 |         # 划分消息：最近完整 turn 原样保留，较旧完整 turn 作为摘要候选。\n 217 |         keep_messages = self._select_recent_complete_turn_messages(messages, min_keep)\n 218 |         keep_start = len(messages)\n 219 |         if keep_messages:\n 220 |             keep_start = min(\n 221 |                 messages.index(msg)\n 222 |                 for msg in keep_messages\n 223 |                 if msg in messages\n 224 |             )\n 225 |         to_summarize = self._select_summary_candidate_messages(messages[:keep_start])\n 226 | \n 227 |         # 🔥 Phase 2: 检查缓存\n 228 |         messages_hash = self._get_messages_hash(to_summarize)\n 229 |         if messages_hash in self.summary_cache:\n 230 |             print(f\"   ✅ 命中缓存：直接使用已有摘要\")\n 231 |             cached_summary = self.summary_cache[messages_hash]\n 232 |             return CompressionResult(\n 233 |                 success=True,\n 234 |                 strategy=CompressionStrategy.LLM_SUMMARY,\n 235 |                 compressed_messages=keep_messages,\n 236 |                 summary=cached_summary,\n 237 |                 compression_ratio=len(keep_messages) / len(messages) if messages else 0,\n 238 |                 original_count=len(messages),\n 239 |                 compressed_count=len(keep_messages),\n 240 |                 metadata={\"from_cache\": True, \"cache_hit\": messages_hash}\n 241 |             )\n 242 | \n 243 |         # 🔥 Phase 2: 检查频率限制\n 244 |         if not self._should_call_llm():\n 245 |             print(f\"   ⚠️  LLM 调用超限，降级到 SLIDING_WINDOW\")\n 246 |             return self._compress_with_sliding_window(messages, 0.3, min_keep)\n 247 | \n 248 |         # 生成摘要\n 249 |         prompt = SUMMARY_PROMPT_TEMPLATE_V2.format(\n 250 |             existing_summary=existing_summary or \"无\",\n 251 |             messages_to_summarize=str(to_summarize)\n 252 |         )\n 253 | \n 254 |         try:\n 255 |             summary_text = await llm_summarizer_func(prompt)\n 256 | \n 257 |             # 🔥 Phase 2: 记录调用\n 258 |             self._record_llm_call()\n 259 | \n 260 |             if not summary_text:\n 261 |                 return CompressionResult(\n 262 |                     success=False,\n 263 |                     strategy=CompressionStrategy.LLM_SUMMARY,\n 264 |                     compressed_messages=keep_messages,\n 265 |                     original_count=len(messages),\n 266 |                     compressed_count=len(keep_messages)\n 267 |                 )\n 268 | \n 269 |             # 解析结构化摘要\n 270 |             summary = self._parse_structured_summary(\n 271 |                 summary_text, to_summarize, 0.5\n 272 |             )\n 273 | \n 274 |             # 🔥 Phase 2: 缓存结果\n 275 |             if len(sel...",
+      "files": [
+        "core/compression_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

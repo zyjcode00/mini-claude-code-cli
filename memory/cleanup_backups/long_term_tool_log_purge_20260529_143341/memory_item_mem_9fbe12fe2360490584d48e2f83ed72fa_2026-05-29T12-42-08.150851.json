@@ -1,0 +1,61 @@
+{
+  "id": "mem_9fbe12fe2360490584d48e2f83ed72fa",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: read_file",
+  "content": "\n```text\ncore/memory_context_builder.py\n```\n\n核心类：\n\n```text\nMemoryContextBuilder\n```\n\n它负责把召回结果转换成可注入 Prompt 的上下文片段。\n\n任务开始时，`AgentEngine` 会调用：\n\n```text\nMemoryManager.build_prompt_memory_context(...)\n```\n\n大致流程：\n\n```text\n用户输入\n  ↓\nAgentEngine 推断任务类型\n  ↓\nMemoryManager 执行 Hybrid Recall\n  ↓\nMemoryContextBuilder 排序、过滤、去重、截断\n  ↓\n生成 [相关长期记忆] Prompt 片段\n  ↓\n注入模型上下文\n```\n\n注入片段概念示例：\n\n```text\n[相关长期记忆]\n### 相关长期记忆\n任务类型: code_edit\n\n1. [bug] 修改 core/engine.py 后需要运行相关 engine 测试\n   来源: core/engine.py; long_term_items\n   相关度: 3.00\n   原因: 文件路径匹配、任务类型匹配\n   内容: 之前在 AgentEngine 中接入工具调用时出现过异步处理遗漏，修改后必须运行 pytest tests/test_engine.py\n```\n\n---\n\n## 8. Token Budget 与上下文污染控制\n\n为了避免长期记忆挤占上下文或污染当前任务，系统加入了预算控制。\n\n当前关键配置概念：\n\n```text\nmemory_token_budget = 1500\nmemory_recall_top_k = 8\n```\n\n`MemoryContextBuilder` 会执行：\n\n- 限制最大召回条数\n- 限制总注入长度\n- 截断单条过长记忆\n- 过滤低置信度记忆\n- 去除重复或高度相似记忆\n- 按任务类型重排记忆优先级\n\n这保证 Prompt 中只注入与当前任务最相关、最有价值的一小部分长期记忆。\n\n---\n\n## 9. 任务类型感知召回\n\n系统会根据用户输入推断任务类型。\n\n当前常见任务类型：\n\n```text\ncode_edit\narchitecture\ntest_failure\ndocumentation\ngit\ngeneral\n```\n\n不同任务类型优先召回不同记忆：\n\n| 任务类型 | 优先记忆 |\n|---|---|\n| `code_edit` | `bug`、`workflow`、`decision`、`architecture` |\n| `architecture` | `architecture`、`decision`、`fact`、`workflow` |\n| `test_failure` | `bug`、`procedural`、`workflow`、`fact` |\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:42:08.150851",
+  "updated_at": "2026-05-29T12:42:08.150851",
+  "concepts": [
+    "post_tool_use",
+    "read_file"
+  ],
+  "files": [
+    "docs/new_long_term_memory_system.md",
+    "core/memory_context_builder.py",
+    "core/engine.py",
+    "tests/test_engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_c0d65a67c71a47c99998af5d29bd2156"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_c0d65a67c71a47c99998af5d29bd2156",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:42:08.150851",
+      "event_type": "post_tool_use",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 330,
+        "path": "docs/new_long_term_memory_system.md",
+        "raw_mode": true,
+        "start_line": 234
+      },
+      "tool_output": "\n```text\ncore/memory_context_builder.py\n```\n\n核心类：\n\n```text\nMemoryContextBuilder\n```\n\n它负责把召回结果转换成可注入 Prompt 的上下文片段。\n\n任务开始时，`AgentEngine` 会调用：\n\n```text\nMemoryManager.build_prompt_memory_context(...)\n```\n\n大致流程：\n\n```text\n用户输入\n  ↓\nAgentEngine 推断任务类型\n  ↓\nMemoryManager 执行 Hybrid Recall\n  ↓\nMemoryContextBuilder 排序、过滤、去重、截断\n  ↓\n生成 [相关长期记忆] Prompt 片段\n  ↓\n注入模型上下文\n```\n\n注入片段概念示例：\n\n```text\n[相关长期记忆]\n### 相关长期记忆\n任务类型: code_edit\n\n1. [bug] 修改 core/engine.py 后需要运行相关 engine 测试\n   来源: core/engine.py; long_term_items\n   相关度: 3.00\n   原因: 文件路径匹配、任务类型匹配\n   内容: 之前在 AgentEngine 中接入工具调用时出现过异步处理遗漏，修改后必须运行 pytest tests/test_engine.py\n```\n\n---\n\n## 8. Token Budget 与上下文污染控制\n\n为了避免长期记忆挤占上下文或污染当前任务，系统加入了预算控制。\n\n当前关键配置概念：\n\n```text\nmemory_token_budget = 1500\nmemory_recall_top_k = 8\n```\n\n`MemoryContextBuilder` 会执行：\n\n- 限制最大召回条数\n- 限制总注入长度\n- 截断单条过长记忆\n- 过滤低置信度记忆\n- 去除重复或高度相似记忆\n- 按任务类型重排记忆优先级\n\n这保证 Prompt 中只注入与当前任务最相关、最有价值的一小部分长期记忆。\n\n---\n\n## 9. 任务类型感知召回\n\n系统会根据用户输入推断任务类型。\n\n当前常见任务类型：\n\n```text\ncode_edit\narchitecture\ntest_failure\ndocumentation\ngit\ngeneral\n```\n\n不同任务类型优先召回不同记忆：\n\n| 任务类型 | 优先记忆 |\n|---|---|\n| `code_edit` | `bug`、`workflow`、`decision`、`architecture` |\n| `architecture` | `architecture`、`decision`、`fact`、`workflow` |\n| `test_failure` | `bug`、`procedural`、`workflow`、`fact` |\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "docs/new_long_term_memory_system.md",
+        "core/memory_context_builder.py",
+        "core/engine.py",
+        "tests/test_engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

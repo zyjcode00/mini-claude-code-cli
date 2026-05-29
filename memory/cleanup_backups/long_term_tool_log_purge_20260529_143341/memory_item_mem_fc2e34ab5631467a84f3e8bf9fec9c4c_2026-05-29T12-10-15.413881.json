@@ -1,0 +1,54 @@
+{
+  "id": "mem_fc2e34ab5631467a84f3e8bf9fec9c4c",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 core/turn_builder.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:10:15.413881",
+  "updated_at": "2026-05-29T12:10:15.413881",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "core/turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_2f7419da43064e5a9afc58f77aebe547"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_2f7419da43064e5a9afc58f77aebe547",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:10:15.413881",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "    PLAN_KEYWORDS = (\"plan\", \"todo\", \"步骤\", \"继续\", \"完成\", \"已完成\", \"待办\")",
+        "old_str": "    PLAN_KEYWORDS = (\"plan\", \"todo\", \"task\", \"任务\", \"步骤\", \"继续\", \"完成\", \"已完成\", \"待办\")",
+        "path": "core/turn_builder.py"
+      },
+      "tool_output": "成功: 已更新 core/turn_builder.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "core/turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

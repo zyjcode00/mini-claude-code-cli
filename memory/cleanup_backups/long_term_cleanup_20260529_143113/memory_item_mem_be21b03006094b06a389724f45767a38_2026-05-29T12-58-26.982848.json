@@ -1,0 +1,55 @@
+{
+  "id": "mem_be21b03006094b06a389724f45767a38",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/engine.py (第 421 至 767 行，共 767 行) ---\n 421 |     def _observe_prompt_submit(self, user_input: str):\n 422 |         \"\"\"记录用户输入 Observation，并提升为任务型长期记忆。\"\"\"\n 423 |         observation = RawObservation(\n 424 |             session_id=self.session_id,\n 425 |             project=Path.cwd().name,\n 426 |             cwd=str(Path.cwd()),\n 427 |             event_type=ObservationType.PROMPT_SUBMIT.value,\n 428 |             user_prompt=user_input,\n 429 |             metadata={\"source\": \"AgentEngine.execute_query\"},\n 430 |         )\n 431 |         return self.context.memory_manager.save_observation(\n 432 |             observation,\n 433 |             promote=True,\n 434 |             kind=MemoryKind.TASK.value,\n 435 |             title=f\"用户任务: {self._shorten(user_input, 80)}\",\n 436 |             importance=0.55,\n 437 |             confidence=0.7,\n 438 |         )\n 439 | \n 440 |     def _observe_tool_result(self, tool_name: str, tool_input: Dict[str, Any], result: Any):\n 441 |         \"\"\"记录工具执行结果 Observation，失败/pytest 结果会沉淀为长期 MemoryItem。\"\"\"\n 442 |         result_text = str(result)\n 443 |         failed = self._is_failure_result(result_text)\n 444 |         event_type = ObservationType.TOOL_FAILURE.value if failed else ObservationType.POST_TOOL_USE.value\n 445 |         if tool_name == \"run_pytest\":\n 446 |             event_type = ObservationType.TOOL_FAILURE.value if failed else ObservationType.TEST_RESULT.value\n 447 | \n 448 |         files = self._extract_files_from_tool_call(tool_name, tool_input, result_text)\n 449 |         observation = RawObservation(\n 450 |             session_id=self.session_id,\n 451 |             project=Path.cwd().name,\n 452 |             cwd=str(Path.cwd()),\n 453 |             event_type=event_type,\n 454 |             tool_name=tool_name,\n 455 |             tool_input=tool_input or {},\n 456 |             tool_output=self._shorten(result_text, 4000) if not failed else None,\n 457 |             error=self._shorten(result_text, 4000) if failed else None,\n 458 |             files=files,\n 459 |             metadata={\"source\": \"AgentEngine.tool_dispatch\", \"success\": not failed},\n 460 |         )\n 461 | \n 462 |         kind = MemoryKind.BUG.value if failed else MemoryKind.WORKFLOW.value\n 463 |         title_status = \"失败\" if failed else \"成功\"\n 464 |         return self.context.memory_manager.save_observation(\n 465 |             observation,\n 466 |             promote=True,\n 467 |             kind=kind,\n 468 |             title=f\"工具执行{title_status}: {tool_name}\",\n 469 |             importance=0.8 if failed else 0.6,\n 470 |             confidence=0.85,\n 471 |         )\n 472 | \n 473 |     def _remember_task_completion(self, user_input: str, final_answer: str):\n 474 |         \"\"\"任务结束时保存一条任务完成记忆，方便跨会话召回。\"\"\"\n 475 |         content = f\"用户任务: {user_input}\\n完成结果: {final_answer}\"\n 476 |         observation = RawObservation(\n 477 |             session_id=self.session_id,\n 478 |             project=Path.cwd().name,\n 479 |             cwd=str(Path.cwd()),\n 480 |             event_type=ObservationType.SESSION_END.value,\n 481 |             user_prompt=user_input,\n 482 |             assistant_message=final_answer,\n 483 |             files=self._extract_file_paths(content),\n 484 |             metadata={\"source\": \"AgentEngine.final_answer\"},\n 485 |         )\n 486 |         item = self.context.memory_manager.save_observation(\n 487 |             observation,\n 488 |             promote=True,\n 489 |             kind=MemoryKind.TASK.value,\n 490 |             title=f\"任务完成: {self._shorten(user_input, 80)}\",\n 491 |             importance=0.75,\n 492 |             confidence=0.8,\n 493 |         )\n 494 |         if item:\n 495 |             item.concepts = list(dict.fromkeys(item.concepts + self._extract_concepts(content)))\n 496 |             self.context.memory_manager.save_memory_item(item)\n 497 |         return item\n 498 | \n 499 |     @staticmethod\n 500 |     def _shorten(text: Any, limit: int) -> str:\n 501 |         text = str(text or \"\")\n ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:58:26.982848",
+  "updated_at": "2026-05-29T12:58:26.982848",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/engine.py"
+  ],
+  "source_observation_ids": [
+    "obs_a0dac26111584c75ade34850b140d4d7"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_a0dac26111584c75ade34850b140d4d7",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:58:26.982848",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 767,
+        "path": "core/engine.py",
+        "raw_mode": false,
+        "start_line": 421
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/engine.py (第 421 至 767 行，共 767 行) ---\n 421 |     def _observe_prompt_submit(self, user_input: str):\n 422 |         \"\"\"记录用户输入 Observation，并提升为任务型长期记忆。\"\"\"\n 423 |         observation = RawObservation(\n 424 |             session_id=self.session_id,\n 425 |             project=Path.cwd().name,\n 426 |             cwd=str(Path.cwd()),\n 427 |             event_type=ObservationType.PROMPT_SUBMIT.value,\n 428 |             user_prompt=user_input,\n 429 |             metadata={\"source\": \"AgentEngine.execute_query\"},\n 430 |         )\n 431 |         return self.context.memory_manager.save_observation(\n 432 |             observation,\n 433 |             promote=True,\n 434 |             kind=MemoryKind.TASK.value,\n 435 |             title=f\"用户任务: {self._shorten(user_input, 80)}\",\n 436 |             importance=0.55,\n 437 |             confidence=0.7,\n 438 |         )\n 439 | \n 440 |     def _observe_tool_result(self, tool_name: str, tool_input: Dict[str, Any], result: Any):\n 441 |         \"\"\"记录工具执行结果 Observation，失败/pytest 结果会沉淀为长期 MemoryItem。\"\"\"\n 442 |         result_text = str(result)\n 443 |         failed = self._is_failure_result(result_text)\n 444 |         event_type = ObservationType.TOOL_FAILURE.value if failed else ObservationType.POST_TOOL_USE.value\n 445 |         if tool_name == \"run_pytest\":\n 446 |             event_type = ObservationType.TOOL_FAILURE.value if failed else ObservationType.TEST_RESULT.value\n 447 | \n 448 |         files = self._extract_files_from_tool_call(tool_name, tool_input, result_text)\n 449 |         observation = RawObservation(\n 450 |             session_id=self.session_id,\n 451 |             project=Path.cwd().name,\n 452 |             cwd=str(Path.cwd()),\n 453 |             event_type=event_type,\n 454 |             tool_name=tool_name,\n 455 |             tool_input=tool_input or {},\n 456 |             tool_output=self._shorten(result_text, 4000) if not failed else None,\n 457 |             error=self._shorten(result_text, 4000) if failed else None,\n 458 |             files=files,\n 459 |             metadata={\"source\": \"AgentEngine.tool_dispatch\", \"success\": not failed},\n 460 |         )\n 461 | \n 462 |         kind = MemoryKind.BUG.value if failed else MemoryKind.WORKFLOW.value\n 463 |         title_status = \"失败\" if failed else \"成功\"\n 464 |         return self.context.memory_manager.save_observation(\n 465 |             observation,\n 466 |             promote=True,\n 467 |             kind=kind,\n 468 |             title=f\"工具执行{title_status}: {tool_name}\",\n 469 |             importance=0.8 if failed else 0.6,\n 470 |             confidence=0.85,\n 471 |         )\n 472 | \n 473 |     def _remember_task_completion(self, user_input: str, final_answer: str):\n 474 |         \"\"\"任务结束时保存一条任务完成记忆，方便跨会话召回。\"\"\"\n 475 |         content = f\"用户任务: {user_input}\\n完成结果: {final_answer}\"\n 476 |         observation = RawObservation(\n 477 |             session_id=self.session_id,\n 478 |             project=Path.cwd().name,\n 479 |             cwd=str(Path.cwd()),\n 480 |             event_type=ObservationType.SESSION_END.value,\n 481 |             user_prompt=user_input,\n 482 |             assistant_message=final_answer,\n 483 |             files=self._extract_file_paths(content),\n 484 |             metadata={\"source\": \"AgentEngine.final_answer\"},\n 485 |         )\n 486 |         item = self.context.memory_manager.save_observation(\n 487 |             observation,\n 488 |             promote=True,\n 489 |             kind=MemoryKind.TASK.value,\n 490 |             title=f\"任务完成: {self._shorten(user_input, 80)}\",\n 491 |             importance=0.75,\n 492 |             confidence=0.8,\n 493 |         )\n 494 |         if item:\n 495 |             item.concepts = list(dict.fromkeys(item.concepts + self._extract_concepts(content)))\n 496 |             self.context.memory_manager.save_memory_item(item)\n 497 |         return item\n 498 | \n 499 |     @staticmethod\n 500 |     def _shorten(text: Any, limit: int) -> str:\n 501 |         text = str(text or \"\")\n ...",
+      "files": [
+        "core/engine.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

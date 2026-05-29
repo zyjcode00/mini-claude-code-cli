@@ -1,0 +1,76 @@
+{
+  "id": "mem_f6e62963ccb54807a78df2bd3e330b83",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 111 处匹配，分布在 8 个文件中\n\n================================================================================\n\n[FILE] compression_engine.py (11 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      19 | \n      20 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n      21 | from core.memory_items import MemoryItem, MemoryKind\n>>>   22 | from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2\n      23 | from core.turn_builder import ConversationTurn, TurnBuilder\n      24 | \n      25 | \n    [上下文]\n      86 |             created_at=data.get(\"created_at\", datetime.now().isoformat()),\n      87 |         )\n      88 | \n>>>   89 |     def render_for_prompt(self) -> str:\n      90 |         \"\"\"Render structured state as a compact prompt section.\"\"\"\n      91 |         lines = [\n      92 |             \"### 压缩后的会话状态\",\n    [上下文]\n      87 |         )\n      88 | \n      89 |     def render_for_prompt(self) -> str:\n>>>   90 |         \"\"\"Render structured state as a compact prompt section.\"\"\"\n      91 |         lines = [\n      92 |             \"### 压缩后的会话状态\",\n      93 |             f\"当前目标：{self.task_goal or '未知'}\",\n    [上下文]\n     352 |                     \"from_cache\": True,\n     353 |                     \"cache_hit\": messages_hash,\n     354 |                     \"compressed_state\": compressed_state.to_dict(),\n>>>  355 |                     \"compressed_state_prompt\": compressed_state.render_for_prompt(),\n     356 |                 },\n     357 |                 compressed_state=compressed_state\n     358 |             )\n    [上下文]\n     363 |             return self._compress_with_sliding_window(messages, 0.3, min_keep)\n     364 | \n     365 |         # 生成摘要\n>>>  366 |         prompt = SUMMARY_PROMPT_TEMPLATE_V2.format(\n     367 |             existing_summary=existing_summary or \"无\",\n     368 |             messages_to_summarize=str(to_summarize)\n     369 |         )\n    [上下文]\n     369 |         )\n     370 | \n     371 |         try:\n>>>  372 |             summary_text = await llm_summarizer_func(prompt)\n     373 | \n     374 |             # 🔥 Phase 2: 记录调用\n     375 |             self._record_llm_call()\n    [上下文]\n     397 |                     compressed_state,\n     398 |                 )\n     399 |             else:\n>>>  400 |                 summary.summary_text = compressed_state.render_for_prompt()\n     401 |                 summary.task_goal = compressed_state.task_goal or summary.task_goal\n     402 |                 summary.task_status = compressed_state.current_status\n     403 |                 summary.key_decisions = compressed_state.key_decisions or summary.key_decisions\n    [上下文]\n     424 |                     \"summary_text\": summary_text,\n     425 |                     \"from_cache\": False,\n     426 |                     \"compressed_state\": compressed_state.to_dict(),\n>>>  427 |                     \"compressed_state_prompt\": compressed_state.render_for_prompt(),\n     428 |                 },\n     429 |                 compressed_state=compressed_state\n     430 |             )\n    [上下文]\n     522 |                 \"tool_messages\": sum(1 for msg in compressed_messages if msg.get(\"role\") == \"tool\"),\n     523 |                 \"files_touched\": sorted({path for turn in selected_turns for path in turn.files_touched})[:20],\n     524 |                 \"compressed_state\": compressed_state.to_dict(),\n>>>  525 |                 \"compressed_state_prompt\": compressed_state.render_for_prompt(),\n     526 |             },\n     527 |             compressed_state=compressed_state\n     528 |         )\n    [上下文]\n     583 |             metadata={\n     584 |                 \"window_size\": len(compressed_messages),\n     585 |                 \"compressed_state\": compressed_state.to_dict(),\n>>>  586 |                 \"compressed_state_prompt\": compressed_state.render_for_prompt(),\n     587 |             },\n     588 |             compressed_state=compressed_state\n     589 |         )\n...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:57:13.670804",
+  "updated_at": "2026-05-29T12:57:13.670804",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    "core",
+    "compression_engine.py",
+    "context.py",
+    "context_assembler.py",
+    "core/context_assembler.py",
+    "engine.py",
+    "CLAUDE.md",
+    "memory_context_builder.py",
+    "memory_items.py",
+    "memory_manager.py",
+    "prompts.py"
+  ],
+  "source_observation_ids": [
+    "obs_3b796e723da349698419cfe927798a73"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_3b796e723da349698419cfe927798a73",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:57:13.670804",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 3,
+        "file_pattern": "*.py",
+        "path": "core",
+        "pattern": "system_prompt|inject|prompt|CLAUDE\\.md|ContextAssembler|assemble"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 111 处匹配，分布在 8 个文件中\n\n================================================================================\n\n[FILE] compression_engine.py (11 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      19 | \n      20 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n      21 | from core.memory_items import MemoryItem, MemoryKind\n>>>   22 | from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2\n      23 | from core.turn_builder import ConversationTurn, TurnBuilder\n      24 | \n      25 | \n    [上下文]\n      86 |             created_at=data.get(\"created_at\", datetime.now().isoformat()),\n      87 |         )\n      88 | \n>>>   89 |     def render_for_prompt(self) -> str:\n      90 |         \"\"\"Render structured state as a compact prompt section.\"\"\"\n      91 |         lines = [\n      92 |             \"### 压缩后的会话状态\",\n    [上下文]\n      87 |         )\n      88 | \n      89 |     def render_for_prompt(self) -> str:\n>>>   90 |         \"\"\"Render structured state as a compact prompt section.\"\"\"\n      91 |         lines = [\n      92 |             \"### 压缩后的会话状态\",\n      93 |             f\"当前目标：{self.task_goal or '未知'}\",\n    [上下文]\n     352 |                     \"from_cache\": True,\n     353 |                     \"cache_hit\": messages_hash,\n     354 |                     \"compressed_state\": compressed_state.to_dict(),\n>>>  355 |                     \"compressed_state_prompt\": compressed_state.render_for_prompt(),\n     356 |                 },\n     357 |                 compressed_state=compressed_state\n     358 |             )\n    [上下文]\n     363 |             return self._compress_with_sliding_window(messages, 0.3, min_keep)\n     364 | \n     365 |         # 生成摘要\n>>>  366 |         prompt = SUMMARY_PROMPT_TEMPLATE_V2.format(\n     367 |             existing_summary=existing_summary or \"无\",\n     368 |             messages_to_summarize=str(to_summarize)\n     369 |         )\n    [上下文]\n     369 |         )\n     370 | \n     371 |         try:\n>>>  372 |             summary_text = await llm_summarizer_func(prompt)\n     373 | \n     374 |             # 🔥 Phase 2: 记录调用\n     375 |             self._record_llm_call()\n    [上下文]\n     397 |                     compressed_state,\n     398 |                 )\n     399 |             else:\n>>>  400 |                 summary.summary_text = compressed_state.render_for_prompt()\n     401 |                 summary.task_goal = compressed_state.task_goal or summary.task_goal\n     402 |                 summary.task_status = compressed_state.current_status\n     403 |                 summary.key_decisions = compressed_state.key_decisions or summary.key_decisions\n    [上下文]\n     424 |                     \"summary_text\": summary_text,\n     425 |                     \"from_cache\": False,\n     426 |                     \"compressed_state\": compressed_state.to_dict(),\n>>>  427 |                     \"compressed_state_prompt\": compressed_state.render_for_prompt(),\n     428 |                 },\n     429 |                 compressed_state=compressed_state\n     430 |             )\n    [上下文]\n     522 |                 \"tool_messages\": sum(1 for msg in compressed_messages if msg.get(\"role\") == \"tool\"),\n     523 |                 \"files_touched\": sorted({path for turn in selected_turns for path in turn.files_touched})[:20],\n     524 |                 \"compressed_state\": compressed_state.to_dict(),\n>>>  525 |                 \"compressed_state_prompt\": compressed_state.render_for_prompt(),\n     526 |             },\n     527 |             compressed_state=compressed_state\n     528 |         )\n    [上下文]\n     583 |             metadata={\n     584 |                 \"window_size\": len(compressed_messages),\n     585 |                 \"compressed_state\": compressed_state.to_dict(),\n>>>  586 |                 \"compressed_state_prompt\": compressed_state.render_for_prompt(),\n     587 |             },\n     588 |             compressed_state=compressed_state\n     589 |         )\n...",
+      "files": [
+        "core",
+        "compression_engine.py",
+        "context.py",
+        "context_assembler.py",
+        "core/context_assembler.py",
+        "engine.py",
+        "CLAUDE.md",
+        "memory_context_builder.py",
+        "memory_items.py",
+        "memory_manager.py",
+        "prompts.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

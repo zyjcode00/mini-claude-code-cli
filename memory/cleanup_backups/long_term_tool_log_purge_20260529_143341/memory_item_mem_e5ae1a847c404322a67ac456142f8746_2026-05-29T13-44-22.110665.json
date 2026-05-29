@@ -1,0 +1,91 @@
+{
+  "id": "mem_e5ae1a847c404322a67ac456142f8746",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: list_all_symbols",
+  "content": "📊 项目符号索引 (共 240 个定义)\n\n================================================================================\n\n\n📁 test_compressed_session_state.py\n--------------------------------------------------------------------------------\n⚡   phase3_messages (L13-L29)\n⚡   test_compressed_session_state_serialization_and_prompt_rendering (L32-L50)\n⚡   test_extract_compressed_state_from_turn_metadata (L53-L67)\n⚡   test_keyframe_result_carries_structured_state_and_preserves_tool_pairs (L71-L87)\n⚡   test_llm_summary_result_uses_structured_state_when_llm_returns_plain_text (L91-L110)\n⚡   summarizer (L94-L95)\n⚡   test_task_goal_uses_latest_real_user_request_and_skips_greetings (L113-L126)\n⚡   test_compressed_state_records_and_renders_read_file_progress (L129-L158)\n\n📁 test_compression_engine.py\n--------------------------------------------------------------------------------\n⚡   create_mock_messages (L28-L80)\n    💬 创建模拟消息列表\n    💬 \n⚡   mock_llm_summarizer (L83-L100)\n    💬 模拟 LLM 摘要函数\n    💬 \n⚡   test_compression_engine_init (L105-L112)\n    💬 测试压缩引擎初始化\n⚡   test_select_strategy_error_dense (L117-L123)\n    💬 测试策略选择：错误密集 → LLM_SUMMARY\n⚡   test_select_strategy_tool_dense (L126-L133)\n    💬 测试策略选择：工具密集 → KEYFRAME 或 SLIDING_WINDOW\n⚡   test_select_strategy_simple (L136-L142)\n    💬 测试策略选择：一般对话 → SLIDING_WINDOW\n⚡   test_select_strategy_empty (L145-L149)\n    💬 测试策略选择：空消息列表 → SLIDING_WINDOW\n⚡   test_select_strategy_function (L152-L157)\n    💬 测试便捷函数 select_compression_strategy\n⚡   test_sliding_window_compression (L163-L179)\n    💬 测试滑动窗口压缩\n⚡   test_sliding_window_preserve_order (L183-L196)\n    💬 测试滑动窗口保留原始顺序\n⚡   test_keyframe_compression (L202-L217)\n    💬 测试关键帧提取压缩\n⚡   test_keyframe_extract_user_messages (L221-L235)\n    💬 测试关键帧提取用户消息\n⚡   test_keyframe_extract_tool_messages (L239-L254)\n    💬 测试关键帧提取工具消息\n⚡   test_llm_summary_compression (L263-L279)\n    💬 测试 LLM 摘要压缩\n⚡   test_llm_summary_without_llm (L283-L297)\n    💬 测试 LLM 摘要策略降级（无 LLM 函数）\n⚡   test_auto_strategy_selection (L303-L322)\n    💬 测试自动策略选择\n⚡   test_compression_ratio (L328-L348)\n    💬 测试压缩比\n⚡   test_empty_messages (L352-L358)\n    💬 测试空消息列表压缩\n⚡   test_context_manager_compression_engine (L364-L370)\n    💬 测试 ContextManager 集成压缩引擎\n⚡   test_context_manager_compress_with_strategy (L374-L387)\n    💬 测试 ContextManager 使用指定策略压缩\n⚡   test_context_manager_compress_auto_strategy (L391-L404)\n    💬 测试 ContextManager 自动策略压缩\n⚡   test_context_manager_compress_with_summary (L408-L421)\n    💬 测试 ContextManager 压缩生成摘要\n⚡   test_compression_result_dataclass (L426-L441)\n    💬 测试 CompressionResult 数据类\n⚡   test_compression_performance (L447-L465)\n    💬 测试压缩性能（< 1s）\n\n📁 test_context_assembly_budget.py\n--------------------------------------------------------------------------------\n⚡   _tool_pair (L6-L20)\n⚡   test_context_assembler_preserves_current_user_request_under_tight_budget (L23-L41)\n⚡   test_context_assembler_keeps_tool_pair_atomic_when_recent_turn_budget_small (L44-L61)\n⚡   test_context_assembler_drops_incomplete_tool_pairs_for_provider_validation (L64-L85)\n⚡   test_context_assembler_injects_memory_into_system_not_between_tool_pair (L88-L102)\n⚡   test_context_assembler_openai_messages_starts_with_single_system_message (L105-L122)\n\n📁 test_memory_items.py\n--------------------------------------------------------------------------------\n⚡   test_raw_observation_roundtrip_and_defaults (L15-L36)\n⚡   test_raw_observation_json_roundtrip_and_unknown_type_fallback (L39-L50)\n⚡   test_memory_item_roundtrip_with_enum_and_type_alias (L53-L79)\n⚡   test_memory_item_from_legacy_type_alias_and_json_roundtrip (L82-L96)\n⚡   test_memory_recall_result_roundtrip_accepts_item_dict (L99-L110)\n\n📁 test_memory_layers.py\n--------------------------------------------------------------------------------\n📦   TestWorkingMemory (L18-L82)\n    💬 测试工作记忆\n⚡   TestWorkingMemory.test_init (L21-L25)\n    💬 测试初始化\n⚡   TestWorkingMemory.test_add_message (L27-L36)\n    💬 测试添加消息\n⚡   TestWorkingMemory.test_fifo_eviction (L38-L60)\n    💬 测试 FIFO 淘汰\n⚡   TestWorkingMemory.test_get_recent (...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:44:22.110665",
+  "updated_at": "2026-05-29T13:44:22.110665",
+  "concepts": [
+    "tool_failure",
+    "list_all_symbols"
+  ],
+  "files": [
+    "tests",
+    "test_compressed_session_state.py",
+    "test_compression_engine.py",
+    "test_context_assembly_budget.py",
+    "test_memory_items.py",
+    "test_memory_layers.py",
+    "index.json",
+    "test_memory_manager.py",
+    "test_memory_manager_phase2.py",
+    "test_memory_models.py",
+    "test_memory_persistence.py",
+    "test_memory_phase3.py",
+    "test_memory_phase4.py",
+    "test_memory_phase4_promotion.py",
+    "test_memory_phase5.py",
+    "test_memory_retrieval.py",
+    "test_openai_tool_pairing.py",
+    "test_shared_memory_manager.py",
+    "test_symbol_tool.py",
+    "test_turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_d78719c3bd424995ad9df68c3083d026"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_d78719c3bd424995ad9df68c3083d026",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:44:22.110665",
+      "event_type": "tool_failure",
+      "tool_name": "list_all_symbols",
+      "tool_input": {
+        "path": "tests",
+        "symbol_type": "all"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "📊 项目符号索引 (共 240 个定义)\n\n================================================================================\n\n\n📁 test_compressed_session_state.py\n--------------------------------------------------------------------------------\n⚡   phase3_messages (L13-L29)\n⚡   test_compressed_session_state_serialization_and_prompt_rendering (L32-L50)\n⚡   test_extract_compressed_state_from_turn_metadata (L53-L67)\n⚡   test_keyframe_result_carries_structured_state_and_preserves_tool_pairs (L71-L87)\n⚡   test_llm_summary_result_uses_structured_state_when_llm_returns_plain_text (L91-L110)\n⚡   summarizer (L94-L95)\n⚡   test_task_goal_uses_latest_real_user_request_and_skips_greetings (L113-L126)\n⚡   test_compressed_state_records_and_renders_read_file_progress (L129-L158)\n\n📁 test_compression_engine.py\n--------------------------------------------------------------------------------\n⚡   create_mock_messages (L28-L80)\n    💬 创建模拟消息列表\n    💬 \n⚡   mock_llm_summarizer (L83-L100)\n    💬 模拟 LLM 摘要函数\n    💬 \n⚡   test_compression_engine_init (L105-L112)\n    💬 测试压缩引擎初始化\n⚡   test_select_strategy_error_dense (L117-L123)\n    💬 测试策略选择：错误密集 → LLM_SUMMARY\n⚡   test_select_strategy_tool_dense (L126-L133)\n    💬 测试策略选择：工具密集 → KEYFRAME 或 SLIDING_WINDOW\n⚡   test_select_strategy_simple (L136-L142)\n    💬 测试策略选择：一般对话 → SLIDING_WINDOW\n⚡   test_select_strategy_empty (L145-L149)\n    💬 测试策略选择：空消息列表 → SLIDING_WINDOW\n⚡   test_select_strategy_function (L152-L157)\n    💬 测试便捷函数 select_compression_strategy\n⚡   test_sliding_window_compression (L163-L179)\n    💬 测试滑动窗口压缩\n⚡   test_sliding_window_preserve_order (L183-L196)\n    💬 测试滑动窗口保留原始顺序\n⚡   test_keyframe_compression (L202-L217)\n    💬 测试关键帧提取压缩\n⚡   test_keyframe_extract_user_messages (L221-L235)\n    💬 测试关键帧提取用户消息\n⚡   test_keyframe_extract_tool_messages (L239-L254)\n    💬 测试关键帧提取工具消息\n⚡   test_llm_summary_compression (L263-L279)\n    💬 测试 LLM 摘要压缩\n⚡   test_llm_summary_without_llm (L283-L297)\n    💬 测试 LLM 摘要策略降级（无 LLM 函数）\n⚡   test_auto_strategy_selection (L303-L322)\n    💬 测试自动策略选择\n⚡   test_compression_ratio (L328-L348)\n    💬 测试压缩比\n⚡   test_empty_messages (L352-L358)\n    💬 测试空消息列表压缩\n⚡   test_context_manager_compression_engine (L364-L370)\n    💬 测试 ContextManager 集成压缩引擎\n⚡   test_context_manager_compress_with_strategy (L374-L387)\n    💬 测试 ContextManager 使用指定策略压缩\n⚡   test_context_manager_compress_auto_strategy (L391-L404)\n    💬 测试 ContextManager 自动策略压缩\n⚡   test_context_manager_compress_with_summary (L408-L421)\n    💬 测试 ContextManager 压缩生成摘要\n⚡   test_compression_result_dataclass (L426-L441)\n    💬 测试 CompressionResult 数据类\n⚡   test_compression_performance (L447-L465)\n    💬 测试压缩性能（< 1s）\n\n📁 test_context_assembly_budget.py\n--------------------------------------------------------------------------------\n⚡   _tool_pair (L6-L20)\n⚡   test_context_assembler_preserves_current_user_request_under_tight_budget (L23-L41)\n⚡   test_context_assembler_keeps_tool_pair_atomic_when_recent_turn_budget_small (L44-L61)\n⚡   test_context_assembler_drops_incomplete_tool_pairs_for_provider_validation (L64-L85)\n⚡   test_context_assembler_injects_memory_into_system_not_between_tool_pair (L88-L102)\n⚡   test_context_assembler_openai_messages_starts_with_single_system_message (L105-L122)\n\n📁 test_memory_items.py\n--------------------------------------------------------------------------------\n⚡   test_raw_observation_roundtrip_and_defaults (L15-L36)\n⚡   test_raw_observation_json_roundtrip_and_unknown_type_fallback (L39-L50)\n⚡   test_memory_item_roundtrip_with_enum_and_type_alias (L53-L79)\n⚡   test_memory_item_from_legacy_type_alias_and_json_roundtrip (L82-L96)\n⚡   test_memory_recall_result_roundtrip_accepts_item_dict (L99-L110)\n\n📁 test_memory_layers.py\n--------------------------------------------------------------------------------\n📦   TestWorkingMemory (L18-L82)\n    💬 测试工作记忆\n⚡   TestWorkingMemory.test_init (L21-L25)\n    💬 测试初始化\n⚡   TestWorkingMemory.test_add_message (L27-L36)\n    💬 测试添加消息\n⚡   TestWorkingMemory.test_fifo_eviction (L38-L60)\n    💬 测试 FIFO 淘汰\n⚡   TestWorkingMemory.test_get_recent (...",
+      "files": [
+        "tests",
+        "test_compressed_session_state.py",
+        "test_compression_engine.py",
+        "test_context_assembly_budget.py",
+        "test_memory_items.py",
+        "test_memory_layers.py",
+        "index.json",
+        "test_memory_manager.py",
+        "test_memory_manager_phase2.py",
+        "test_memory_models.py",
+        "test_memory_persistence.py",
+        "test_memory_phase3.py",
+        "test_memory_phase4.py",
+        "test_memory_phase4_promotion.py",
+        "test_memory_phase5.py",
+        "test_memory_retrieval.py",
+        "test_openai_tool_pairing.py",
+        "test_shared_memory_manager.py",
+        "test_symbol_tool.py",
+        "test_turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

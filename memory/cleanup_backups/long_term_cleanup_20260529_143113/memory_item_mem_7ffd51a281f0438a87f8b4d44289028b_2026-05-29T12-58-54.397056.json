@@ -1,0 +1,68 @@
+{
+  "id": "mem_7ffd51a281f0438a87f8b4d44289028b",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 25 处匹配，分布在 5 个文件中\n\n================================================================================\n\n[FILE] engine.py (10 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       8 | import asyncio\n       9 | from tools.base import BaseTool\n>>>   10 | from core.prompts import get_system_prompt\n      11 | from core.context import ContextManager  # <--- 导入新管家\n      12 | from core.context_assembler import ContextAssembler, ContextBudget\n    [上下文]\n      40 |         # Phase 5: Prompt 记忆注入预算配置\n      41 |         self.memory_token_budget = 1500\n>>>   42 |         self.memory_recall_top_k = 8\n      43 |         self.context_assembler = ContextAssembler(\n      44 |             ContextBudget(memory=self.memory_token_budget)\n    [上下文]\n      67 | \n      68 |         # 🔥🔥🔥 跨会话长期记忆检索：从磁盘检索所有会话的长期记忆\n>>>   69 |         long_term_memories = []\n      70 |         if self.context._enable_memory_layers and user_input:\n      71 |             try:\n    [上下文]\n      71 |             try:\n      72 |                 # 从长期记忆中检索与当前任务相关的摘要（跨所有会话）\n>>>   73 |                 long_term_memories = self.context.memory_manager.search_long_term(\n      74 |                     query=user_input,\n      75 |                     top_k=5  # 检索最相关的 5 条长期记忆\n    [上下文]\n      75 |                     top_k=5  # 检索最相关的 5 条长期记忆\n      76 |                 )\n>>>   77 |                 if long_term_memories:\n      78 |                     print(f\" [🧠] 检索到 {len(long_term_memories)} 条跨会话长期记忆\")\n      79 |             except Exception as e:\n    [上下文]\n      76 |                 )\n      77 |                 if long_term_memories:\n>>>   78 |                     print(f\" [🧠] 检索到 {len(long_term_memories)} 条跨会话长期记忆\")\n      79 |             except Exception as e:\n      80 |                 print(f\" [⚠️] 长期记忆检索失败: {e}\")\n    [上下文]\n      83 |         completed_goals = self.plan_manager.get_completed_goals()\n      84 | \n>>>   85 |         system_ptr = get_system_prompt(\n      86 |             summary=self.context.history_summary,\n      87 |             plan=current_plan,\n    [上下文]\n      88 |             episodic_memories=episodic_memories,\n      89 |             session_summaries=session_summaries,\n>>>   90 |             long_term_memories=long_term_memories,  # 🔥🔥🔥 新增参数：跨会话长期记忆\n      91 |             completed_goals=completed_goals,  # 🔥 新增参数\n      92 |             user_input=user_input  # 🔥 新增：用于 CLAUDE.md 按需注入\n    [上下文]\n      94 | \n      95 |         # Phase 5: ContextAssembler 统一预算化装配。\n>>>   96 |         # get_system_prompt 仍负责生成兼容旧行为的基础 system prompt；主动召回的\n      97 |         # relevant_history 作为 memory layer 交给 assembler，避免直接无预算拼接。\n      98 |         messages_snapshot = await self.context.get_messages_snapshot()\n    [上下文]\n     351 |                 token_budget=self.memory_token_budget,\n     352 |                 task_type=None,\n>>>  353 |                 top_k=top_k or self.memory_recall_top_k,\n     354 |             )\n     355 |         except Exception as e:\n\n[FILE] memory_context_builder.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      13 | \n      14 | \n>>>   15 | class MemoryContextBuilder:\n      16 |     \"\"\"根据 token budget 构造可注入系统提示词的长期记忆上下文。\"\"\"\n      17 | \n\n[FILE] memory_manager.py (9 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      24 | from core.memory_models import SessionSummary\n      25 | from core.memory_retrieval import MemoryRetriever\n>>>   26 | from core.memory_context_builder import MemoryContextBuilder\n      27 | \n      28 | \n    [上下文]\n      66 |             self.long_term_memory,\n      67 |         )\n>>>   68 |         self.context_builder = MemoryContextBuilder()\n      69 | \n      70 |     def add_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:\n    [上下文]\n     148 |         统一召回长期记忆。\n     149 | \n>>>  150 |         阶段4 起默认委托 MemoryRetriever.hybrid_recall，统一整合 MemoryItem 与\n   ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:58:54.397056",
+  "updated_at": "2026-05-29T12:58:54.397056",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    "core",
+    "engine.py",
+    "CLAUDE.md",
+    "memory_context_builder.py",
+    "memory_manager.py",
+    "memory_retrieval.py",
+    "prompts.py"
+  ],
+  "source_observation_ids": [
+    "obs_8a200c61980b448a815236c53c78d127"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_8a200c61980b448a815236c53c78d127",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:58:54.397056",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 2,
+        "file_pattern": "*.py",
+        "path": "core",
+        "pattern": "get_system_prompt|MemoryContextBuilder|hybrid_recall|memory_recall|long_term_memories"
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 25 处匹配，分布在 5 个文件中\n\n================================================================================\n\n[FILE] engine.py (10 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n       8 | import asyncio\n       9 | from tools.base import BaseTool\n>>>   10 | from core.prompts import get_system_prompt\n      11 | from core.context import ContextManager  # <--- 导入新管家\n      12 | from core.context_assembler import ContextAssembler, ContextBudget\n    [上下文]\n      40 |         # Phase 5: Prompt 记忆注入预算配置\n      41 |         self.memory_token_budget = 1500\n>>>   42 |         self.memory_recall_top_k = 8\n      43 |         self.context_assembler = ContextAssembler(\n      44 |             ContextBudget(memory=self.memory_token_budget)\n    [上下文]\n      67 | \n      68 |         # 🔥🔥🔥 跨会话长期记忆检索：从磁盘检索所有会话的长期记忆\n>>>   69 |         long_term_memories = []\n      70 |         if self.context._enable_memory_layers and user_input:\n      71 |             try:\n    [上下文]\n      71 |             try:\n      72 |                 # 从长期记忆中检索与当前任务相关的摘要（跨所有会话）\n>>>   73 |                 long_term_memories = self.context.memory_manager.search_long_term(\n      74 |                     query=user_input,\n      75 |                     top_k=5  # 检索最相关的 5 条长期记忆\n    [上下文]\n      75 |                     top_k=5  # 检索最相关的 5 条长期记忆\n      76 |                 )\n>>>   77 |                 if long_term_memories:\n      78 |                     print(f\" [🧠] 检索到 {len(long_term_memories)} 条跨会话长期记忆\")\n      79 |             except Exception as e:\n    [上下文]\n      76 |                 )\n      77 |                 if long_term_memories:\n>>>   78 |                     print(f\" [🧠] 检索到 {len(long_term_memories)} 条跨会话长期记忆\")\n      79 |             except Exception as e:\n      80 |                 print(f\" [⚠️] 长期记忆检索失败: {e}\")\n    [上下文]\n      83 |         completed_goals = self.plan_manager.get_completed_goals()\n      84 | \n>>>   85 |         system_ptr = get_system_prompt(\n      86 |             summary=self.context.history_summary,\n      87 |             plan=current_plan,\n    [上下文]\n      88 |             episodic_memories=episodic_memories,\n      89 |             session_summaries=session_summaries,\n>>>   90 |             long_term_memories=long_term_memories,  # 🔥🔥🔥 新增参数：跨会话长期记忆\n      91 |             completed_goals=completed_goals,  # 🔥 新增参数\n      92 |             user_input=user_input  # 🔥 新增：用于 CLAUDE.md 按需注入\n    [上下文]\n      94 | \n      95 |         # Phase 5: ContextAssembler 统一预算化装配。\n>>>   96 |         # get_system_prompt 仍负责生成兼容旧行为的基础 system prompt；主动召回的\n      97 |         # relevant_history 作为 memory layer 交给 assembler，避免直接无预算拼接。\n      98 |         messages_snapshot = await self.context.get_messages_snapshot()\n    [上下文]\n     351 |                 token_budget=self.memory_token_budget,\n     352 |                 task_type=None,\n>>>  353 |                 top_k=top_k or self.memory_recall_top_k,\n     354 |             )\n     355 |         except Exception as e:\n\n[FILE] memory_context_builder.py (1 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      13 | \n      14 | \n>>>   15 | class MemoryContextBuilder:\n      16 |     \"\"\"根据 token budget 构造可注入系统提示词的长期记忆上下文。\"\"\"\n      17 | \n\n[FILE] memory_manager.py (9 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      24 | from core.memory_models import SessionSummary\n      25 | from core.memory_retrieval import MemoryRetriever\n>>>   26 | from core.memory_context_builder import MemoryContextBuilder\n      27 | \n      28 | \n    [上下文]\n      66 |             self.long_term_memory,\n      67 |         )\n>>>   68 |         self.context_builder = MemoryContextBuilder()\n      69 | \n      70 |     def add_message(self, message: Dict[str, Any]) -> Optional[Dict[str, Any]]:\n    [上下文]\n     148 |         统一召回长期记忆。\n     149 | \n>>>  150 |         阶段4 起默认委托 MemoryRetriever.hybrid_recall，统一整合 MemoryItem 与\n   ...",
+      "files": [
+        "core",
+        "engine.py",
+        "CLAUDE.md",
+        "memory_context_builder.py",
+        "memory_manager.py",
+        "memory_retrieval.py",
+        "prompts.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

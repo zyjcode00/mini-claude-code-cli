@@ -1,0 +1,80 @@
+{
+  "id": "mem_a983e31d1c47471b998608c8cb5d35ad",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nmemory\\long_term json_files= 867 size_kb= 11961.4\r\n  index.json 6104.1 KB\r\n  memory_item_mem_0a9d3111b29749b59dc8854365e2d2f2_2026-05-28T16-06-25.397079.json 18.4 KB\r\n  memory_item_mem_5eeb9bcd7e934953a99ade75a56c3eee_2026-05-29T12-05-53.928745.json 16.2 KB\r\n  memory_item_mem_7e50d9aa5cc44796904cab3996c96385_2026-05-29T12-58-49.892728.json 16.2 KB\r\n  memory_item_mem_02032f952493485499c939a4b4d6b9fe_2026-05-28T16-56-45.523561.json 15.9 KB\r\n  memory_item_mem_38513d7d9ce349bd85c5f8ab3a1b1a75_2026-05-29T12-46-21.373520.json 14.0 KB\r\n  memory_item_mem_bc05669fbfc347218298adb54f0167fa_2026-05-29T12-24-41.161264.json 13.8 KB\r\n  memory_item_mem_f6e7dad244d945528c6bcf3695971aec_2026-05-29T12-04-01.275459.json 13.8 KB\r\nsessions json_files= 7 size_kb= 21712.3\r\n  test.json 5444.9 KB\r\n  test2.json 5411.7 KB\r\n  memory.json 4307.5 KB\r\n  default.json 3834.4 KB\r\n  GRPO.json 2399.7 KB\r\n  GRPO-code.json 255.5 KB\r\n  vlm.json 58.6 KB\r\nindex counts: {'index': 0, 'item_index': 824, 'inverted_index': 0, 'item_inverted_index': 8786}\r\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:37:51.028008",
+  "updated_at": "2026-05-29T13:37:51.028008",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [
+    "index.json",
+    "memory_item_mem_0a9d3111b29749b59dc8854365e2d2f2_2026-05-28T16-06-25.397079.json",
+    "memory_item_mem_5eeb9bcd7e934953a99ade75a56c3eee_2026-05-29T12-05-53.928745.json",
+    "memory_item_mem_7e50d9aa5cc44796904cab3996c96385_2026-05-29T12-58-49.892728.json",
+    "memory_item_mem_02032f952493485499c939a4b4d6b9fe_2026-05-28T16-56-45.523561.json",
+    "memory_item_mem_38513d7d9ce349bd85c5f8ab3a1b1a75_2026-05-29T12-46-21.373520.json",
+    "memory_item_mem_bc05669fbfc347218298adb54f0167fa_2026-05-29T12-24-41.161264.json",
+    "memory_item_mem_f6e7dad244d945528c6bcf3695971aec_2026-05-29T12-04-01.275459.json",
+    "test.json",
+    "test2.json",
+    "memory.json",
+    "default.json",
+    "GRPO.json",
+    "GRPO-code.json",
+    "vlm.json"
+  ],
+  "source_observation_ids": [
+    "obs_f4029a53bbad4dadb6ae83c34680e647"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f4029a53bbad4dadb6ae83c34680e647",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:37:51.028008",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "python tmp_startup_stats.py"
+      },
+      "tool_output": "STDOUT:\nmemory\\long_term json_files= 867 size_kb= 11961.4\r\n  index.json 6104.1 KB\r\n  memory_item_mem_0a9d3111b29749b59dc8854365e2d2f2_2026-05-28T16-06-25.397079.json 18.4 KB\r\n  memory_item_mem_5eeb9bcd7e934953a99ade75a56c3eee_2026-05-29T12-05-53.928745.json 16.2 KB\r\n  memory_item_mem_7e50d9aa5cc44796904cab3996c96385_2026-05-29T12-58-49.892728.json 16.2 KB\r\n  memory_item_mem_02032f952493485499c939a4b4d6b9fe_2026-05-28T16-56-45.523561.json 15.9 KB\r\n  memory_item_mem_38513d7d9ce349bd85c5f8ab3a1b1a75_2026-05-29T12-46-21.373520.json 14.0 KB\r\n  memory_item_mem_bc05669fbfc347218298adb54f0167fa_2026-05-29T12-24-41.161264.json 13.8 KB\r\n  memory_item_mem_f6e7dad244d945528c6bcf3695971aec_2026-05-29T12-04-01.275459.json 13.8 KB\r\nsessions json_files= 7 size_kb= 21712.3\r\n  test.json 5444.9 KB\r\n  test2.json 5411.7 KB\r\n  memory.json 4307.5 KB\r\n  default.json 3834.4 KB\r\n  GRPO.json 2399.7 KB\r\n  GRPO-code.json 255.5 KB\r\n  vlm.json 58.6 KB\r\nindex counts: {'index': 0, 'item_index': 824, 'inverted_index': 0, 'item_inverted_index': 8786}\r\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "index.json",
+        "memory_item_mem_0a9d3111b29749b59dc8854365e2d2f2_2026-05-28T16-06-25.397079.json",
+        "memory_item_mem_5eeb9bcd7e934953a99ade75a56c3eee_2026-05-29T12-05-53.928745.json",
+        "memory_item_mem_7e50d9aa5cc44796904cab3996c96385_2026-05-29T12-58-49.892728.json",
+        "memory_item_mem_02032f952493485499c939a4b4d6b9fe_2026-05-28T16-56-45.523561.json",
+        "memory_item_mem_38513d7d9ce349bd85c5f8ab3a1b1a75_2026-05-29T12-46-21.373520.json",
+        "memory_item_mem_bc05669fbfc347218298adb54f0167fa_2026-05-29T12-24-41.161264.json",
+        "memory_item_mem_f6e7dad244d945528c6bcf3695971aec_2026-05-29T12-04-01.275459.json",
+        "test.json",
+        "test2.json",
+        "memory.json",
+        "default.json",
+        "GRPO.json",
+        "GRPO-code.json",
+        "vlm.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "mem_41da7df48ef447e8ba6c562ebfd2eafb",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_manager.py (第 259 至 446 行，共 446 行) ---\n 259 |     def search(self, query: str, top_k: int = 5) -> List[SessionSummary]:\n 260 |         \"\"\"检索情景记忆和长期记忆，返回去重后的摘要列表。\"\"\"\n 261 |         if not self.enabled:\n 262 |             return []\n 263 | \n 264 |         ranked_results = self.retriever.retrieve(\n 265 |             query=query,\n 266 |             top_k=top_k,\n 267 |             include_working=False,\n 268 |             include_episodic=True,\n 269 |             include_long_term=True,\n 270 |         )\n 271 |         return [summary for summary, _score, _source in ranked_results]\n 272 | \n 273 |     def retrieve(\n 274 |         self,\n 275 |         query: str,\n 276 |         top_k: int = 5,\n 277 |         include_working: bool = True,\n 278 |         include_episodic: bool = True,\n 279 |         include_long_term: bool = True,\n 280 |     ) -> List[Tuple[SessionSummary, float, str]]:\n 281 |         \"\"\"返回带分数和来源层的多层检索结果。\"\"\"\n 282 |         if not self.enabled:\n 283 |             return []\n 284 |         return self.retriever.retrieve(\n 285 |             query=query,\n 286 |             top_k=top_k,\n 287 |             include_working=include_working,\n 288 |             include_episodic=include_episodic,\n 289 |             include_long_term=include_long_term,\n 290 |         )\n 291 | \n 292 |     def search_long_term(self, query: str, top_k: int = 5) -> List[SessionSummary]:\n 293 |         \"\"\"仅检索长期记忆。\"\"\"\n 294 |         if not self.enabled:\n 295 |             return []\n 296 |         return self.long_term_memory.search(query=query, top_k=top_k)\n 297 | \n 298 |     def retrieve_by_file_path(self, file_path: str, top_k: int = 5) -> List[Tuple[SessionSummary, float, str]]:\n 299 |         \"\"\"按文件路径检索相关摘要。\"\"\"\n 300 |         if not self.enabled:\n 301 |             return []\n 302 |         return self.retriever.retrieve_by_file_path(file_path=file_path, top_k=top_k)\n 303 | \n 304 |     def retrieve_by_error_type(self, error_type: str, top_k: int = 5) -> List[Tuple[SessionSummary, float, str]]:\n 305 |         \"\"\"按错误类型检索相关摘要。\"\"\"\n 306 |         if not self.enabled:\n 307 |             return []\n 308 |         return self.retriever.retrieve_by_error_type(error_type=error_type, top_k=top_k)\n 309 | \n 310 |     def get_recent_summaries(self, n: int = 5) -> List[SessionSummary]:\n 311 |         \"\"\"获取最近情景摘要。\"\"\"\n 312 |         if not self.enabled:\n 313 |             return []\n 314 |         return self.episodic_memory.get_recent(n)\n 315 | \n 316 |     def get_statistics(self) -> Dict[str, Any]:\n 317 |         \"\"\"获取三层记忆统计信息。\"\"\"\n 318 |         if not self.enabled:\n 319 |             return {\n 320 |                 \"enabled\": False,\n 321 |                 \"working_memory\": {\"size\": 0, \"max_size\": self.working_memory.max_size, \"usage_rate\": 0},\n 322 |                 \"episodic_memory\": {\"size\": 0, \"max_size\": self.episodic_memory.max_size, \"usage_rate\": 0},\n 323 |                 \"long_term_memory\": {\n 324 |                     \"count\": 0,\n 325 |                     \"summary_count\": 0,\n 326 |                     \"item_count\": 0,\n 327 |                     \"storage_dir\": str(self.long_term_memory.storage_dir),\n 328 |                 },\n 329 |             }\n 330 | \n 331 |         working_max = max(self.working_memory.max_size, 1)\n 332 |         episodic_max = max(self.episodic_memory.max_size, 1)\n 333 |         return {\n 334 |             \"enabled\": True,\n 335 |             \"working_memory\": {\n 336 |                 \"size\": len(self.working_memory),\n 337 |                 \"max_size\": self.working_memory.max_size,\n 338 |                 \"usage_rate\": len(self.working_memory) / working_max,\n 339 |             },\n 340 |             \"episodic_memory\": {\n 341 |                 \"size\": len(self.episodic_memory),\n 342 |                 \"max_size\": self.episodic_memory.max_size,\n 343 |                 \"usage_rate\": len(self.episodic_memory) / episodic_max,\n 344 |             },\n 345 |             \"long_term_memory\": {\n 346 |                 \"count\": len(self.l...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:58:19.890665",
+  "updated_at": "2026-05-29T12:58:19.890665",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_manager.py",
+    "episodic_memory.json",
+    "memory_items.json",
+    "memory_statistics.json"
+  ],
+  "source_observation_ids": [
+    "obs_e3288f6bc8c44d4dbbf611abeb30d174"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_e3288f6bc8c44d4dbbf611abeb30d174",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:58:19.890665",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 446,
+        "path": "core/memory_manager.py",
+        "raw_mode": false,
+        "start_line": 259
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_manager.py (第 259 至 446 行，共 446 行) ---\n 259 |     def search(self, query: str, top_k: int = 5) -> List[SessionSummary]:\n 260 |         \"\"\"检索情景记忆和长期记忆，返回去重后的摘要列表。\"\"\"\n 261 |         if not self.enabled:\n 262 |             return []\n 263 | \n 264 |         ranked_results = self.retriever.retrieve(\n 265 |             query=query,\n 266 |             top_k=top_k,\n 267 |             include_working=False,\n 268 |             include_episodic=True,\n 269 |             include_long_term=True,\n 270 |         )\n 271 |         return [summary for summary, _score, _source in ranked_results]\n 272 | \n 273 |     def retrieve(\n 274 |         self,\n 275 |         query: str,\n 276 |         top_k: int = 5,\n 277 |         include_working: bool = True,\n 278 |         include_episodic: bool = True,\n 279 |         include_long_term: bool = True,\n 280 |     ) -> List[Tuple[SessionSummary, float, str]]:\n 281 |         \"\"\"返回带分数和来源层的多层检索结果。\"\"\"\n 282 |         if not self.enabled:\n 283 |             return []\n 284 |         return self.retriever.retrieve(\n 285 |             query=query,\n 286 |             top_k=top_k,\n 287 |             include_working=include_working,\n 288 |             include_episodic=include_episodic,\n 289 |             include_long_term=include_long_term,\n 290 |         )\n 291 | \n 292 |     def search_long_term(self, query: str, top_k: int = 5) -> List[SessionSummary]:\n 293 |         \"\"\"仅检索长期记忆。\"\"\"\n 294 |         if not self.enabled:\n 295 |             return []\n 296 |         return self.long_term_memory.search(query=query, top_k=top_k)\n 297 | \n 298 |     def retrieve_by_file_path(self, file_path: str, top_k: int = 5) -> List[Tuple[SessionSummary, float, str]]:\n 299 |         \"\"\"按文件路径检索相关摘要。\"\"\"\n 300 |         if not self.enabled:\n 301 |             return []\n 302 |         return self.retriever.retrieve_by_file_path(file_path=file_path, top_k=top_k)\n 303 | \n 304 |     def retrieve_by_error_type(self, error_type: str, top_k: int = 5) -> List[Tuple[SessionSummary, float, str]]:\n 305 |         \"\"\"按错误类型检索相关摘要。\"\"\"\n 306 |         if not self.enabled:\n 307 |             return []\n 308 |         return self.retriever.retrieve_by_error_type(error_type=error_type, top_k=top_k)\n 309 | \n 310 |     def get_recent_summaries(self, n: int = 5) -> List[SessionSummary]:\n 311 |         \"\"\"获取最近情景摘要。\"\"\"\n 312 |         if not self.enabled:\n 313 |             return []\n 314 |         return self.episodic_memory.get_recent(n)\n 315 | \n 316 |     def get_statistics(self) -> Dict[str, Any]:\n 317 |         \"\"\"获取三层记忆统计信息。\"\"\"\n 318 |         if not self.enabled:\n 319 |             return {\n 320 |                 \"enabled\": False,\n 321 |                 \"working_memory\": {\"size\": 0, \"max_size\": self.working_memory.max_size, \"usage_rate\": 0},\n 322 |                 \"episodic_memory\": {\"size\": 0, \"max_size\": self.episodic_memory.max_size, \"usage_rate\": 0},\n 323 |                 \"long_term_memory\": {\n 324 |                     \"count\": 0,\n 325 |                     \"summary_count\": 0,\n 326 |                     \"item_count\": 0,\n 327 |                     \"storage_dir\": str(self.long_term_memory.storage_dir),\n 328 |                 },\n 329 |             }\n 330 | \n 331 |         working_max = max(self.working_memory.max_size, 1)\n 332 |         episodic_max = max(self.episodic_memory.max_size, 1)\n 333 |         return {\n 334 |             \"enabled\": True,\n 335 |             \"working_memory\": {\n 336 |                 \"size\": len(self.working_memory),\n 337 |                 \"max_size\": self.working_memory.max_size,\n 338 |                 \"usage_rate\": len(self.working_memory) / working_max,\n 339 |             },\n 340 |             \"episodic_memory\": {\n 341 |                 \"size\": len(self.episodic_memory),\n 342 |                 \"max_size\": self.episodic_memory.max_size,\n 343 |                 \"usage_rate\": len(self.episodic_memory) / episodic_max,\n 344 |             },\n 345 |             \"long_term_memory\": {\n 346 |                 \"count\": len(self.l...",
+      "files": [
+        "core/memory_manager.py",
+        "episodic_memory.json",
+        "memory_items.json",
+        "memory_statistics.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

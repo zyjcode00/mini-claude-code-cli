@@ -1,0 +1,55 @@
+{
+  "id": "mem_0a638345088f40b68137fef77029d89c",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "    def export_memories(self, session_summaries: Optional[List[SessionSummary]] = None, history_summary: str = \"\") -> Dict[str, Any]:\n        \"\"\"导出可写入 session 文件的记忆数据。\"\"\"\n        session_summaries = session_summaries or []\n        if not self.enabled:\n            return {\n                \"working_memory\": [],\n                \"episodic_memory\": [],\n                \"memory_items\": [],\n                \"session_summaries\": [s.to_dict() for s in session_summaries],\n                \"history_summary\": history_summary,\n            }\n\n        return {\n            \"working_memory\": self.working_memory.get_all(),\n            \"episodic_memory\": [s.to_dict() for s in self.episodic_memory.get_all()],\n            \"memory_items\": [item.to_dict() for item in self.long_term_memory.get_all_items()],\n            \"session_summaries\": [s.to_dict() for s in session_summaries],\n            \"history_summary\": history_summary,\n        }\n\n    def import_memories(self, data: Dict[str, Any]) -> Dict[str, Any]:\n        \"\"\"\n        导入 session 文件中的记忆数据。\n\n        返回 Phase 1 兼容字段：history_summary 与 session_summaries。\n        \"\"\"\n        session_summaries: List[SessionSummary] = []\n        for s_dict in data.get(\"session_summaries\", []):\n            try:\n                session_summaries.append(SessionSummary.from_dict(s_dict))\n            except Exception as e:\n                print(f\"⚠️ 恢复会话摘要失败: {e}\")\n\n        if self.enabled:\n            self.working_memory.clear()\n            for msg in data.get(\"working_memory\", []):\n                self.working_memory.add(msg)\n\n            self.episodic_memory.clear()\n            for s_dict in data.get(\"episodic_memory\", []):\n                try:\n                    self.episodic_memory.add(SessionSummary.from_dict(s_dict))\n                except Exception as e:\n                    print(f\"⚠️ 恢复情景记忆失败: {e}\")\n\n            for item_dict in data.get(\"memory_items\", []):\n                try:\n                    self.long_term_memory.store_item(MemoryItem.from_dict(item_dict))\n                except Exception as e:\n                    print(f\"⚠️ 恢复 MemoryItem 失败: {e}\")\n\n        return {\n            \"history_summary\": data.get(\"history_summary\", \"\"),\n            \"session_summaries\": session_summaries,\n        }\n\n    def export_to_files(self, output_dir: str = \"memory/export\") -> Dict[str, str]:\n        \"\"\"导出情景记忆和统计信息到独立文件，返回文件路径。\"\"\"\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:42:18.730664",
+  "updated_at": "2026-05-29T13:42:18.730664",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_manager.py"
+  ],
+  "source_observation_ids": [
+    "obs_f08345e1ad7d49d29893d5007b827fd7"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f08345e1ad7d49d29893d5007b827fd7",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:42:18.729666",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 410,
+        "path": "core/memory_manager.py",
+        "raw_mode": true,
+        "start_line": 353
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "    def export_memories(self, session_summaries: Optional[List[SessionSummary]] = None, history_summary: str = \"\") -> Dict[str, Any]:\n        \"\"\"导出可写入 session 文件的记忆数据。\"\"\"\n        session_summaries = session_summaries or []\n        if not self.enabled:\n            return {\n                \"working_memory\": [],\n                \"episodic_memory\": [],\n                \"memory_items\": [],\n                \"session_summaries\": [s.to_dict() for s in session_summaries],\n                \"history_summary\": history_summary,\n            }\n\n        return {\n            \"working_memory\": self.working_memory.get_all(),\n            \"episodic_memory\": [s.to_dict() for s in self.episodic_memory.get_all()],\n            \"memory_items\": [item.to_dict() for item in self.long_term_memory.get_all_items()],\n            \"session_summaries\": [s.to_dict() for s in session_summaries],\n            \"history_summary\": history_summary,\n        }\n\n    def import_memories(self, data: Dict[str, Any]) -> Dict[str, Any]:\n        \"\"\"\n        导入 session 文件中的记忆数据。\n\n        返回 Phase 1 兼容字段：history_summary 与 session_summaries。\n        \"\"\"\n        session_summaries: List[SessionSummary] = []\n        for s_dict in data.get(\"session_summaries\", []):\n            try:\n                session_summaries.append(SessionSummary.from_dict(s_dict))\n            except Exception as e:\n                print(f\"⚠️ 恢复会话摘要失败: {e}\")\n\n        if self.enabled:\n            self.working_memory.clear()\n            for msg in data.get(\"working_memory\", []):\n                self.working_memory.add(msg)\n\n            self.episodic_memory.clear()\n            for s_dict in data.get(\"episodic_memory\", []):\n                try:\n                    self.episodic_memory.add(SessionSummary.from_dict(s_dict))\n                except Exception as e:\n                    print(f\"⚠️ 恢复情景记忆失败: {e}\")\n\n            for item_dict in data.get(\"memory_items\", []):\n                try:\n                    self.long_term_memory.store_item(MemoryItem.from_dict(item_dict))\n                except Exception as e:\n                    print(f\"⚠️ 恢复 MemoryItem 失败: {e}\")\n\n        return {\n            \"history_summary\": data.get(\"history_summary\", \"\"),\n            \"session_summaries\": session_summaries,\n        }\n\n    def export_to_files(self, output_dir: str = \"memory/export\") -> Dict[str, str]:\n        \"\"\"导出情景记忆和统计信息到独立文件，返回文件路径。\"\"\"\n",
+      "files": [
+        "core/memory_manager.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

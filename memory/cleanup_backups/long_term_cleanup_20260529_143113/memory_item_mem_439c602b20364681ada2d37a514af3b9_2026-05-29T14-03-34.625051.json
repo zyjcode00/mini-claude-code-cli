@@ -1,0 +1,55 @@
+{
+  "id": "mem_439c602b20364681ada2d37a514af3b9",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: D:\\LLM\\memory\\agentmemory\\src\\index.ts (第 447 至 520 行，共 596 行) ---\n 447 |   const needsRebuild = bm25Index.size === 0;\n 448 | \n 449 |   if (needsRebuild) {\n 450 |     // Fire-and-forget. rebuildIndex iterates every observation across\n 451 |     // every session and AWAITS an embedding-provider call per record.\n 452 |     // On a large corpus + rate-limited embedding endpoint that can\n 453 |     // take HOURS; awaiting it here blocks every subsequent boot step\n 454 |     // (including startViewerServer below, leaving the viewer port\n 455 |     // unbound for the duration). The index lazily fills in over time\n 456 |     // and search degrades gracefully — partial coverage > no viewer\n 457 |     // for hours. Errors still surface via the inner .catch.\n 458 |     void rebuildIndex(kv)\n 459 |       .then((indexCount) => {\n 460 |         if (indexCount > 0) {\n 461 |           bootLog(`Search index rebuilt: ${indexCount} entries`);\n 462 |           indexPersistence.scheduleSave();\n 463 |         }\n 464 |       })\n 465 |       .catch((err) => {\n 466 |         console.warn(`[agentmemory] Failed to rebuild search index:`, err);\n 467 |       });\n 468 |   } else {\n 469 |     // Backfill memories into BM25 for users upgrading from <0.9.5: prior\n 470 |     // versions of mem::remember never indexed memories, so the persisted\n 471 |     // BM25 covers observations only and `memory_smart_search` returns\n 472 |     // empty for everything saved via memory_save (#257). Walk KV.memories\n 473 |     // and add the ones missing from the restored index. Idempotent on\n 474 |     // re-runs because SearchIndex.has() short-circuits already-indexed\n 475 |     // ids.\n 476 |     try {\n 477 |       const memories = await kv.list<import(\"./types.js\").Memory>(KV.memories);\n 478 |       let backfilled = 0;\n 479 |       for (const memory of memories) {\n 480 |         if (memory.isLatest === false) continue;\n 481 |         if (!memory.title || !memory.content) continue;\n 482 |         if (bm25Index.has(memory.id)) continue;\n 483 |         bm25Index.add({\n 484 |           id: memory.id,\n 485 |           sessionId: memory.sessionIds?.[0] ?? \"memory\",\n 486 |           timestamp: memory.createdAt,\n 487 |           type: \"decision\",\n 488 |           title: memory.title,\n 489 |           facts: [memory.content],\n 490 |           narrative: memory.content,\n 491 |           concepts: memory.concepts,\n 492 |           files: memory.files,\n 493 |           importance: memory.strength,\n 494 |         });\n 495 |         backfilled++;\n 496 |       }\n 497 |       if (backfilled > 0) {\n 498 |         bootLog(\n 499 |           `Backfilled ${backfilled} memories into BM25 (legacy gap before #257)`,\n 500 |         );\n 501 |         indexPersistence.scheduleSave();\n 502 |       }\n 503 |     } catch (err) {\n 504 |       console.warn(\n 505 |         `[agentmemory] Failed to backfill memories into BM25:`,\n 506 |         err,\n 507 |       );\n 508 |     }\n 509 |   }\n 510 | \n 511 |   // Ready / Endpoints lines are emitted via `bootLog` so they're\n 512 |   // buffered in quiet mode and printed verbatim under --verbose. The\n 513 |   // CLI surfaces a compact summary when it sees the worker reach\n 514 |   // ready state.\n 515 |   bootLog(\n 516 |     `Ready. ${embeddingProvider ? \"Triple-stream (BM25+Vector+Graph)\" : \"BM25+Graph\"} search active.`,\n 517 |   );\n 518 |   bootLog(\n 519 |     `REST API: 124 endpoints at http://localhost:${config.restPort}/agentmemory/*`,\n 520 |   );\n--- 读取完毕 ---",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:03:34.625051",
+  "updated_at": "2026-05-29T14:03:34.625051",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "D:\\LLM\\memory\\agentmemory\\src\\index.ts"
+  ],
+  "source_observation_ids": [
+    "obs_51235d5b194e41bd985c327cf1ba8da8"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_51235d5b194e41bd985c327cf1ba8da8",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:03:34.625051",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 520,
+        "path": "D:\\LLM\\memory\\agentmemory\\src\\index.ts",
+        "raw_mode": false,
+        "start_line": 447
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: D:\\LLM\\memory\\agentmemory\\src\\index.ts (第 447 至 520 行，共 596 行) ---\n 447 |   const needsRebuild = bm25Index.size === 0;\n 448 | \n 449 |   if (needsRebuild) {\n 450 |     // Fire-and-forget. rebuildIndex iterates every observation across\n 451 |     // every session and AWAITS an embedding-provider call per record.\n 452 |     // On a large corpus + rate-limited embedding endpoint that can\n 453 |     // take HOURS; awaiting it here blocks every subsequent boot step\n 454 |     // (including startViewerServer below, leaving the viewer port\n 455 |     // unbound for the duration). The index lazily fills in over time\n 456 |     // and search degrades gracefully — partial coverage > no viewer\n 457 |     // for hours. Errors still surface via the inner .catch.\n 458 |     void rebuildIndex(kv)\n 459 |       .then((indexCount) => {\n 460 |         if (indexCount > 0) {\n 461 |           bootLog(`Search index rebuilt: ${indexCount} entries`);\n 462 |           indexPersistence.scheduleSave();\n 463 |         }\n 464 |       })\n 465 |       .catch((err) => {\n 466 |         console.warn(`[agentmemory] Failed to rebuild search index:`, err);\n 467 |       });\n 468 |   } else {\n 469 |     // Backfill memories into BM25 for users upgrading from <0.9.5: prior\n 470 |     // versions of mem::remember never indexed memories, so the persisted\n 471 |     // BM25 covers observations only and `memory_smart_search` returns\n 472 |     // empty for everything saved via memory_save (#257). Walk KV.memories\n 473 |     // and add the ones missing from the restored index. Idempotent on\n 474 |     // re-runs because SearchIndex.has() short-circuits already-indexed\n 475 |     // ids.\n 476 |     try {\n 477 |       const memories = await kv.list<import(\"./types.js\").Memory>(KV.memories);\n 478 |       let backfilled = 0;\n 479 |       for (const memory of memories) {\n 480 |         if (memory.isLatest === false) continue;\n 481 |         if (!memory.title || !memory.content) continue;\n 482 |         if (bm25Index.has(memory.id)) continue;\n 483 |         bm25Index.add({\n 484 |           id: memory.id,\n 485 |           sessionId: memory.sessionIds?.[0] ?? \"memory\",\n 486 |           timestamp: memory.createdAt,\n 487 |           type: \"decision\",\n 488 |           title: memory.title,\n 489 |           facts: [memory.content],\n 490 |           narrative: memory.content,\n 491 |           concepts: memory.concepts,\n 492 |           files: memory.files,\n 493 |           importance: memory.strength,\n 494 |         });\n 495 |         backfilled++;\n 496 |       }\n 497 |       if (backfilled > 0) {\n 498 |         bootLog(\n 499 |           `Backfilled ${backfilled} memories into BM25 (legacy gap before #257)`,\n 500 |         );\n 501 |         indexPersistence.scheduleSave();\n 502 |       }\n 503 |     } catch (err) {\n 504 |       console.warn(\n 505 |         `[agentmemory] Failed to backfill memories into BM25:`,\n 506 |         err,\n 507 |       );\n 508 |     }\n 509 |   }\n 510 | \n 511 |   // Ready / Endpoints lines are emitted via `bootLog` so they're\n 512 |   // buffered in quiet mode and printed verbatim under --verbose. The\n 513 |   // CLI surfaces a compact summary when it sees the worker reach\n 514 |   // ready state.\n 515 |   bootLog(\n 516 |     `Ready. ${embeddingProvider ? \"Triple-stream (BM25+Vector+Graph)\" : \"BM25+Graph\"} search active.`,\n 517 |   );\n 518 |   bootLog(\n 519 |     `REST API: 124 endpoints at http://localhost:${config.restPort}/agentmemory/*`,\n 520 |   );\n--- 读取完毕 ---",
+      "files": [
+        "D:\\LLM\\memory\\agentmemory\\src\\index.ts"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

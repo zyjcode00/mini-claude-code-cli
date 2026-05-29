@@ -1,0 +1,94 @@
+{
+  "id": "mem_66f973cd79c24b0c8360cb149a3dd090",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: search_code",
+  "content": "[SEARCH] 搜索结果: 共找到 348 处匹配，分布在 23 个文件中\n\n================================================================================\n\n[FILE] core\\bm25_retriever.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     288 |             return self.idf_cache[term]\n     289 | \n     290 |         # 计算包含该词项的文档数\n>>>  291 |         n_qi = len(self.inverted_index.get(term, set()))\n     292 | \n     293 |         # IDF 公式（使用平滑版本，避免除零）\n     294 |         idf = math.log(\n    [上下文]\n     421 |     def clear(self):\n     422 |         \"\"\"清空索引\"\"\"\n     423 |         self.documents.clear()\n>>>  424 |         self.inverted_index.clear()\n     425 |         self.idf_cache.clear()\n     426 |         self.avg_doc_length = 0.0\n     427 |         self.total_docs = 0\n\n[FILE] core\\compression_engine.py (15 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      18 | from datetime import datetime\n      19 | \n      20 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n>>>   21 | from core.memory_items import MemoryItem, MemoryKind\n      22 | from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2\n      23 | from core.turn_builder import ConversationTurn, TurnBuilder\n      24 | \n    [上下文]\n     835 |             token_count=sum(len(str(msg)) for msg in messages)\n     836 |         )\n     837 | \n>>>  838 |     def _promote_compression_result(self, result: CompressionResult) -> List[MemoryItem]:\n     839 |         \"\"\"Promote reusable knowledge from CompressedSessionState into long-term MemoryItems.\"\"\"\n     840 |         if not self.promotion_enabled or not self.memory_manager or not result or not result.success:\n     841 |             return []\n    [上下文]\n     836 |         )\n     837 | \n     838 |     def _promote_compression_result(self, result: CompressionResult) -> List[MemoryItem]:\n>>>  839 |         \"\"\"Promote reusable knowledge from CompressedSessionState into long-term MemoryItems.\"\"\"\n     840 |         if not self.promotion_enabled or not self.memory_manager or not result or not result.success:\n     841 |             return []\n     842 |         if not result.compressed_state:\n    [上下文]\n     843 |             return []\n     844 | \n     845 |         candidates = self._build_memory_promotion_candidates(result.compressed_state, result)\n>>>  846 |         promoted: List[MemoryItem] = []\n     847 |         seen = self._existing_memory_signatures()\n     848 |         for item in candidates:\n     849 |             signature = self._memory_item_signature(item)\n    [上下文]\n     862 |         self,\n     863 |         state: CompressedSessionState,\n     864 |         result: CompressionResult,\n>>>  865 |     ) -> List[MemoryItem]:\n     866 |         \"\"\"Convert compressed state facts into MemoryItem candidates aligned with memory module APIs.\"\"\"\n     867 |         candidates: List[MemoryItem] = []\n     868 |         source_turn_ids = list(state.source_turn_ids)\n    [上下文]\n     863 |         state: CompressedSessionState,\n     864 |         result: CompressionResult,\n     865 |     ) -> List[MemoryItem]:\n>>>  866 |         \"\"\"Convert compressed state facts into MemoryItem candidates aligned with memory module APIs.\"\"\"\n     867 |         candidates: List[MemoryItem] = []\n     868 |         source_turn_ids = list(state.source_turn_ids)\n     869 |         session_id = result.summary.session_id if result.summary else \"\"\n    [上下文]\n     864 |         result: CompressionResult,\n     865 |     ) -> List[MemoryItem]:\n     866 |         \"\"\"Convert compressed state facts into MemoryItem candidates aligned with memory module APIs.\"\"\"\n>>>  867 |         candidates: List[MemoryItem] = []\n     868 |         source_turn_ids = list(state.source_turn_ids)\n     869 |         session_id = result.summary.session_id if result.summary else \"\"\n     870 |         project = self._infer_project_from_memory_manager()\n    [上下文]\n     886 |                 content_parts.append(f\"相关测试/命...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:27:28.811110",
+  "updated_at": "2026-05-29T14:27:28.811110",
+  "concepts": [
+    "tool_failure",
+    "search_code"
+  ],
+  "files": [
+    ".",
+    "core\\bm25_retriever.py",
+    "core\\compression_engine.py",
+    "core\\context.py",
+    "index.json",
+    "core\\engine.py",
+    "CLAUDE.md",
+    "core\\keyword_indexer.py",
+    "core\\memory_items.py",
+    "core\\memory_layers.py",
+    "index.pending.json",
+    "core\\memory_manager.py",
+    "memory/long_term/index.json",
+    "core\\memory_retrieval.py",
+    "core\\prompts.py",
+    "tests\\test_memory_items.py",
+    "tests\\test_memory_layers.py",
+    "tools/legacy_memory_tool.py",
+    "summary_corrupt_2024-01-01T00-00-00.json",
+    "memory_item_locked.json"
+  ],
+  "source_observation_ids": [
+    "obs_146fed8e3b1f4923ba7728052a23e0ee"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_146fed8e3b1f4923ba7728052a23e0ee",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:27:28.811110",
+      "event_type": "tool_failure",
+      "tool_name": "search_code",
+      "tool_input": {
+        "case_sensitive": false,
+        "context": 3,
+        "file_pattern": "*.py",
+        "path": ".",
+        "pattern": "long_term|MemoryItem|hybrid_recall|index\\."
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "[SEARCH] 搜索结果: 共找到 348 处匹配，分布在 23 个文件中\n\n================================================================================\n\n[FILE] core\\bm25_retriever.py (2 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n     288 |             return self.idf_cache[term]\n     289 | \n     290 |         # 计算包含该词项的文档数\n>>>  291 |         n_qi = len(self.inverted_index.get(term, set()))\n     292 | \n     293 |         # IDF 公式（使用平滑版本，避免除零）\n     294 |         idf = math.log(\n    [上下文]\n     421 |     def clear(self):\n     422 |         \"\"\"清空索引\"\"\"\n     423 |         self.documents.clear()\n>>>  424 |         self.inverted_index.clear()\n     425 |         self.idf_cache.clear()\n     426 |         self.avg_doc_length = 0.0\n     427 |         self.total_docs = 0\n\n[FILE] core\\compression_engine.py (15 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      18 | from datetime import datetime\n      19 | \n      20 | from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage\n>>>   21 | from core.memory_items import MemoryItem, MemoryKind\n      22 | from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2\n      23 | from core.turn_builder import ConversationTurn, TurnBuilder\n      24 | \n    [上下文]\n     835 |             token_count=sum(len(str(msg)) for msg in messages)\n     836 |         )\n     837 | \n>>>  838 |     def _promote_compression_result(self, result: CompressionResult) -> List[MemoryItem]:\n     839 |         \"\"\"Promote reusable knowledge from CompressedSessionState into long-term MemoryItems.\"\"\"\n     840 |         if not self.promotion_enabled or not self.memory_manager or not result or not result.success:\n     841 |             return []\n    [上下文]\n     836 |         )\n     837 | \n     838 |     def _promote_compression_result(self, result: CompressionResult) -> List[MemoryItem]:\n>>>  839 |         \"\"\"Promote reusable knowledge from CompressedSessionState into long-term MemoryItems.\"\"\"\n     840 |         if not self.promotion_enabled or not self.memory_manager or not result or not result.success:\n     841 |             return []\n     842 |         if not result.compressed_state:\n    [上下文]\n     843 |             return []\n     844 | \n     845 |         candidates = self._build_memory_promotion_candidates(result.compressed_state, result)\n>>>  846 |         promoted: List[MemoryItem] = []\n     847 |         seen = self._existing_memory_signatures()\n     848 |         for item in candidates:\n     849 |             signature = self._memory_item_signature(item)\n    [上下文]\n     862 |         self,\n     863 |         state: CompressedSessionState,\n     864 |         result: CompressionResult,\n>>>  865 |     ) -> List[MemoryItem]:\n     866 |         \"\"\"Convert compressed state facts into MemoryItem candidates aligned with memory module APIs.\"\"\"\n     867 |         candidates: List[MemoryItem] = []\n     868 |         source_turn_ids = list(state.source_turn_ids)\n    [上下文]\n     863 |         state: CompressedSessionState,\n     864 |         result: CompressionResult,\n     865 |     ) -> List[MemoryItem]:\n>>>  866 |         \"\"\"Convert compressed state facts into MemoryItem candidates aligned with memory module APIs.\"\"\"\n     867 |         candidates: List[MemoryItem] = []\n     868 |         source_turn_ids = list(state.source_turn_ids)\n     869 |         session_id = result.summary.session_id if result.summary else \"\"\n    [上下文]\n     864 |         result: CompressionResult,\n     865 |     ) -> List[MemoryItem]:\n     866 |         \"\"\"Convert compressed state facts into MemoryItem candidates aligned with memory module APIs.\"\"\"\n>>>  867 |         candidates: List[MemoryItem] = []\n     868 |         source_turn_ids = list(state.source_turn_ids)\n     869 |         session_id = result.summary.session_id if result.summary else \"\"\n     870 |         project = self._infer_project_from_memory_manager()\n    [上下文]\n     886 |                 content_parts.append(f\"相关测试/命...",
+      "files": [
+        ".",
+        "core\\bm25_retriever.py",
+        "core\\compression_engine.py",
+        "core\\context.py",
+        "index.json",
+        "core\\engine.py",
+        "CLAUDE.md",
+        "core\\keyword_indexer.py",
+        "core\\memory_items.py",
+        "core\\memory_layers.py",
+        "index.pending.json",
+        "core\\memory_manager.py",
+        "memory/long_term/index.json",
+        "core\\memory_retrieval.py",
+        "core\\prompts.py",
+        "tests\\test_memory_items.py",
+        "tests\\test_memory_layers.py",
+        "tools/legacy_memory_tool.py",
+        "summary_corrupt_2024-01-01T00-00-00.json",
+        "memory_item_locked.json"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

@@ -1,0 +1,91 @@
+{
+  "id": "mem_1f277c6aeae6470b94640e4dee3e3d22",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: memory_file_history",
+  "content": "📁 文件历史 tools/__init__.py 命中 3 条：\n\n1. [bug] 工具执行失败: search_code\n   ID: mem_c49693bed175480f8e8cb68df7021889\n   相关度: 9.476 | 来源: long_term_items | 原因: 匹配关键词/文本相关 8.25; 重要性 0.28; 时间 0.20; 文件匹配 0.75\n   内容: [SEARCH] 搜索结果: 共找到 54 处匹配，分布在 10 个文件中\n\n================================================================================\n\n[FILE] core\\engine.py (19 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      16 | from tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes, start_task_branch, finalize_task, start_plan_branch, finalize_plan\n      17 | \n      18 | # 检索增强导入\n>>>   19 | from core.keyword_indexer import KeywordIndexer\n      ...\n   文件: ., core\\engine.py, core\\memory_manager.py, core\\memory_retrieval.py, tests\\test_memory_items.py, tests\\test_memory_phase3.py, tests\\test_memory_phase4.py, tests\\test_openai_tool_pairing.py, tools\\memory_tool.py, tools\\retrieval_tool.py, tools\\__init__.py\n   概念: tool_failure, search_code\n\n2. [workflow] 工具执行成功: search_code\n   ID: mem_e5b949e8045e471e8343724dbe063cc7\n   相关度: 9.241 | 来源: long_term_items | 原因: 匹配关键词/文本相关 8.08; 重要性 0.21; 时间 0.20; 文件匹配 0.75\n   内容: [SEARCH] 搜索结果: 共找到 24 处匹配，分布在 5 个文件中\n\n================================================================================\n\n[FILE] core\\bm25_retriever.py (3 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      23 | \n      24 | \n>>>   25 | class BM25Retriever:\n      26 |     \"\"\"\n      27 |     BM25 检索器\n    [上下文]\n     438 |     def __repr__(self) -> str:\n     439 |         return (\n>>>  440 |             f\"BM25Retriever(docs={self.total_docs}, \"\n     44...\n   文件: ., core\\bm25_retriever.py, core\\engine.py, core\\keyword_indexer.py, tests\\test_memory_phase4.py, tools/retrieval_tool.py, tools\\retrieval_tool.py\n   概念: post_tool_use, search_code\n\n3. [task] 任务完成: 执行你的plan\n   ID: mem_0a9d3111b29749b59dc8854365e2d2f2\n   相关度: 8.867 | 来源: long_term_items | 原因: 匹配关键词/文本相关 7.20; 重要性 0.26; 时间 0.20; 文件匹配 1.20\n   内容: 执行你的plan\n   文件: index.json, memory/long_term/index.json, core/memory_layers.py, core/memory_manager.py, core/memory_items.py, core/memory_models.py, core/engine.py, tools/memory_tool.py, tools/__init__.py, summary_xxx.json, memory_item_xxx.json, core/memory_retrieval.py, core/prompts.py, core/memory_context_builder.py\n   概念: session_end, plan, LLM, mini-claude-code-cli, text, AgentEngine, RawObservation, MemoryManager, save_observation, save_memory_item, LongTermMemory, store_item, store, memory, long_term, json, index, MemoryRetriever, hybrid_recall, MemoryContextBuilder, Prompt",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:22:55.408423",
+  "updated_at": "2026-05-29T13:22:55.408423",
+  "concepts": [
+    "tool_failure",
+    "memory_file_history"
+  ],
+  "files": [
+    "tools/__init__.py",
+    "core\\engine.py",
+    "core\\memory_manager.py",
+    "core\\memory_retrieval.py",
+    "tests\\test_memory_items.py",
+    "tests\\test_memory_phase3.py",
+    "tests\\test_memory_phase4.py",
+    "tests\\test_openai_tool_pairing.py",
+    "tools\\memory_tool.py",
+    "tools\\retrieval_tool.py",
+    "tools\\__init__.py",
+    "core\\bm25_retriever.py",
+    "core\\keyword_indexer.py",
+    "tools/retrieval_tool.py",
+    "index.json",
+    "memory/long_term/index.json",
+    "core/memory_layers.py",
+    "core/memory_manager.py",
+    "core/memory_items.py",
+    "core/memory_models.py"
+  ],
+  "source_observation_ids": [
+    "obs_85326b64b55f43ce96f1973459d6a65b"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_85326b64b55f43ce96f1973459d6a65b",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:22:55.408423",
+      "event_type": "tool_failure",
+      "tool_name": "memory_file_history",
+      "tool_input": {
+        "path": "tools/__init__.py",
+        "top_k": 3
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "📁 文件历史 tools/__init__.py 命中 3 条：\n\n1. [bug] 工具执行失败: search_code\n   ID: mem_c49693bed175480f8e8cb68df7021889\n   相关度: 9.476 | 来源: long_term_items | 原因: 匹配关键词/文本相关 8.25; 重要性 0.28; 时间 0.20; 文件匹配 0.75\n   内容: [SEARCH] 搜索结果: 共找到 54 处匹配，分布在 10 个文件中\n\n================================================================================\n\n[FILE] core\\engine.py (19 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      16 | from tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes, start_task_branch, finalize_task, start_plan_branch, finalize_plan\n      17 | \n      18 | # 检索增强导入\n>>>   19 | from core.keyword_indexer import KeywordIndexer\n      ...\n   文件: ., core\\engine.py, core\\memory_manager.py, core\\memory_retrieval.py, tests\\test_memory_items.py, tests\\test_memory_phase3.py, tests\\test_memory_phase4.py, tests\\test_openai_tool_pairing.py, tools\\memory_tool.py, tools\\retrieval_tool.py, tools\\__init__.py\n   概念: tool_failure, search_code\n\n2. [workflow] 工具执行成功: search_code\n   ID: mem_e5b949e8045e471e8343724dbe063cc7\n   相关度: 9.241 | 来源: long_term_items | 原因: 匹配关键词/文本相关 8.08; 重要性 0.21; 时间 0.20; 文件匹配 0.75\n   内容: [SEARCH] 搜索结果: 共找到 24 处匹配，分布在 5 个文件中\n\n================================================================================\n\n[FILE] core\\bm25_retriever.py (3 处匹配)\n--------------------------------------------------------------------------------\n    [上下文]\n      23 | \n      24 | \n>>>   25 | class BM25Retriever:\n      26 |     \"\"\"\n      27 |     BM25 检索器\n    [上下文]\n     438 |     def __repr__(self) -> str:\n     439 |         return (\n>>>  440 |             f\"BM25Retriever(docs={self.total_docs}, \"\n     44...\n   文件: ., core\\bm25_retriever.py, core\\engine.py, core\\keyword_indexer.py, tests\\test_memory_phase4.py, tools/retrieval_tool.py, tools\\retrieval_tool.py\n   概念: post_tool_use, search_code\n\n3. [task] 任务完成: 执行你的plan\n   ID: mem_0a9d3111b29749b59dc8854365e2d2f2\n   相关度: 8.867 | 来源: long_term_items | 原因: 匹配关键词/文本相关 7.20; 重要性 0.26; 时间 0.20; 文件匹配 1.20\n   内容: 执行你的plan\n   文件: index.json, memory/long_term/index.json, core/memory_layers.py, core/memory_manager.py, core/memory_items.py, core/memory_models.py, core/engine.py, tools/memory_tool.py, tools/__init__.py, summary_xxx.json, memory_item_xxx.json, core/memory_retrieval.py, core/prompts.py, core/memory_context_builder.py\n   概念: session_end, plan, LLM, mini-claude-code-cli, text, AgentEngine, RawObservation, MemoryManager, save_observation, save_memory_item, LongTermMemory, store_item, store, memory, long_term, json, index, MemoryRetriever, hybrid_recall, MemoryContextBuilder, Prompt",
+      "files": [
+        "tools/__init__.py",
+        "core\\engine.py",
+        "core\\memory_manager.py",
+        "core\\memory_retrieval.py",
+        "tests\\test_memory_items.py",
+        "tests\\test_memory_phase3.py",
+        "tests\\test_memory_phase4.py",
+        "tests\\test_openai_tool_pairing.py",
+        "tools\\memory_tool.py",
+        "tools\\retrieval_tool.py",
+        "tools\\__init__.py",
+        "core\\bm25_retriever.py",
+        "core\\keyword_indexer.py",
+        "tools/retrieval_tool.py",
+        "index.json",
+        "memory/long_term/index.json",
+        "core/memory_layers.py",
+        "core/memory_manager.py",
+        "core/memory_items.py",
+        "core/memory_models.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

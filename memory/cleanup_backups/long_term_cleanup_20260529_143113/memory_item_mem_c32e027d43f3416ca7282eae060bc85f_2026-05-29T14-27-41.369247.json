@@ -1,0 +1,55 @@
+{
+  "id": "mem_c32e027d43f3416ca7282eae060bc85f",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/memory_layers.py (第 539 至 648 行，共 648 行) ---\n 539 |     def get_all_items(self) -> List[MemoryItem]:\n 540 |         \"\"\"获取所有 MemoryItem。\"\"\"\n 541 |         items = []\n 542 |         for item_id in list(self.item_index.keys()):\n 543 |             item = self.retrieve_item(item_id)\n 544 |             if item:\n 545 |                 items.append(item)\n 546 |         items.sort(key=lambda item: item.updated_at, reverse=True)\n 547 |         return items\n 548 | \n 549 |     def _remove_id_from_inverted_index(self, inverted_index: Dict[str, List[str]], record_id: str) -> None:\n 550 |         \"\"\"从倒排索引中移除某个记录 ID，用于更新同 ID 文件。\"\"\"\n 551 |         empty_keywords = []\n 552 |         for keyword, record_ids in inverted_index.items():\n 553 |             inverted_index[keyword] = [existing_id for existing_id in record_ids if existing_id != record_id]\n 554 |             if not inverted_index[keyword]:\n 555 |                 empty_keywords.append(keyword)\n 556 |         for keyword in empty_keywords:\n 557 |             inverted_index.pop(keyword, None)\n 558 | \n 559 |     def retrieve(self, session_id: str) -> Optional[SessionSummary]:\n 560 |         \"\"\"\n 561 |         根据 session_id 检索摘要\n 562 | \n 563 |         Args:\n 564 |             session_id: 会话 ID\n 565 | \n 566 |         Returns:\n 567 |             会话摘要，如果不存在返回 None\n 568 |         \"\"\"\n 569 |         file_path = self.index.get(session_id)\n 570 |         if not file_path or not file_path.exists():\n 571 |             return None\n 572 | \n 573 |         try:\n 574 |             with open(file_path, 'r', encoding='utf-8') as f:\n 575 |                 data = json.load(f)\n 576 |                 return SessionSummary.from_dict(data)\n 577 |         except Exception as e:\n 578 |             print(f\"⚠️ 读取摘要失败: {e}\")\n 579 |             return None\n 580 | \n 581 |     def search(self, query: str, top_k: int = 10) -> List[SessionSummary]:\n 582 |         \"\"\"\n 583 |         关键词检索摘要\n 584 | \n 585 |         Args:\n 586 |             query: 查询关键词\n 587 |             top_k: 返回结果数量\n 588 | \n 589 |         Returns:\n 590 |             匹配的摘要列表\n 591 |         \"\"\"\n 592 |         # 分词\n 593 |         keywords = self._tokenize(query)\n 594 | \n 595 |         # 查找匹配的 session_id\n 596 |         matched_session_ids = set()\n 597 |         for keyword in keywords:\n 598 |             if keyword in self.inverted_index:\n 599 |                 matched_session_ids.update(self.inverted_index[keyword])\n 600 | \n 601 |         # 加载匹配的摘要\n 602 |         results = []\n 603 |         for session_id in matched_session_ids:\n 604 |             summary = self.retrieve(session_id)\n 605 |             if summary:\n 606 |                 results.append(summary)\n 607 | \n 608 |         # 按重要性排序\n 609 |         results.sort(key=lambda s: s.importance, reverse=True)\n 610 | \n 611 |         return results[:top_k]\n 612 | \n 613 |     def get_all_session_ids(self) -> List[str]:\n 614 |         \"\"\"获取所有会话 ID\"\"\"\n 615 |         return list(self.index.keys())\n 616 | \n 617 |     def count(self) -> int:\n 618 |         \"\"\"获取摘要总数\"\"\"\n 619 |         return len(self.index)\n 620 | \n 621 |     def clear(self):\n 622 |         \"\"\"清空长期记忆（删除所有文件）\"\"\"\n 623 |         import shutil\n 624 | \n 625 |         # 删除所有摘要文件\n 626 |         for file_path in self.index.values():\n 627 |             if file_path.exists():\n 628 |                 file_path.unlink()\n 629 | \n 630 |         # 删除所有 MemoryItem 文件\n 631 |         for file_path in self.item_index.values():\n 632 |             if file_path.exists():\n 633 |                 file_path.unlink()\n 634 | \n 635 |         # 清空索引\n 636 |         self.index.clear()\n 637 |         self.item_index.clear()\n 638 |         self.inverted_index.clear()\n 639 |         self.item_inverted_index.clear()\n 640 | \n 641 |         # 保存空索引\n 642 |         self._save_index()\n 643 | \n 644 |     def __len__(self) -> int:\n 645 |         return len(self.index) + len(self.item_index)\n 646 | \n 647 |     def __repr__(self) -> str:\n 648 |         return f\"LongTermMemory(summarie...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T14:27:41.369247",
+  "updated_at": "2026-05-29T14:27:41.369247",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/memory_layers.py"
+  ],
+  "source_observation_ids": [
+    "obs_f22ed34b862647449406b2a8dacb229f"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_f22ed34b862647449406b2a8dacb229f",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T14:27:41.369247",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 648,
+        "path": "core/memory_layers.py",
+        "raw_mode": false,
+        "start_line": 539
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/memory_layers.py (第 539 至 648 行，共 648 行) ---\n 539 |     def get_all_items(self) -> List[MemoryItem]:\n 540 |         \"\"\"获取所有 MemoryItem。\"\"\"\n 541 |         items = []\n 542 |         for item_id in list(self.item_index.keys()):\n 543 |             item = self.retrieve_item(item_id)\n 544 |             if item:\n 545 |                 items.append(item)\n 546 |         items.sort(key=lambda item: item.updated_at, reverse=True)\n 547 |         return items\n 548 | \n 549 |     def _remove_id_from_inverted_index(self, inverted_index: Dict[str, List[str]], record_id: str) -> None:\n 550 |         \"\"\"从倒排索引中移除某个记录 ID，用于更新同 ID 文件。\"\"\"\n 551 |         empty_keywords = []\n 552 |         for keyword, record_ids in inverted_index.items():\n 553 |             inverted_index[keyword] = [existing_id for existing_id in record_ids if existing_id != record_id]\n 554 |             if not inverted_index[keyword]:\n 555 |                 empty_keywords.append(keyword)\n 556 |         for keyword in empty_keywords:\n 557 |             inverted_index.pop(keyword, None)\n 558 | \n 559 |     def retrieve(self, session_id: str) -> Optional[SessionSummary]:\n 560 |         \"\"\"\n 561 |         根据 session_id 检索摘要\n 562 | \n 563 |         Args:\n 564 |             session_id: 会话 ID\n 565 | \n 566 |         Returns:\n 567 |             会话摘要，如果不存在返回 None\n 568 |         \"\"\"\n 569 |         file_path = self.index.get(session_id)\n 570 |         if not file_path or not file_path.exists():\n 571 |             return None\n 572 | \n 573 |         try:\n 574 |             with open(file_path, 'r', encoding='utf-8') as f:\n 575 |                 data = json.load(f)\n 576 |                 return SessionSummary.from_dict(data)\n 577 |         except Exception as e:\n 578 |             print(f\"⚠️ 读取摘要失败: {e}\")\n 579 |             return None\n 580 | \n 581 |     def search(self, query: str, top_k: int = 10) -> List[SessionSummary]:\n 582 |         \"\"\"\n 583 |         关键词检索摘要\n 584 | \n 585 |         Args:\n 586 |             query: 查询关键词\n 587 |             top_k: 返回结果数量\n 588 | \n 589 |         Returns:\n 590 |             匹配的摘要列表\n 591 |         \"\"\"\n 592 |         # 分词\n 593 |         keywords = self._tokenize(query)\n 594 | \n 595 |         # 查找匹配的 session_id\n 596 |         matched_session_ids = set()\n 597 |         for keyword in keywords:\n 598 |             if keyword in self.inverted_index:\n 599 |                 matched_session_ids.update(self.inverted_index[keyword])\n 600 | \n 601 |         # 加载匹配的摘要\n 602 |         results = []\n 603 |         for session_id in matched_session_ids:\n 604 |             summary = self.retrieve(session_id)\n 605 |             if summary:\n 606 |                 results.append(summary)\n 607 | \n 608 |         # 按重要性排序\n 609 |         results.sort(key=lambda s: s.importance, reverse=True)\n 610 | \n 611 |         return results[:top_k]\n 612 | \n 613 |     def get_all_session_ids(self) -> List[str]:\n 614 |         \"\"\"获取所有会话 ID\"\"\"\n 615 |         return list(self.index.keys())\n 616 | \n 617 |     def count(self) -> int:\n 618 |         \"\"\"获取摘要总数\"\"\"\n 619 |         return len(self.index)\n 620 | \n 621 |     def clear(self):\n 622 |         \"\"\"清空长期记忆（删除所有文件）\"\"\"\n 623 |         import shutil\n 624 | \n 625 |         # 删除所有摘要文件\n 626 |         for file_path in self.index.values():\n 627 |             if file_path.exists():\n 628 |                 file_path.unlink()\n 629 | \n 630 |         # 删除所有 MemoryItem 文件\n 631 |         for file_path in self.item_index.values():\n 632 |             if file_path.exists():\n 633 |                 file_path.unlink()\n 634 | \n 635 |         # 清空索引\n 636 |         self.index.clear()\n 637 |         self.item_index.clear()\n 638 |         self.inverted_index.clear()\n 639 |         self.item_inverted_index.clear()\n 640 | \n 641 |         # 保存空索引\n 642 |         self._save_index()\n 643 | \n 644 |     def __len__(self) -> int:\n 645 |         return len(self.index) + len(self.item_index)\n 646 | \n 647 |     def __repr__(self) -> str:\n 648 |         return f\"LongTermMemory(summarie...",
+      "files": [
+        "core/memory_layers.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "mem_a53f0ba57cef471fa7e994672b708146",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/context.py (第 225 至 666 行，共 666 行) ---\n 225 |     async def compress(self, llm_summarizer_func, strategy: CompressionStrategy = None):\n 226 |         \"\"\"\n 227 |         执行异步压缩逻辑（Phase 3 增强版）\n 228 | \n 229 |         流程：\n 230 |         1. 检查是否需要压缩（基于 messages 或 working_memory）\n 231 |         2. 使用 CompressionEngine 选择压缩策略\n 232 |         3. 执行压缩\n 233 |         4. 存储摘要到三层记忆\n 234 | \n 235 |         Args:\n 236 |             llm_summarizer_func: 异步回调函数，接收 prompt，返回摘要文本\n 237 |             strategy: 指定压缩策略（None 表示自动选择）\n 238 | \n 239 |         Returns:\n 240 |             bool: 是否执行了压缩\n 241 |         \"\"\"\n 242 |         # 检查限制（支持 Phase 1, Phase 2, Phase 3）\n 243 |         current_tokens = sum(len(str(msg)) for msg in self.messages)\n 244 |         need_compress = current_tokens > self.max_history\n 245 | \n 246 |         # Phase 2: 检查工作记忆是否需要压缩\n 247 |         if self._enable_memory_layers and len(self.working_memory) >= self.working_memory.max_size:\n 248 |             need_compress = True\n 249 | \n 250 |         if not need_compress:\n 251 |             return False\n 252 | \n 253 |         print(f\"\\n[🧠 s06] 正在异步压缩上下文 (当前: {len(self.messages)}条)...\")\n 254 |         if self._enable_memory_layers:\n 255 |             print(f\"   [Phase 2] 工作记忆: {len(self.working_memory)}/{self.working_memory.max_size}\")\n 256 | \n 257 |         # Phase 3: 通过 MemoryManager 使用统一压缩入口\n 258 |         async with self.messages_lock:\n 259 |             source_messages = [dict(msg) if isinstance(msg, dict) else msg for msg in self.messages]\n 260 | \n 261 |         result = await self.memory_manager.compress_messages(\n 262 |             messages=source_messages,\n 263 |             strategy=strategy,\n 264 |             llm_summarizer_func=llm_summarizer_func,\n 265 |             min_keep=self.min_keep,\n 266 |             existing_summary=self.history_summary\n 267 |         )\n 268 | \n 269 |         if not result.success:\n 270 |             print(\"   [Phase 3] 压缩失败\")\n 271 |             sanitized_messages = self.compression_engine._sanitize_openai_tool_pairs(source_messages)\n 272 |             if sanitized_messages != source_messages:\n 273 |                 async with self.messages_lock:\n 274 |                     if self.messages[:len(source_messages)] == source_messages:\n 275 |                         appended_messages = self.messages[len(source_messages):]\n 276 |                         self.messages = sanitized_messages + appended_messages\n 277 |                         if self._enable_memory_layers:\n 278 |                             self.memory_manager.reset_working_memory(self.messages)\n 279 |                         print(\"   [Phase 3] 压缩失败后已执行 OpenAI tool pair 安全清理\")\n 280 |             return False\n 281 | \n 282 |         # 更新消息列表。注意：压缩期间可能有新消息被追加，不能用旧快照覆盖新消息。\n 283 |         async with self.messages_lock:\n 284 |             if self.messages[:len(source_messages)] == source_messages:\n 285 |                 appended_messages = self.messages[len(source_messages):]\n 286 |                 self.messages = result.compressed_messages + appended_messages\n 287 |             else:\n 288 |                 print(\"   [Phase 3] 检测到压缩期间消息被修改，跳过本次上下文替换\")\n 289 |                 return False\n 290 | \n 291 |         # Phase 2: 同步更新工作记忆\n 292 |         if self._enable_memory_layers:\n 293 |             self.memory_manager.reset_working_memory(self.messages)\n 294 | \n 295 |         # 如果有结构化摘要，存储到三层记忆\n 296 |         if result.summary:\n 297 |             # Phase 2: 添加到情景记忆\n 298 |             if self._enable_memory_layers:\n 299 |                 evicted_summary = self.memory_manager.save_summary(result.summary)\n 300 | \n 301 |                 if evicted_summary:\n 302 |                     print(f\"   [Phase 2] 情景记忆已满，归档到长期记忆: {evicted_summary.session_id}\")\n 303 | \n 304 |                 print(f\"   [Phase 2] 摘要已添加到情景记忆: {result.summary.session_id}\")\n 305 | \n 306 |             # 兼容 Phase 1: 存储到 session_summaries\n 307 |             self.session_summaries.append(result.summary)\n 308 | \n 309 |          ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:59:39.499761",
+  "updated_at": "2026-05-29T12:59:39.499761",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/context.py"
+  ],
+  "source_observation_ids": [
+    "obs_24f4f986fc9c492abd6a5cab93ccda95"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_24f4f986fc9c492abd6a5cab93ccda95",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:59:39.499761",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 666,
+        "path": "core/context.py",
+        "raw_mode": false,
+        "start_line": 225
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/context.py (第 225 至 666 行，共 666 行) ---\n 225 |     async def compress(self, llm_summarizer_func, strategy: CompressionStrategy = None):\n 226 |         \"\"\"\n 227 |         执行异步压缩逻辑（Phase 3 增强版）\n 228 | \n 229 |         流程：\n 230 |         1. 检查是否需要压缩（基于 messages 或 working_memory）\n 231 |         2. 使用 CompressionEngine 选择压缩策略\n 232 |         3. 执行压缩\n 233 |         4. 存储摘要到三层记忆\n 234 | \n 235 |         Args:\n 236 |             llm_summarizer_func: 异步回调函数，接收 prompt，返回摘要文本\n 237 |             strategy: 指定压缩策略（None 表示自动选择）\n 238 | \n 239 |         Returns:\n 240 |             bool: 是否执行了压缩\n 241 |         \"\"\"\n 242 |         # 检查限制（支持 Phase 1, Phase 2, Phase 3）\n 243 |         current_tokens = sum(len(str(msg)) for msg in self.messages)\n 244 |         need_compress = current_tokens > self.max_history\n 245 | \n 246 |         # Phase 2: 检查工作记忆是否需要压缩\n 247 |         if self._enable_memory_layers and len(self.working_memory) >= self.working_memory.max_size:\n 248 |             need_compress = True\n 249 | \n 250 |         if not need_compress:\n 251 |             return False\n 252 | \n 253 |         print(f\"\\n[🧠 s06] 正在异步压缩上下文 (当前: {len(self.messages)}条)...\")\n 254 |         if self._enable_memory_layers:\n 255 |             print(f\"   [Phase 2] 工作记忆: {len(self.working_memory)}/{self.working_memory.max_size}\")\n 256 | \n 257 |         # Phase 3: 通过 MemoryManager 使用统一压缩入口\n 258 |         async with self.messages_lock:\n 259 |             source_messages = [dict(msg) if isinstance(msg, dict) else msg for msg in self.messages]\n 260 | \n 261 |         result = await self.memory_manager.compress_messages(\n 262 |             messages=source_messages,\n 263 |             strategy=strategy,\n 264 |             llm_summarizer_func=llm_summarizer_func,\n 265 |             min_keep=self.min_keep,\n 266 |             existing_summary=self.history_summary\n 267 |         )\n 268 | \n 269 |         if not result.success:\n 270 |             print(\"   [Phase 3] 压缩失败\")\n 271 |             sanitized_messages = self.compression_engine._sanitize_openai_tool_pairs(source_messages)\n 272 |             if sanitized_messages != source_messages:\n 273 |                 async with self.messages_lock:\n 274 |                     if self.messages[:len(source_messages)] == source_messages:\n 275 |                         appended_messages = self.messages[len(source_messages):]\n 276 |                         self.messages = sanitized_messages + appended_messages\n 277 |                         if self._enable_memory_layers:\n 278 |                             self.memory_manager.reset_working_memory(self.messages)\n 279 |                         print(\"   [Phase 3] 压缩失败后已执行 OpenAI tool pair 安全清理\")\n 280 |             return False\n 281 | \n 282 |         # 更新消息列表。注意：压缩期间可能有新消息被追加，不能用旧快照覆盖新消息。\n 283 |         async with self.messages_lock:\n 284 |             if self.messages[:len(source_messages)] == source_messages:\n 285 |                 appended_messages = self.messages[len(source_messages):]\n 286 |                 self.messages = result.compressed_messages + appended_messages\n 287 |             else:\n 288 |                 print(\"   [Phase 3] 检测到压缩期间消息被修改，跳过本次上下文替换\")\n 289 |                 return False\n 290 | \n 291 |         # Phase 2: 同步更新工作记忆\n 292 |         if self._enable_memory_layers:\n 293 |             self.memory_manager.reset_working_memory(self.messages)\n 294 | \n 295 |         # 如果有结构化摘要，存储到三层记忆\n 296 |         if result.summary:\n 297 |             # Phase 2: 添加到情景记忆\n 298 |             if self._enable_memory_layers:\n 299 |                 evicted_summary = self.memory_manager.save_summary(result.summary)\n 300 | \n 301 |                 if evicted_summary:\n 302 |                     print(f\"   [Phase 2] 情景记忆已满，归档到长期记忆: {evicted_summary.session_id}\")\n 303 | \n 304 |                 print(f\"   [Phase 2] 摘要已添加到情景记忆: {result.summary.session_id}\")\n 305 | \n 306 |             # 兼容 Phase 1: 存储到 session_summaries\n 307 |             self.session_summaries.append(result.summary)\n 308 | \n 309 |          ...",
+      "files": [
+        "core/context.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "mem_007a8b6ea6844150b5971fbf5864a786",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: run_pytest",
+  "content": "✅ 测试通过！\n============================= test session starts =============================\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\ncachedir: .pytest_cache\nrootdir: D:\\LLM\\mini-claude-code-cli\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 8 items\n\ntests/test_memory_phase5.py::test_memory_context_builder_respects_token_budget_and_deduplicates PASSED [ 12%]\ntests/test_memory_phase5.py::test_memory_context_builder_prioritizes_task_type_kinds PASSED [ 25%]\ntests/test_memory_phase5.py::test_memory_manager_build_prompt_memory_context_uses_budget_and_task_type PASSED [ 37%]\ntests/test_memory_phase5.py::test_memory_stats_tool_and_default_registration PASSED [ 50%]\ntests/test_memory_phase5.py::test_agent_engine_builds_file_and_error_history_context PASSED [ 62%]\ntests/test_memory_phase5.py::test_agent_engine_uses_memory_manager_recall_without_local_bm25_index PASSED [ 75%]\ntests/test_memory_phase5.py::test_memory_recall_tool_uses_memory_manager_hybrid_recall PASSED [ 87%]\ntests/test_memory_phase5.py::test_agent_engine_initializes_current_plan_branch_and_starts_plan_branch PASSED [100%]\n\n============================== 8 passed in 2.01s ==============================\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:49:52.350105",
+  "updated_at": "2026-05-29T12:49:52.350105",
+  "concepts": [
+    "test_result",
+    "run_pytest"
+  ],
+  "files": [
+    "tests/test_memory_phase5.py"
+  ],
+  "source_observation_ids": [
+    "obs_ed383d18e18143baa34a67f742db7c39"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_ed383d18e18143baa34a67f742db7c39",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:49:52.350105",
+      "event_type": "test_result",
+      "tool_name": "run_pytest",
+      "tool_input": {
+        "path": "tests/test_memory_phase5.py"
+      },
+      "tool_output": "✅ 测试通过！\n============================= test session starts =============================\nplatform win32 -- Python 3.11.5, pytest-9.0.3, pluggy-1.6.0 -- E:\\acaconda3\\python.exe\ncachedir: .pytest_cache\nrootdir: D:\\LLM\\mini-claude-code-cli\nplugins: anyio-3.5.0, hydra-core-1.3.2, asyncio-1.3.0\nasyncio: mode=Mode.STRICT, debug=False, asyncio_default_fixture_loop_scope=None, asyncio_default_test_loop_scope=function\ncollecting ... collected 8 items\n\ntests/test_memory_phase5.py::test_memory_context_builder_respects_token_budget_and_deduplicates PASSED [ 12%]\ntests/test_memory_phase5.py::test_memory_context_builder_prioritizes_task_type_kinds PASSED [ 25%]\ntests/test_memory_phase5.py::test_memory_manager_build_prompt_memory_context_uses_budget_and_task_type PASSED [ 37%]\ntests/test_memory_phase5.py::test_memory_stats_tool_and_default_registration PASSED [ 50%]\ntests/test_memory_phase5.py::test_agent_engine_builds_file_and_error_history_context PASSED [ 62%]\ntests/test_memory_phase5.py::test_agent_engine_uses_memory_manager_recall_without_local_bm25_index PASSED [ 75%]\ntests/test_memory_phase5.py::test_memory_recall_tool_uses_memory_manager_hybrid_recall PASSED [ 87%]\ntests/test_memory_phase5.py::test_agent_engine_initializes_current_plan_branch_and_starts_plan_branch PASSED [100%]\n\n============================== 8 passed in 2.01s ==============================\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_memory_phase5.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,57 @@
+{
+  "id": "mem_90e5a889d1cf4170846a98ad9dafe916",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "--- 文件: core/prompts.py (第 261 至 560 行，共 797 行) ---\n 261 |         \"list\": [\"符号表查询规范\"],\n 262 |     }\n 263 | \n 264 |     # 3. 提取任务关键词\n 265 |     task_keywords = set(task_description.lower().split())\n 266 | \n 267 |     # 4. 匹配相关段落\n 268 |     relevant_sections = []\n 269 |     for keyword in task_keywords:\n 270 |         if keyword in task_section_mapping:\n 271 |             for section_name in task_section_mapping[keyword]:\n 272 |                 if section_name in sections and section_name not in relevant_sections:\n 273 |                     relevant_sections.append(section_name)\n 274 | \n 275 |     # 5. 如果没有匹配，注入默认段落\n 276 |     if not relevant_sections:\n 277 |         # 默认注入最常用的规范\n 278 |         default_sections = [\"文件编辑工具选择规范\", \"测试驱动规范 (TDD)\"]\n 279 |         relevant_sections = [s for s in default_sections if s in sections]\n 280 | \n 281 |     # 6. 限制注入数量\n 282 |     relevant_sections = relevant_sections[:max_sections]\n 283 | \n 284 |     # 7. 组装注入内容\n 285 |     if relevant_sections:\n 286 |         injected_content = \"\\n### 项目特定规范 (CLAUDE.md - 按需注入):\\n\"\n 287 |         for section_name in relevant_sections:\n 288 |             injected_content += f\"\\n{sections[section_name]}\\n\"\n 289 |         return injected_content\n 290 | \n 291 |     return \"\"\n 292 | \n 293 | \n 294 | # ==================== 格式化函数 ====================\n 295 | \n 296 | def format_episodic_memory(episodic_memories: List[\"SessionSummary\"], max_items: int = 5) -> str:\n 297 |     \"\"\"\n 298 |     格式化情景记忆为可读文本（压缩格式）\n 299 | \n 300 |     Args:\n 301 |         episodic_memories: 情景记忆列表\n 302 |         max_items: 最多显示多少条\n 303 | \n 304 |     Returns:\n 305 |         格式化后的文本（压缩单行格式）\n 306 |     \"\"\"\n 307 |     if not episodic_memories:\n 308 |         return \"\"\n 309 | \n 310 |     lines = []\n 311 |     lines.append(\"### 🧠 情景记忆 (Episodic Memory):\")\n 312 |     lines.append(\"最近的任务摘要（按重要性排序）：\")\n 313 |     lines.append(\"\")\n 314 | \n 315 |     for i, ep in enumerate(episodic_memories[:max_items], 1):\n 316 |         # 压缩格式：✅ [时间] 核心描述 → 文件变更 (错误数)\n 317 |         status_icon = \"✅\" if ep.task_status == \"completed\" else \"⏳\"\n 318 | \n 319 |         # 时间压缩：2026-04-25T15:21:52 → 04-25 15:21\n 320 |         time_str = ep.timestamp[5:16].replace('T', ' ') if len(ep.timestamp) >= 16 else ep.timestamp[:19]\n 321 | \n 322 |         # 核心描述：优先使用摘要，其次目标（取前60字符）\n 323 |         core_desc = \"\"\n 324 |         if ep.summary_text:\n 325 |             core_desc = ep.summary_text[:60]\n 326 |         elif ep.task_goal:\n 327 |             core_desc = ep.task_goal[:60]\n 328 | \n 329 |         # 文件变更：最多显示3个文件名\n 330 |         files_str = \"\"\n 331 |         if ep.files_changed:\n 332 |             files = [f.path.split('/')[-1] for f in ep.files_changed[:3]]\n 333 |             files_str = \", \".join(files)\n 334 |             if len(ep.files_changed) > 3:\n 335 |                 files_str += f\" +{len(ep.files_changed)-3}\"\n 336 | \n 337 |         # 错误数：仅在有错误时显示\n 338 |         errors_str = \"\"\n 339 |         if ep.errors_encountered:\n 340 |             errors_str = f\" ({len(ep.errors_encountered)}错误)\"\n 341 | \n 342 |         # 组装压缩行\n 343 |         line = f\"{status_icon} [{time_str}] {core_desc}\"\n 344 |         if files_str:\n 345 |             line += f\" → {files_str}\"\n 346 |         line += errors_str\n 347 | \n 348 |         lines.append(line)\n 349 | \n 350 |     return \"\\n\".join(lines)\n 351 | \n 352 | \n 353 | def format_session_summaries(session_summaries: List[\"SessionSummary\"], max_items: int = 3) -> str:\n 354 |     \"\"\"\n 355 |     格式化会话摘要为可读文本（压缩格式）\n 356 | \n 357 |     Args:\n 358 |         session_summaries: 会话摘要列表\n 359 |         max_items: 最多显示多少条\n 360 | \n 361 |     Returns:\n 362 |         格式化后的文本（压缩单行格式）\n 363 |     \"\"\"\n 364 |     if not session_summaries:\n 365 |         return \"\"\n 366 | \n 367 |     lines = []\n 368 |     lines.append(\"### 📚 会话摘要 (Session Summaries):\")\n 369 |     lines.append(\"历史会话的关键信息：\")\n 370 |     lines.append(\"\")\n 371 | \n 372 |     for i, summary in enumerate(session_summaries[:max_items], 1):\n 373 |         # 压缩格式：✅ [时间] 核心...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T13:00:38.527238",
+  "updated_at": "2026-05-29T13:00:38.527238",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "core/prompts.py",
+    "CLAUDE.md"
+  ],
+  "source_observation_ids": [
+    "obs_03316d1070a1490787e81cda03a49d54"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_03316d1070a1490787e81cda03a49d54",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T13:00:38.527238",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "end_line": 560,
+        "path": "core/prompts.py",
+        "raw_mode": false,
+        "start_line": 261
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "--- 文件: core/prompts.py (第 261 至 560 行，共 797 行) ---\n 261 |         \"list\": [\"符号表查询规范\"],\n 262 |     }\n 263 | \n 264 |     # 3. 提取任务关键词\n 265 |     task_keywords = set(task_description.lower().split())\n 266 | \n 267 |     # 4. 匹配相关段落\n 268 |     relevant_sections = []\n 269 |     for keyword in task_keywords:\n 270 |         if keyword in task_section_mapping:\n 271 |             for section_name in task_section_mapping[keyword]:\n 272 |                 if section_name in sections and section_name not in relevant_sections:\n 273 |                     relevant_sections.append(section_name)\n 274 | \n 275 |     # 5. 如果没有匹配，注入默认段落\n 276 |     if not relevant_sections:\n 277 |         # 默认注入最常用的规范\n 278 |         default_sections = [\"文件编辑工具选择规范\", \"测试驱动规范 (TDD)\"]\n 279 |         relevant_sections = [s for s in default_sections if s in sections]\n 280 | \n 281 |     # 6. 限制注入数量\n 282 |     relevant_sections = relevant_sections[:max_sections]\n 283 | \n 284 |     # 7. 组装注入内容\n 285 |     if relevant_sections:\n 286 |         injected_content = \"\\n### 项目特定规范 (CLAUDE.md - 按需注入):\\n\"\n 287 |         for section_name in relevant_sections:\n 288 |             injected_content += f\"\\n{sections[section_name]}\\n\"\n 289 |         return injected_content\n 290 | \n 291 |     return \"\"\n 292 | \n 293 | \n 294 | # ==================== 格式化函数 ====================\n 295 | \n 296 | def format_episodic_memory(episodic_memories: List[\"SessionSummary\"], max_items: int = 5) -> str:\n 297 |     \"\"\"\n 298 |     格式化情景记忆为可读文本（压缩格式）\n 299 | \n 300 |     Args:\n 301 |         episodic_memories: 情景记忆列表\n 302 |         max_items: 最多显示多少条\n 303 | \n 304 |     Returns:\n 305 |         格式化后的文本（压缩单行格式）\n 306 |     \"\"\"\n 307 |     if not episodic_memories:\n 308 |         return \"\"\n 309 | \n 310 |     lines = []\n 311 |     lines.append(\"### 🧠 情景记忆 (Episodic Memory):\")\n 312 |     lines.append(\"最近的任务摘要（按重要性排序）：\")\n 313 |     lines.append(\"\")\n 314 | \n 315 |     for i, ep in enumerate(episodic_memories[:max_items], 1):\n 316 |         # 压缩格式：✅ [时间] 核心描述 → 文件变更 (错误数)\n 317 |         status_icon = \"✅\" if ep.task_status == \"completed\" else \"⏳\"\n 318 | \n 319 |         # 时间压缩：2026-04-25T15:21:52 → 04-25 15:21\n 320 |         time_str = ep.timestamp[5:16].replace('T', ' ') if len(ep.timestamp) >= 16 else ep.timestamp[:19]\n 321 | \n 322 |         # 核心描述：优先使用摘要，其次目标（取前60字符）\n 323 |         core_desc = \"\"\n 324 |         if ep.summary_text:\n 325 |             core_desc = ep.summary_text[:60]\n 326 |         elif ep.task_goal:\n 327 |             core_desc = ep.task_goal[:60]\n 328 | \n 329 |         # 文件变更：最多显示3个文件名\n 330 |         files_str = \"\"\n 331 |         if ep.files_changed:\n 332 |             files = [f.path.split('/')[-1] for f in ep.files_changed[:3]]\n 333 |             files_str = \", \".join(files)\n 334 |             if len(ep.files_changed) > 3:\n 335 |                 files_str += f\" +{len(ep.files_changed)-3}\"\n 336 | \n 337 |         # 错误数：仅在有错误时显示\n 338 |         errors_str = \"\"\n 339 |         if ep.errors_encountered:\n 340 |             errors_str = f\" ({len(ep.errors_encountered)}错误)\"\n 341 | \n 342 |         # 组装压缩行\n 343 |         line = f\"{status_icon} [{time_str}] {core_desc}\"\n 344 |         if files_str:\n 345 |             line += f\" → {files_str}\"\n 346 |         line += errors_str\n 347 | \n 348 |         lines.append(line)\n 349 | \n 350 |     return \"\\n\".join(lines)\n 351 | \n 352 | \n 353 | def format_session_summaries(session_summaries: List[\"SessionSummary\"], max_items: int = 3) -> str:\n 354 |     \"\"\"\n 355 |     格式化会话摘要为可读文本（压缩格式）\n 356 | \n 357 |     Args:\n 358 |         session_summaries: 会话摘要列表\n 359 |         max_items: 最多显示多少条\n 360 | \n 361 |     Returns:\n 362 |         格式化后的文本（压缩单行格式）\n 363 |     \"\"\"\n 364 |     if not session_summaries:\n 365 |         return \"\"\n 366 | \n 367 |     lines = []\n 368 |     lines.append(\"### 📚 会话摘要 (Session Summaries):\")\n 369 |     lines.append(\"历史会话的关键信息：\")\n 370 |     lines.append(\"\")\n 371 | \n 372 |     for i, summary in enumerate(session_summaries[:max_items], 1):\n 373 |         # 压缩格式：✅ [时间] 核心...",
+      "files": [
+        "core/prompts.py",
+        "CLAUDE.md"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}

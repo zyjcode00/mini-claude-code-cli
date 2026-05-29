@@ -1,0 +1,48 @@
+{
+  "id": "mem_45beedc8588f405389bee56b72cb5a3e",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: execute_bash",
+  "content": "STDOUT:\nagent/plan-5caa5b74\norigin\thttps://github.com/zyjcode00/mini-claude-code-cli.git (fetch)\norigin\thttps://github.com/zyjcode00/mini-claude-code-cli.git (push)\n## agent/plan-5caa5b74\na334baa (HEAD -> agent/plan-5caa5b74, main) 🎯 [Task-2] Auto snapshot\n5c1470a 🎯 [Plan-fe2d5ae7] 执行阶段 A：删除 D:\\LLM\\mini-claude-code-cli 中 AgentEngine 里的独立 BM25/Keyword 检索旧逻辑，并补测试确认 memory_recall / hybrid_recall 仍正常\nebd4907 (origin/main) 🎯 [Fallback] Plan completed\n3cd1d74 🎯 [Task-3] Auto snapshot\n6df42c2 🎯 [Task-2] Auto snapshot\n",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T19:11:48.754827",
+  "updated_at": "2026-05-28T19:11:48.754827",
+  "concepts": [
+    "post_tool_use",
+    "execute_bash"
+  ],
+  "files": [],
+  "source_observation_ids": [
+    "obs_61d05b1e5e8a4807856fb8291995b7a5"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_61d05b1e5e8a4807856fb8291995b7a5",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T19:11:48.754827",
+      "event_type": "post_tool_use",
+      "tool_name": "execute_bash",
+      "tool_input": {
+        "command": "git branch --show-current && git remote -v && git status --short --branch && git log --oneline --decorate -5"
+      },
+      "tool_output": "STDOUT:\nagent/plan-5caa5b74\norigin\thttps://github.com/zyjcode00/mini-claude-code-cli.git (fetch)\norigin\thttps://github.com/zyjcode00/mini-claude-code-cli.git (push)\n## agent/plan-5caa5b74\na334baa (HEAD -> agent/plan-5caa5b74, main) 🎯 [Task-2] Auto snapshot\n5c1470a 🎯 [Plan-fe2d5ae7] 执行阶段 A：删除 D:\\LLM\\mini-claude-code-cli 中 AgentEngine 里的独立 BM25/Keyword 检索旧逻辑，并补测试确认 memory_recall / hybrid_recall 仍正常\nebd4907 (origin/main) 🎯 [Fallback] Plan completed\n3cd1d74 🎯 [Task-3] Auto snapshot\n6df42c2 🎯 [Task-2] Auto snapshot\n",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

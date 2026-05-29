@@ -1,0 +1,54 @@
+{
+  "id": "mem_1c875aa05ec046f7abf073c35268fb11",
+  "kind": "workflow",
+  "type": "workflow",
+  "title": "工具执行成功: edit_file",
+  "content": "成功: 已更新 tests/test_turn_builder.py。修改已持久化。",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-29T12:09:48.376563",
+  "updated_at": "2026-05-29T12:09:48.376563",
+  "concepts": [
+    "post_tool_use",
+    "edit_file"
+  ],
+  "files": [
+    "tests/test_turn_builder.py"
+  ],
+  "source_observation_ids": [
+    "obs_5c68545a37f8488ba5f675322ff481bc"
+  ],
+  "source_session_ids": [
+    "memory"
+  ],
+  "importance": 0.6,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_5c68545a37f8488ba5f675322ff481bc",
+      "session_id": "memory",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-29T12:09:48.376563",
+      "event_type": "post_tool_use",
+      "tool_name": "edit_file",
+      "tool_input": {
+        "new_str": "    assert messages[3] not in result.compressed_messages\n    assert messages[4] in result.compressed_messages\n    assert messages[5] in result.compressed_messages\n    assert messages[6] in result.compressed_messages",
+        "old_str": "    assert messages[3] in result.compressed_messages\n    assert messages[4] in result.compressed_messages\n    assert messages[5] not in result.compressed_messages\n    assert messages[6] in result.compressed_messages",
+        "path": "tests/test_turn_builder.py"
+      },
+      "tool_output": "成功: 已更新 tests/test_turn_builder.py。修改已持久化。",
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": null,
+      "files": [
+        "tests/test_turn_builder.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": true
+      }
+    }
+  }
+}

@@ -1,0 +1,55 @@
+{
+  "id": "mem_6fc6e07f82cd4bb5af2a9466b6b3b0c8",
+  "kind": "bug",
+  "type": "bug",
+  "title": "工具执行失败: read_file",
+  "content": "\"\"\"长期记忆工具：memory_save / memory_recall / memory_file_history / memory_error_history。\"\"\"\n\nfrom __future__ import annotations\n\nfrom typing import Any, Dict, List, Optional\n\nfrom pydantic import BaseModel, Field\n\nfrom core.memory_items import MemoryItem, MemoryKind, MemoryRecallResult\nfrom core.memory_manager import MemoryManager\nfrom tools.base import BaseTool\n\n\nclass MemorySaveArgs(BaseModel):\n    kind: str = Field(default=MemoryKind.FACT.value, description=\"记忆类型，如 fact/architecture/preference/bug/workflow/decision/task\")\n    title: str = Field(..., description=\"记忆标题，简短描述这条长期记忆\")\n    content: str = Field(..., description=\"记忆正文，记录可复用的事实、经验、决策或工作流\")\n    files: List[str] = Field(default_factory=list, description=\"相关文件路径列表\")\n    concepts: List[str] = Field(default_factory=list, description=\"相关概念/关键词列表\")\n    importance: float = Field(default=0.6, description=\"重要性 0~1\")\n    confidence: float = Field(default=0.8, description=\"置信度 0~1\")\n    project: str = Field(default=\"\", description=\"项目名称，可选\")\n    metadata: Dict[str, Any] = Field(default_factory=dict, description=\"额外元数据，可选\")\n\n\nclass MemoryRecallArgs(BaseModel):\n    query: str = Field(..., description=\"召回查询文本\")\n    top_k: int = Field(default=5, description=\"最多返回几条记忆\")\n    include_summaries: bool = Field(default=True, description=\"是否包含旧 SessionSummary 兼容召回\")\n\n\nclass MemoryFileHistoryArgs(BaseModel):\n    path: str = Field(..., description=\"要查询历史的文件路径\")\n    top_k: int = Field(default=5, description=\"最多返回几条文件历史\")\n\n\nclass MemoryErrorHistoryArgs(BaseModel):\n    error: str = Field(..., description=\"错误类型、错误消息或 traceback 片段\")\n    top_k: int = Field(default=5, description=\"最多返回几条错误历史\")\n\n\nclass MemoryStatsArgs(BaseModel):\n    include_details: bool = Field(default=True, description=\"是否包含各层记忆明细统计\")\n\n\nclass MemorySaveTool(BaseTool):\n    name = \"memory_save\"\n    description = \"保存一条可长期复用的 MemoryItem，例如架构决策、Bug 修复经验、用户偏好或工作流。\"\n    args_schema = MemorySaveArgs\n\n    def __init__(self, memory_manager: Optional[MemoryManager] = None, long_term_storage_dir: str = \"memory/long_term\"):\n        self.memory_manager = memory_manager or MemoryManager(long_term_storage_dir=long_term_storage_dir)\n\n    def create_item(\n        self,\n        kind: str = MemoryKind.FACT.value,\n        title: str = \"\",\n        content: str = \"\",\n        files: Optional[List[str]] = None,\n        concepts: Optional[List[str]] = None,\n        importance: float = 0.6,\n        confidence: float = 0.8,\n        project: str = \"\",\n        metadata: Optional[Dict[str, Any]] = None,\n    ) -> MemoryItem:\n        return MemoryItem(\n            kind=kind,\n            title=title,\n            content=content,\n            project=project,\n            files=files or [],\n            concepts=concepts or [],\n            importance=importance,\n            confidence=confidence,\n            metadata=metadata or {},\n        )\n\n    def run(\n        self,\n        kind: str = MemoryKind.FACT.value,\n        title: str = \"\",\n        content: str = \"\",\n        files: Optional[List[str]] = None,\n        concepts: Optional[List[str]] = None,\n        importance: float = 0.6,\n        confidence: float = 0.8,\n        project: str = \"\",\n        metadata: Optional[Dict[str, Any]] = None,\n        **kwargs,\n    ) -> str:\n        try:\n            if not title or not content:\n                return \"❌ 保存失败: title 和 content 不能为空\"\n\n            item = self.create_item(\n                kind=kind,\n                title=title,\n                content=content,\n                files=files,\n                concepts=concepts,\n                importance=importance,\n                confidence=confidence,\n                project=project,\n                metadata=metadata,\n            )\n            path = self.memory_manager.save_memory_item(item)\n            return (\n                \"✅ 已保存长期记忆\\n\"\n                f\"ID: {item.id}\\n\"\n                f\"类型: {item.kind}\\n\"\n                f\"标题: {item.title}\\n\"\n                f\"文件: {', '.join(item.files) if item.files else '无'}\\n\"\n         ...",
+  "project": "mini-claude-code-cli",
+  "created_at": "2026-05-28T17:11:29.567265",
+  "updated_at": "2026-05-28T17:11:29.567265",
+  "concepts": [
+    "tool_failure",
+    "read_file"
+  ],
+  "files": [
+    "tools/memory_tool.py"
+  ],
+  "source_observation_ids": [
+    "obs_af9810e0b77943e6864645ba6fc5297a"
+  ],
+  "source_session_ids": [
+    "test"
+  ],
+  "importance": 0.8,
+  "confidence": 0.85,
+  "status": "active",
+  "version": 1,
+  "metadata": {
+    "raw_observation": {
+      "id": "obs_af9810e0b77943e6864645ba6fc5297a",
+      "session_id": "test",
+      "project": "mini-claude-code-cli",
+      "cwd": "D:\\LLM\\mini-claude-code-cli",
+      "timestamp": "2026-05-28T17:11:29.567265",
+      "event_type": "tool_failure",
+      "tool_name": "read_file",
+      "tool_input": {
+        "path": "tools/memory_tool.py",
+        "start_line": 1,
+        "end_line": 190,
+        "raw_mode": true
+      },
+      "tool_output": null,
+      "user_prompt": null,
+      "assistant_message": null,
+      "error": "\"\"\"长期记忆工具：memory_save / memory_recall / memory_file_history / memory_error_history。\"\"\"\n\nfrom __future__ import annotations\n\nfrom typing import Any, Dict, List, Optional\n\nfrom pydantic import BaseModel, Field\n\nfrom core.memory_items import MemoryItem, MemoryKind, MemoryRecallResult\nfrom core.memory_manager import MemoryManager\nfrom tools.base import BaseTool\n\n\nclass MemorySaveArgs(BaseModel):\n    kind: str = Field(default=MemoryKind.FACT.value, description=\"记忆类型，如 fact/architecture/preference/bug/workflow/decision/task\")\n    title: str = Field(..., description=\"记忆标题，简短描述这条长期记忆\")\n    content: str = Field(..., description=\"记忆正文，记录可复用的事实、经验、决策或工作流\")\n    files: List[str] = Field(default_factory=list, description=\"相关文件路径列表\")\n    concepts: List[str] = Field(default_factory=list, description=\"相关概念/关键词列表\")\n    importance: float = Field(default=0.6, description=\"重要性 0~1\")\n    confidence: float = Field(default=0.8, description=\"置信度 0~1\")\n    project: str = Field(default=\"\", description=\"项目名称，可选\")\n    metadata: Dict[str, Any] = Field(default_factory=dict, description=\"额外元数据，可选\")\n\n\nclass MemoryRecallArgs(BaseModel):\n    query: str = Field(..., description=\"召回查询文本\")\n    top_k: int = Field(default=5, description=\"最多返回几条记忆\")\n    include_summaries: bool = Field(default=True, description=\"是否包含旧 SessionSummary 兼容召回\")\n\n\nclass MemoryFileHistoryArgs(BaseModel):\n    path: str = Field(..., description=\"要查询历史的文件路径\")\n    top_k: int = Field(default=5, description=\"最多返回几条文件历史\")\n\n\nclass MemoryErrorHistoryArgs(BaseModel):\n    error: str = Field(..., description=\"错误类型、错误消息或 traceback 片段\")\n    top_k: int = Field(default=5, description=\"最多返回几条错误历史\")\n\n\nclass MemoryStatsArgs(BaseModel):\n    include_details: bool = Field(default=True, description=\"是否包含各层记忆明细统计\")\n\n\nclass MemorySaveTool(BaseTool):\n    name = \"memory_save\"\n    description = \"保存一条可长期复用的 MemoryItem，例如架构决策、Bug 修复经验、用户偏好或工作流。\"\n    args_schema = MemorySaveArgs\n\n    def __init__(self, memory_manager: Optional[MemoryManager] = None, long_term_storage_dir: str = \"memory/long_term\"):\n        self.memory_manager = memory_manager or MemoryManager(long_term_storage_dir=long_term_storage_dir)\n\n    def create_item(\n        self,\n        kind: str = MemoryKind.FACT.value,\n        title: str = \"\",\n        content: str = \"\",\n        files: Optional[List[str]] = None,\n        concepts: Optional[List[str]] = None,\n        importance: float = 0.6,\n        confidence: float = 0.8,\n        project: str = \"\",\n        metadata: Optional[Dict[str, Any]] = None,\n    ) -> MemoryItem:\n        return MemoryItem(\n            kind=kind,\n            title=title,\n            content=content,\n            project=project,\n            files=files or [],\n            concepts=concepts or [],\n            importance=importance,\n            confidence=confidence,\n            metadata=metadata or {},\n        )\n\n    def run(\n        self,\n        kind: str = MemoryKind.FACT.value,\n        title: str = \"\",\n        content: str = \"\",\n        files: Optional[List[str]] = None,\n        concepts: Optional[List[str]] = None,\n        importance: float = 0.6,\n        confidence: float = 0.8,\n        project: str = \"\",\n        metadata: Optional[Dict[str, Any]] = None,\n        **kwargs,\n    ) -> str:\n        try:\n            if not title or not content:\n                return \"❌ 保存失败: title 和 content 不能为空\"\n\n            item = self.create_item(\n                kind=kind,\n                title=title,\n                content=content,\n                files=files,\n                concepts=concepts,\n                importance=importance,\n                confidence=confidence,\n                project=project,\n                metadata=metadata,\n            )\n            path = self.memory_manager.save_memory_item(item)\n            return (\n                \"✅ 已保存长期记忆\\n\"\n                f\"ID: {item.id}\\n\"\n                f\"类型: {item.kind}\\n\"\n                f\"标题: {item.title}\\n\"\n                f\"文件: {', '.join(item.files) if item.files else '无'}\\n\"\n         ...",
+      "files": [
+        "tools/memory_tool.py"
+      ],
+      "metadata": {
+        "source": "AgentEngine.tool_dispatch",
+        "success": false
+      }
+    }
+  }
+}
