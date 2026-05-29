@@ -412,6 +412,7 @@ class MemoryRetriever:
         kinds: Optional[List[str]] = None,
         include_summaries: bool = True,
         include_items: bool = True,
+        current_task_goal: Optional[str] = None,  # 🔥 新增：当前任务目标
     ) -> List[MemoryRecallResult]:
         """统一 Hybrid Recall：用 RRF 融合 BM25、Vector 与 Metadata 召回。"""
         documents = self._build_documents(include_summaries=include_summaries, include_items=include_items)
@@ -534,7 +535,65 @@ class MemoryRetriever:
             ))
             if len(results) >= top_k:
                 break
+
+        # 🔥 新增：基于任务目标的相关性过滤
+        if current_task_goal and results:
+            results = self._filter_by_task_relevance(results, current_task_goal)
+
         return results
+
+    def _filter_by_task_relevance(
+        self,
+        results: List[MemoryRecallResult],
+        task_goal: str,
+        min_relevance_score: float = 0.15,
+    ) -> List[MemoryRecallResult]:
+        """
+        基于任务目标过滤记忆相关性
+
+        Args:
+            results: 检索结果列表
+            task_goal: 当前任务目标
+            min_relevance_score: 最小相关性阈值 (0-1)
+
+        Returns:
+            过滤后的结果列表
+        """
+        if not task_goal or not results:
+            return results
+
+        # 提取任务目标关键词
+        task_keywords = set(self._tokenize(task_goal.lower()))
+
+        if not task_keywords:
+            return results
+
+        filtered = []
+        for result in results:
+            # 提取记忆关键词
+            memory_keywords = set()
+
+            # 从标题提取
+            if result.item and hasattr(result.item, 'title') and result.item.title:
+                memory_keywords.update(self._tokenize(result.item.title.lower()))
+
+            # 从内容提取（限制前500字符）
+            if result.item and hasattr(result.item, 'content') and result.item.content:
+                content_preview = result.item.content[:500].lower()
+                memory_keywords.update(self._tokenize(content_preview))
+
+            # 计算 Jaccard 相似度
+            if task_keywords and memory_keywords:
+                overlap = task_keywords & memory_keywords
+                union = task_keywords | memory_keywords
+                relevance = len(overlap) / len(union) if union else 0
+
+                # 如果相关性足够高，保留
+                if relevance >= min_relevance_score:
+                    filtered.append(result)
+
+        # 如果过滤后为空，返回原始结果（避免过度过滤）
+        return filtered if filtered else results
 
     def _rrf_weights(
         self,

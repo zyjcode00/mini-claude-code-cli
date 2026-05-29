@@ -348,24 +348,77 @@ class AgentEngine:
 
         return "任务达到最大思考步数限制。"
 
+    def _is_simple_interaction(self, query: str) -> bool:
+        """判断是否为简单交互（不需要大量记忆注入）。"""
+        normalized = re.sub(r"[\s。！？!,.，、~～]+", "", query).lower()
+        simple_keywords = {
+            "你好", "您好", "hello", "hi", "hey", "在吗", "ok", "好的", "好", "嗯",
+            "继续", "接着", "goon", "thanks", "谢谢", "再见", "bye", "好的",
+            "是的", "对", "可以", "行", "没问题", "ok的", "okk", "oK"
+        }
+        return normalized in simple_keywords or len(normalized) <= 2
+
+    def _estimate_task_complexity(self, query: str) -> str:
+        """评估任务复杂度：simple/medium/complex"""
+        # 简单交互判断
+        if self._is_simple_interaction(query):
+            return "simple"
+
+        # 复杂任务关键词
+        complex_keywords = [
+            "重构", "实现", "修复", "开发", "编写", "创建", "删除", "迁移",
+            "测试", "调试", "优化", "修改", "添加", "集成", "部署"
+        ]
+        if any(kw in query for kw in complex_keywords):
+            return "complex"
+
+        # 中等复杂度
+        return "medium"
+
     def _build_relevant_memory_context(self, query: str, top_k: int = None) -> str:
         """召回与当前输入相关的长期记忆，并按 token budget 格式化为 prompt 注入文本。"""
         if not query or not getattr(self.context, "_enable_memory_layers", False):
             return ""
 
+        # 🔥 新增：任务复杂度评估与记忆预算调整
+        task_complexity = self._estimate_task_complexity(query)
+        if task_complexity == "simple":
+            # 简单交互：跳过记忆注入
+            print(" [💡] 检测到简单交互，跳过记忆注入")
+            return ""
+
+        # 根据复杂度调整预算
+        budget_multiplier = {"medium": 0.5, "complex": 1.0}.get(task_complexity, 1.0)
+        adjusted_budget = int(self.memory_token_budget * budget_multiplier)
+        adjusted_top_k = int((top_k or self.memory_recall_top_k) * budget_multiplier)
+
+        # 🔥 新增：提取当前任务目标（从 plan_manager）
+        current_task_goal = None
+        try:
+            if hasattr(self, 'plan_manager') and self.plan_manager:
+                # 尝试多种属性名获取任务目标
+                for attr in ("current_goal", "goal"):
+                    value = getattr(self.plan_manager, attr, None)
+                    if isinstance(value, str) and value.strip():
+                        current_task_goal = " ".join(value.split())
+                        break
+        except Exception as e:
+            print(f" [⚠️] 获取任务目标失败: {e}")
+
         try:
             context = self.context.memory_manager.build_prompt_memory_context(
                 query=query,
-                token_budget=self.memory_token_budget,
+                token_budget=adjusted_budget,
                 task_type=None,
-                top_k=top_k or self.memory_recall_top_k,
+                top_k=adjusted_top_k,
+                current_task_goal=current_task_goal,  # 🔥 传递任务目标
             )
         except Exception as e:
             print(f" [⚠️] 主动记忆召回失败: {e}")
             return ""
 
         if context:
-            print(" [🧠] 已按预算注入长期记忆上下文")
+            print(f" [🧠] 已按预算注入长期记忆上下文（复杂度:{task_complexity}, 预算:{adjusted_budget}）")
         return context
 
     def _build_pre_tool_memory_context(self, tool_name: str, tool_input: Dict[str, Any]) -> str:

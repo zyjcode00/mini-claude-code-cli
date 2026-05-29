@@ -167,6 +167,7 @@ class MemoryManager:
         kinds: Optional[List[str]] = None,
         include_summaries: bool = True,
         include_items: bool = True,
+        current_task_goal: Optional[str] = None,  # 🔥 新增：当前任务目标
     ) -> List[MemoryRecallResult]:
         """统一 Hybrid Recall 入口，返回标准 MemoryRecallResult。"""
         if not self.enabled:
@@ -179,6 +180,7 @@ class MemoryManager:
             kinds=kinds,
             include_summaries=include_summaries,
             include_items=include_items,
+            current_task_goal=current_task_goal,  # 🔥 传递任务目标
         )
 
     def retrieve_file_history(self, path: str, top_k: int = 5) -> List[MemoryRecallResult]:
@@ -202,6 +204,7 @@ class MemoryManager:
         file_path: Optional[str] = None,
         error_type: Optional[str] = None,
         kinds: Optional[List[str]] = None,
+        current_task_goal: Optional[str] = None,  # 🔥 新增：当前任务目标
     ) -> str:
         """召回并构建受 token budget 限制的 prompt 记忆上下文。"""
         if not self.enabled or not query:
@@ -214,6 +217,7 @@ class MemoryManager:
             kinds=kinds,
             include_summaries=True,
             include_items=True,
+            current_task_goal=current_task_goal,  # 🔥 传递任务目标
         )
         return self.context_builder.build(
             query=query,
