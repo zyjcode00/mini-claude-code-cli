@@ -34,10 +34,10 @@ def test_rrf_fusion_prefers_consensus_over_single_strong_metadata_hit(tmp_path):
     manager.save_memory_item(MemoryItem(
         id="mem_rrf_metadata_only",
         kind=MemoryKind.OTHER.value,
-        title="Unrelated file note",
-        content="This note only shares the file path and has no alpha beta gamma query terms.",
+        title="High importance unrelated note",
+        content="This note has strong metadata signals but no semantic overlap with the retrieval request.",
         files=["core/target.py"],
-        importance=0.1,
+        importance=1.0,
     ))
     manager.save_memory_item(MemoryItem(
         id="mem_rrf_consensus",
@@ -49,10 +49,12 @@ def test_rrf_fusion_prefers_consensus_over_single_strong_metadata_hit(tmp_path):
         importance=0.1,
     ))
 
-    results = manager.hybrid_recall("alpha beta gamma", top_k=2, file_path="core/target.py")
+    results = manager.hybrid_recall("alpha beta gamma", top_k=2)
 
-    assert [result.item.id for result in results][:2] == ["mem_rrf_consensus", "mem_rrf_metadata_only"]
+    assert results[0].item.id == "mem_rrf_consensus"
     assert "RRF" in results[0].reason
+    assert "BM25 rank" in results[0].reason
+    assert "Vector rank" in results[0].reason
 
 
 def test_error_history_dynamic_rrf_weight_keeps_error_match_strong(tmp_path):

@@ -441,11 +441,18 @@ class MemoryRetriever:
             reason = f"BM25 rank{rank}"
             if matched:
                 reason += f" ({matched})"
+            reason += f"; BM25相关 {hit.score:.2f}"
             retrieval_hits.append(RetrievalHit(hit.doc_id, rank, hit.score, "bm25", reason))
 
         for rank, hit in enumerate(sorted(vector_hits.values(), key=lambda item: item.score, reverse=True), start=1):
             vector_by_doc[hit.doc_id] = hit
-            retrieval_hits.append(RetrievalHit(hit.doc_id, rank, hit.score, "vector", f"Vector rank{rank}"))
+            retrieval_hits.append(RetrievalHit(
+                hit.doc_id,
+                rank,
+                hit.score,
+                "vector",
+                f"Vector rank{rank}; Vector相关 {hit.score:.2f}",
+            ))
 
         metadata_raw: List[Tuple[MemoryDocument, float, List[str]]] = []
         for doc in candidate_docs:
@@ -506,9 +513,9 @@ class MemoryRetriever:
         for doc, score, reasons in ranked:
             if doc.id in seen:
                 continue
-            if normalized_file and not (bm25_by_doc.get(doc.id) or vector_by_doc.get(doc.id) or metadata_by_doc.get(doc.id)):
+            if normalized_file and self._file_match_score(doc, normalized_file) <= 0:
                 continue
-            if normalized_error and not (bm25_by_doc.get(doc.id) or vector_by_doc.get(doc.id) or metadata_by_doc.get(doc.id)):
+            if normalized_error and self._error_match_score(doc, normalized_error) <= 0 and doc.kind != MemoryKind.BUG.value:
                 continue
             seen.add(doc.id)
             recalled_item = doc.to_memory_item()
