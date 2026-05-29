@@ -94,12 +94,12 @@ def test_memory_manager_export_import_memory_items_and_files():
             concepts=["SessionSummary", "兼容"],
         ))
 
-        exported = manager.export_memories(history_summary="历史摘要")
+        exported = manager.export_memories(history_summary="历史摘要", include_memory_items=True)
         assert exported["memory_items"][0]["id"] == "mem-export"
         assert exported["history_summary"] == "历史摘要"
 
         restored = MemoryManager(long_term_storage_dir=Path(temp_dir) / "restored")
-        restored.import_memories(exported)
+        restored.import_memories(exported, import_memory_items=True)
         recall_results = restored.recall("SessionSummary 兼容", top_k=1, include_summaries=False)
         assert recall_results[0].item.id == "mem-export"
 

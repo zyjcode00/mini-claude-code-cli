@@ -7,6 +7,8 @@
 import pytest
 import tempfile
 import shutil
+import json
+import os
 from pathlib import Path
 
 from core.memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory
@@ -371,6 +373,93 @@ class TestLongTermMemory:
         assert results[0].session_id == "legacy_file_path_test"
         assert results[0].task_status == "completed"
         assert results[0].files_changed[0].path == "tools/legacy_memory_tool.py"
+
+    def test_corrupt_index_is_backed_up_and_rebuilt(self):
+        """损坏 index.json 时应备份现场并重建出可解析的新索引。"""
+        summary_file = Path(self.temp_dir) / "summary_corrupt_2024-01-01T00-00-00.json"
+        summary_file.write_text(
+            json.dumps({
+                "session_id": "corrupt_index_rebuild",
+                "timestamp": "2024-01-01T00:00:00",
+                "summary_text": "索引损坏恢复测试",
+                "task_goal": "重建索引",
+                "task_status": "completed",
+                "files_changed": [],
+                "errors_encountered": [],
+                "tools_used": [],
+            }, ensure_ascii=False),
+            encoding="utf-8",
+        )
+        index_file = Path(self.temp_dir) / "index.json"
+        index_file.write_text('{"index": {"broken": "missing comma" "x": 1}', encoding="utf-8")
+
+        ltm = LongTermMemory(storage_dir=self.temp_dir)
+
+        backups = list(Path(self.temp_dir).glob("index.json.corrupt_*.bak"))
+        assert len(backups) == 1
+        assert json.loads(index_file.read_text(encoding="utf-8"))
+        assert ltm.retrieve("corrupt_index_rebuild") is not None
+
+    def test_save_index_writes_valid_json_atomically(self):
+        """保存索引应通过临时文件原子替换，最终 index.json 始终为合法 JSON。"""
+        ltm = LongTermMemory(storage_dir=self.temp_dir)
+        summary = SessionSummary(
+            session_id="atomic_save",
+            timestamp="2024-01-01T00:00:00",
+            summary_text="原子保存索引",
+            task_goal="避免半写入 JSON",
+            task_status="completed",
+        )
+
+        ltm.store(summary)
+
+        index_file = Path(self.temp_dir) / "index.json"
+        data = json.loads(index_file.read_text(encoding="utf-8"))
+        assert "atomic_save" in data["index"]
+        assert not list(Path(self.temp_dir).glob("index.*.tmp"))
+
+    def test_save_index_skips_unchanged_content(self, monkeypatch):
+        """索引内容未变化时不应重复 os.replace，降低启动期 Windows 文件占用冲突。"""
+        ltm = LongTermMemory(storage_dir=self.temp_dir)
+        summary = SessionSummary(
+            session_id="skip_unchanged",
+            timestamp="2024-01-01T00:00:00",
+            summary_text="跳过重复保存",
+            task_goal="降低启动写入",
+            task_status="completed",
+        )
+        ltm.store(summary)
+
+        calls = []
+
+        def fail_if_called(*args, **kwargs):
+            calls.append(args)
+            raise AssertionError("unchanged index should not be replaced")
+
+        monkeypatch.setattr("core.memory_layers.os.replace", fail_if_called)
+        ltm._save_index()
+
+        assert calls == []
+
+    def test_save_index_permission_error_keeps_pending_snapshot_and_cleans_tmp(self, monkeypatch):
+        """Windows 下 index.json 被占用导致 replace 拒绝访问时，应降级且不遗留 index.*.tmp。"""
+        ltm = LongTermMemory(storage_dir=self.temp_dir)
+        ltm.item_index["locked_item"] = Path(self.temp_dir) / "memory_item_locked.json"
+        real_replace = os.replace
+
+        def locked_replace(src, dst):
+            if Path(dst).name == "index.json":
+                raise PermissionError(5, "拒绝访问", str(dst))
+            return real_replace(src, dst)
+
+        monkeypatch.setattr("core.memory_layers.os.replace", locked_replace)
+        ltm._save_index()
+
+        pending_file = Path(self.temp_dir) / "index.pending.json"
+        assert pending_file.exists()
+        pending_data = json.loads(pending_file.read_text(encoding="utf-8"))
+        assert "locked_item" in pending_data["item_index"]
+        assert not list(Path(self.temp_dir).glob("index.*.tmp"))
 
     def test_clear(self):
         """测试清空"""

@@ -1,8 +1,8 @@
 # Mini Claude Code CLI 记忆系统重构路线与架构设计
 
-> 项目路径：`D:\LLM\mini-claude-code-cli`  
-> 文档位置：`docs/memory_system_refactor_roadmap.md`  
-> 参考项目：`D:\LLM\memory\agentmemory`  
+> 项目路径：`D:\LLM\mini-claude-code-cli`
+> 文档位置：`docs/memory_system_refactor_roadmap.md`
+> 参考项目：`D:\LLM\memory\agentmemory`
 > 结论：**建议重构，但不建议推倒重写。应保留现有三层记忆雏形，按 agentmemory 的“事件捕获 + 结构化记忆 + 混合检索 + 预算注入”思路渐进增强。**
 
 ---
@@ -703,34 +703,53 @@ memory_stats()
 
 ---
 
-### 阶段 5：Prompt 注入重构，引入 token budget
+### 阶段 5：Prompt 注入重构，引入 token budget 与 ContextAssembler
 
-目标：不再简单拼接记忆，而是按预算构造可控上下文。
+目标：不再简单拼接记忆，而是按预算构造可控上下文，并逐步升级为统一的 `ContextAssembler`。
 
-#### 任务 5.1：新增 MemoryContextBuilder
+当前状态：**长期记忆注入 MVP 已实现，完整上下文装配仍需补齐。**
+
+已落地能力：
+
+- `core/memory_context_builder.py` 提供 `MemoryContextBuilder`；
+- `MemoryManager.build_prompt_memory_context(...)` 统一执行 Hybrid Recall、排序、去重、截断和格式化；
+- `AgentEngine` 任务开始前通过 `MemoryManager` 构建 `[相关长期记忆]`；
+- 文件编辑前可自动召回 `memory_file_history`；
+- 测试失败后可自动召回 `memory_error_history`；
+- `memory_recall` 工具继续委托 `MemoryManager.recall/hybrid_recall`，不再依赖独立 BM25 索引；
+- `tests/test_memory_phase5.py` 已覆盖以上回归。
+
+#### 任务 5.1：巩固 MemoryContextBuilder
 
 **做什么：**
 
 ```python
 class MemoryContextBuilder:
-    def build(self, query, memories, token_budget=1500):
+    def build(self, query, memories, token_budget=1500, task_type=None, max_items=None):
         ...
 ```
 
 输出结构：
 
 ```text
+[相关长期记忆]
 ### 相关长期记忆
+任务类型: code_edit
+
 1. [bug] DeepSeek reasoning_content 必须回传
-   来源: core/engine.py, session_xxx
+   来源: core/engine.py; long_term_items
+   相关度: 3.20; 原因: 文件路径匹配、任务类型匹配
    内容: ...
-
-### 相关文件历史
-- core/memory_layers.py: 曾修复 path/file_path 索引字段不一致
-
-### 用户偏好
-- 文档优先中文，保存到 docs 目录
 ```
+
+约束：
+
+1. 最多注入 5～8 条；
+2. 单条内容默认 80～200 字符；
+3. 保留来源、文件、相关度和命中原因；
+4. 去重相似内容；
+5. 过滤低置信度记忆；
+6. 按任务类型重排优先级。
 
 #### 任务 5.2：按任务类型选择记忆
 
@@ -738,21 +757,106 @@ class MemoryContextBuilder:
 
 | 当前任务 | 优先注入 |
 |---|---|
-| 代码修改 | 文件历史、bug、workflow |
-| 架构设计 | architecture、decision、semantic |
-| 测试失败 | error_history、bug、procedural |
-| 文档写作 | preference、architecture、recent docs |
+| 代码修改 | 文件历史、bug、workflow、decision、architecture |
+| 架构设计 | architecture、decision、fact、workflow |
+| 测试失败 | error_history、bug、procedural、workflow |
+| 文档写作 | preference、architecture、decision、recent docs |
 | git 操作 | workflow、用户安全偏好、历史事故 |
 
-#### 任务 5.3：控制噪声
+#### 任务 5.3：新增 ContextAssembler 统一预算
 
-**做什么：**
+**为什么需要：**
 
-1. 最多注入 5～8 条；
-2. 每条 80～200 字；
-3. 保留来源；
-4. 去重相似内容；
-5. 不注入低置信度过期记忆。
+`MemoryContextBuilder` 只解决“长期记忆片段怎么写入 Prompt”，但完整上下文还包括：
+
+- system prompt；
+- CLAUDE.md / 项目规范；
+- 当前 Plan；
+- 压缩摘要 / `CompressedSessionState`；
+- 最近完整 turns；
+- 当前用户请求；
+- provider 协议约束。
+
+这些目前仍由多处逻辑分散拼接，容易出现：
+
+- 长期记忆挤占最近上下文；
+- summary 超长；
+- 当前请求或 Plan 被压缩掉；
+- memory/user/system 消息插入 tool pair 中间；
+- OpenAI-compatible provider 发送前结构非法。
+
+**建议新增：**
+
+```text
+core/context_assembler.py
+```
+
+核心数据结构：
+
+```python
+@dataclass
+class ContextAssemblyInput:
+    system_prompt: str
+    plan_text: str
+    memory_context: str
+    compressed_state_text: str
+    recent_messages: list[dict]
+    current_user_message: dict
+    token_budget: int
+    provider: str
+
+@dataclass
+class ContextAssemblyResult:
+    system: str
+    messages: list[dict]
+    stats: dict
+    validation_result: dict | None
+```
+
+默认预算建议：
+
+| 上下文层 | 默认策略 |
+|---|---|
+| system / runtime rules | 不参与普通裁剪 |
+| current plan | 不可丢弃，过长时摘要化 |
+| memory context | 默认 800～1500 tokens |
+| compressed state | 默认 1200～2500 tokens |
+| recent complete turns | 保留总预算 40%～60%，按完整 turn 裁剪 |
+| current user message | 永远保留 |
+
+#### 任务 5.4：安全注入位置
+
+ContextAssembler 必须保证：
+
+1. memory/context summary 只能进入 system 附加段或独立 user context；
+2. 不允许插入 `assistant.tool_calls` 和对应 `tool` messages 中间；
+3. 不允许半截保留 tool pair；
+4. 不允许 summary message 携带 `tool_calls` 字段；
+5. 输出后必须通过 provider validator / sanitizer。
+
+#### 任务 5.5：测试
+
+已有测试：
+
+```text
+tests/test_memory_phase5.py
+```
+
+建议新增：
+
+```text
+tests/test_context_assembly_budget.py
+```
+
+覆盖：
+
+- 当前用户请求永远存在；
+- 当前 Plan 永远存在或显式为空；
+- memory budget 不超过上限；
+- memory 不挤掉 recent turns；
+- recent turns 不截断半个 tool pair；
+- compressed state 能稳定注入；
+- provider validator 通过。
 
 ---
 

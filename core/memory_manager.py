@@ -54,7 +54,12 @@ class MemoryManager:
         self.working_memory = working_memory or WorkingMemory(max_size=working_max_size)
         self.episodic_memory = episodic_memory or EpisodicMemory(max_size=episodic_max_size)
         self.long_term_memory = long_term_memory or LongTermMemory(storage_dir=long_term_storage_dir)
-        self.compression_engine = compression_engine or CompressionEngine(plan_manager=plan_manager)
+        self.compression_engine = compression_engine or CompressionEngine(
+            plan_manager=plan_manager,
+            memory_manager=self,
+        )
+        if compression_engine is not None and getattr(compression_engine, "memory_manager", None) is None:
+            compression_engine.memory_manager = self
         self.retriever = MemoryRetriever(
             self.working_memory,
             self.episodic_memory,
@@ -345,14 +350,31 @@ class MemoryManager:
             },
         }
 
-    def export_memories(self, session_summaries: Optional[List[SessionSummary]] = None, history_summary: str = "") -> Dict[str, Any]:
-        """导出可写入 session 文件的记忆数据。"""
+    def export_memories(
+        self,
+        session_summaries: Optional[List[SessionSummary]] = None,
+        history_summary: str = "",
+        include_memory_items: bool = False,
+    ) -> Dict[str, Any]:
+        """
+        导出可写入 session 文件的会话局部记忆数据。
+
+        注意：长期 MemoryItem 已持久化在 memory/long_term 目录，并由 index.json 管理。
+        默认不再把所有长期 MemoryItem 嵌入每个 session JSON，否则会导致：
+        1. session 文件随长期记忆规模线性膨胀；
+        2. 启动恢复 session 时重复 store_item 写回几百/几千条长期记忆；
+        3. Windows 下反复写 index.json，显著拖慢启动。
+        """
         session_summaries = session_summaries or []
+        memory_items = []
+        if include_memory_items and self.enabled:
+            memory_items = [item.to_dict() for item in self.long_term_memory.get_all_items()]
+
         if not self.enabled:
             return {
                 "working_memory": [],
                 "episodic_memory": [],
-                "memory_items": [],
+                "memory_items": memory_items,
                 "session_summaries": [s.to_dict() for s in session_summaries],
                 "history_summary": history_summary,
             }
@@ -360,16 +382,18 @@ class MemoryManager:
         return {
             "working_memory": self.working_memory.get_all(),
             "episodic_memory": [s.to_dict() for s in self.episodic_memory.get_all()],
-            "memory_items": [item.to_dict() for item in self.long_term_memory.get_all_items()],
+            "memory_items": memory_items,
             "session_summaries": [s.to_dict() for s in session_summaries],
             "history_summary": history_summary,
         }
 
-    def import_memories(self, data: Dict[str, Any]) -> Dict[str, Any]:
+    def import_memories(self, data: Dict[str, Any], import_memory_items: bool = False) -> Dict[str, Any]:
         """
-        导入 session 文件中的记忆数据。
+        导入 session 文件中的会话局部记忆数据。
 
         返回 Phase 1 兼容字段：history_summary 与 session_summaries。
+        默认跳过旧 session 内嵌的 memory_items，因为这些长期记忆已经在
+        memory/long_term/index.json 中加载；再次导入会造成启动期大量重复写盘。
         """
         session_summaries: List[SessionSummary] = []
         for s_dict in data.get("session_summaries", []):
@@ -390,11 +414,12 @@ class MemoryManager:
                 except Exception as e:
                     print(f"⚠️ 恢复情景记忆失败: {e}")
 
-            for item_dict in data.get("memory_items", []):
-                try:
-                    self.long_term_memory.store_item(MemoryItem.from_dict(item_dict))
-                except Exception as e:
-                    print(f"⚠️ 恢复 MemoryItem 失败: {e}")
+            if import_memory_items:
+                for item_dict in data.get("memory_items", []):
+                    try:
+                        self.long_term_memory.store_item(MemoryItem.from_dict(item_dict))
+                    except Exception as e:
+                        print(f"⚠️ 恢复 MemoryItem 失败: {e}")
 
         return {
             "history_summary": data.get("history_summary", ""),

@@ -2,15 +2,16 @@ import json
 import os
 import re
 from pathlib import Path
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Optional
 import anthropic
 import openai
 import asyncio
 from tools.base import BaseTool
 from core.prompts import get_system_prompt
 from core.context import ContextManager  # <--- 导入新管家
-from core.compression_engine import CompressionEngine  # OpenAI tool pair sanitizer
+from core.context_assembler import ContextAssembler, ContextBudget
 from core.memory_items import MemoryKind, ObservationType, RawObservation
+from core.memory_manager import MemoryManager
 
 # Git 自动化保险导入
 from tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes, start_task_branch, finalize_task, start_plan_branch, finalize_plan
@@ -18,7 +19,8 @@ from tools.git_tool import create_snapshot, rollback_to, has_uncommitted_changes
 class AgentEngine:
     def __init__(self, tools: List[BaseTool], model: str, plan_manager, # <--- 传入管家
                  base_url: str = None, api_key: str = None,
-                 max_history: int = 100, min_keep: int = 4, session_id="default"):
+                 max_history: int = 100, min_keep: int = 4, session_id="default",
+                 memory_manager: Optional[MemoryManager] = None):
         self.tools = tools
         self.model = model
         self.plan_manager = plan_manager  # <--- 保存管家引用
@@ -27,7 +29,13 @@ class AgentEngine:
 
         # --- 核心修改：使用 ContextManager 替代原有的 self.messages ---
         # 🔥 新增：传入 plan_manager，让压缩引擎能查询真实任务状态
-        self.context = ContextManager(max_history=max_history, min_keep=min_keep, plan_manager=plan_manager)
+        # 可注入共享 MemoryManager，使 tools 与上下文共用同一套长期记忆索引/缓存。
+        self.context = ContextManager(
+            max_history=max_history,
+            min_keep=min_keep,
+            plan_manager=plan_manager,
+            memory_manager=memory_manager,
+        )
         self.last_oa_msg = None
         self.session_id = session_id
         self.session_path = f"sessions/{session_id}.json"
@@ -40,6 +48,9 @@ class AgentEngine:
         # Phase 5: Prompt 记忆注入预算配置
         self.memory_token_budget = 1500
         self.memory_recall_top_k = 8
+        self.context_assembler = ContextAssembler(
+            ContextBudget(memory=self.memory_token_budget)
+        )
 
         self.is_openai_compat = base_url is not None or "claude" not in model.lower()
 
@@ -89,15 +100,20 @@ class AgentEngine:
             user_input=user_input  # 🔥 新增：用于 CLAUDE.md 按需注入
         )
 
-        # ========== 检索增强：注入相关历史 ==========
-        if relevant_history:
-            system_ptr += relevant_history
-        # ===========================================
-
-        # 🔥🔥🔥 Phase 4: 获取消息快照（并发安全）
+        # Phase 5: ContextAssembler 统一预算化装配。
+        # get_system_prompt 仍负责生成兼容旧行为的基础 system prompt；主动召回的
+        # relevant_history 作为 memory layer 交给 assembler，避免直接无预算拼接。
         messages_snapshot = await self.context.get_messages_snapshot()
-        if self.is_openai_compat:
-            messages_snapshot = CompressionEngine()._sanitize_openai_tool_pairs(messages_snapshot)
+        assembled_context = self.context_assembler.assemble(
+            base_system_prompt=system_ptr,
+            memory_context=relevant_history,
+            compressed_state=self.context.history_summary,
+            messages=messages_snapshot,
+            provider="openai" if self.is_openai_compat else "anthropic",
+            budget=ContextBudget(memory=self.memory_token_budget),
+        )
+        system_ptr = assembled_context.system_prompt
+        messages_snapshot = assembled_context.messages
 
         if self.is_openai_compat:
             oa_tools = [{"type": "function", "function": {"name": t["name"], "description": t["description"], "parameters": t["input_schema"]}} for t in self.tool_specs]

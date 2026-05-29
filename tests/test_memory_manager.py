@@ -112,6 +112,14 @@ def test_memory_manager_export_import_roundtrip_and_compat_fields():
         assert len(exported["working_memory"]) == 1
         assert exported["episodic_memory"][0]["session_id"] == "episodic_export"
         assert exported["session_summaries"][0]["session_id"] == "session_export"
+        assert exported["memory_items"] == []
+
+        exported_with_items = manager.export_memories(
+            session_summaries=[session_summary],
+            history_summary="历史摘要",
+            include_memory_items=True,
+        )
+        assert len(exported_with_items["memory_items"]) == len(manager.long_term_memory.item_index)
 
         restored = MemoryManager(long_term_storage_dir=temp_dir)
         imported = restored.import_memories(exported)
@@ -122,6 +130,31 @@ def test_memory_manager_export_import_roundtrip_and_compat_fields():
         assert restored.episodic_memory.get_all()[0].session_id == "episodic_export"
         # 旧状态 done 应在导入时归一化
         assert restored.episodic_memory.get_all()[0].task_status == "completed"
+
+
+def test_memory_manager_import_skips_embedded_memory_items_by_default():
+    with tempfile.TemporaryDirectory() as temp_dir:
+        manager = MemoryManager(long_term_storage_dir=temp_dir)
+        exported = manager.export_memories(include_memory_items=True)
+        exported["memory_items"] = [
+            {
+                "id": "legacy-embedded-item",
+                "kind": "fact",
+                "title": "旧 session 内嵌长期记忆",
+                "content": "启动恢复 session 时不应重复写入长期记忆。",
+                "created_at": "2024-01-01T00:00:00",
+                "updated_at": "2024-01-01T00:00:00",
+                "importance": 0.5,
+                "confidence": 0.8,
+            }
+        ]
+
+        restored = MemoryManager(long_term_storage_dir=temp_dir)
+        restored.import_memories(exported)
+        assert restored.long_term_memory.retrieve_item("legacy-embedded-item") is None
+
+        restored.import_memories(exported, import_memory_items=True)
+        assert restored.long_term_memory.retrieve_item("legacy-embedded-item") is not None
 
 
 def test_memory_manager_export_to_files_and_clear():

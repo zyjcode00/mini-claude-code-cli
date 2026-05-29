@@ -159,6 +159,26 @@ mini-claude-code-cli/
 | hybrid | 混合型任务 | 关键帧 + 语义摘要 |
 | timeline | 时序任务 | 保留时序关键节点 |
 
+**本次上下文压缩系统重构后的高级特性**：
+
+```text
+Turn 元数据 → 关键帧/摘要选择 → CompressedSessionState 结构化状态
+          → 长期记忆晋升 → ContextAssembler 预算化上下文装配
+          → AgentEngine 安全调用 LLM
+```
+
+新增能力包括：
+
+- **Turn 级结构化压缩**：压缩前先识别用户请求、助手响应、工具调用、工具结果和测试反馈，不再只按普通消息文本截断。
+- **关键帧增强**：代码修改、测试运行、错误 Traceback、Git 操作、用户决策等高价值节点会被优先保留，降低长任务中丢失关键工程上下文的概率。
+- **结构化压缩状态**：压缩结果不再只是自然语言摘要，而是包含任务状态、文件变更、测试状态、错误记录、关键决策和可复用经验的 `CompressedSessionState`。
+- **长期记忆自动晋升**：压缩过程中识别出的 bug 修复经验、架构决策、用户偏好和稳定工作流，可以晋升为长期 `MemoryItem`，供后续任务召回。
+- **统一上下文装配器**：`core/context_assembler.py` 统一装配 system prompt、当前计划、长期记忆、压缩状态、最近完整对话轮次和当前用户请求。
+- **预算化上下文控制**：通过 `ContextBudget` 对 system / memory / compressed state / recent turns 分区控量，在上下文窗口紧张时仍优先保留当前请求和关键任务状态。
+- **工具调用安全性**：OpenAI-compatible 消息会保持 `assistant.tool_calls` 与对应 `tool` 结果的原子性，避免压缩或截断后出现非法 tool message 序列。
+- **Provider 兼容校验**：上下文装配阶段会清理不完整 tool pair，并保证记忆和压缩摘要注入到安全位置，而不是插入工具调用链中间。
+- **测试覆盖关键风险**：新增测试覆盖预算优先级、当前请求保留、tool pair 原子性、长期记忆注入位置和 provider message validation。
+
 ### 7. 🧠 新长期记忆闭环 (MemoryManager + Hybrid Recall)
 
 在原有三层记忆基础上，项目进一步补充了面向 Code Agent 的长期记忆闭环：

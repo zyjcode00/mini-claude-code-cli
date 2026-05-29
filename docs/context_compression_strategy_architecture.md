@@ -1,7 +1,7 @@
 # Mini Claude Code CLI 上下文压缩策略优化架构规划
 
-> 项目路径：`D:\LLM\mini-claude-code-cli`  
-> 文档位置：`docs/context_compression_strategy_architecture.md`  
+> 项目路径：`D:\LLM\mini-claude-code-cli`
+> 文档位置：`docs/context_compression_strategy_architecture.md`
 > 关联文档：
 > - `docs/architecture_summary.md`
 > - `docs/memory_system_refactor_roadmap.md`
@@ -22,19 +22,19 @@
 
 但是当前压缩系统仍有几个结构性缺陷：
 
-1. **压缩单位仍偏 message 级别**  
+1. **压缩单位仍偏 message 级别**
    很多策略按消息列表裁剪，容易破坏一次用户请求、assistant 工具调用、tool 返回、assistant 总结之间的完整语义链。
 
-2. **tool call pair 只是在最后被清理，而不是从建模阶段就原子化**  
+2. **tool call pair 只是在最后被清理，而不是从建模阶段就原子化**
    当前 sanitizer 能止血，但理想系统应该在压缩前就把 `assistant(tool_calls) + tool responses` 视为不可拆分块。
 
-3. **压缩结果偏自然语言 summary，缺少结构化状态迁移**  
+3. **压缩结果偏自然语言 summary，缺少结构化状态迁移**
    Coding agent 真正需要保留的是：当前目标、已改文件、失败错误、测试状态、关键决策、未完成事项，而不是完整聊天。
 
-4. **长期记忆和上下文压缩边界还可以更清晰**  
+4. **长期记忆和上下文压缩边界还可以更清晰**
    压缩应负责“当前会话继续执行所需状态”；长期记忆应负责“跨会话可复用经验”。两者应协同，但不能互相替代。
 
-5. **缺少压缩质量可观测性**  
+5. **缺少压缩质量可观测性**
    目前很难知道一次压缩删除了什么、摘要保留了什么、是否丢失关键状态、是否发生 sanitizer 兜底。
 
 ---
@@ -655,20 +655,61 @@ pytest -q
 
 目标：统一 system、plan、memory、summary、recent turns 的预算和顺序。
 
-任务：
+当前状态：**已具备长期记忆 Prompt 预算注入的 MVP，尚未形成完整的全量 ContextAssembler。**
 
-1. 新增或扩展 `MemoryContextBuilder` / `ContextAssembler`；
-2. 明确各层预算；
-3. 防止长期记忆挤掉最近上下文；
-4. 注入内容只能进入 system/user 安全区域，不能插入 tool pair；
-5. 补 `tests/test_context_assembly_budget.py`。
+已经落地：
+
+1. 新增 `core/memory_context_builder.py` 中的 `MemoryContextBuilder`；
+2. `MemoryManager.build_prompt_memory_context(...)` 统一执行 Hybrid Recall + budget formatting；
+3. `AgentEngine._build_relevant_memory_context(...)` 在任务开始前通过 `MemoryManager` 注入相关长期记忆；
+4. 工具执行前后通过文件历史 / 错误历史召回，且延后写入，避免插入 `assistant.tool_calls` 与 `tool` 响应之间；
+5. `tests/test_memory_phase5.py` 已覆盖 budget、任务类型排序、统计工具、memory_recall 委托、文件/错误历史召回和 Plan branch 回归。
+
+Phase 5 的完整目标边界：
+
+| 层级 | 目标 | 当前状态 | 下一步 |
+|---|---|---|---|
+| System Prompt | 固定规则、CLAUDE.md、运行约束 | 由 `prompts.py` / engine 既有逻辑处理 | 统一纳入 ContextAssembler 输入 |
+| Current Plan | 当前任务目标、步骤、完成状态 | 由系统提示和 PlanManager 注入 | 设置硬预算与不可丢弃规则 |
+| Long-term Memory | 相关 MemoryItem / 历史摘要 | `MemoryContextBuilder` 已实现预算控制 | 和 summary/recent turns 统一竞争预算 |
+| Compressed Session State | 当前会话结构化状态 | Phase 3 已实现 `CompressedSessionState` | 明确注入位置和最大长度 |
+| Recent Complete Turns | 最近完整 turn，tool pair 原子化 | Phase 1/2 已建立 TurnBuilder 基础 | ContextAssembler 按 turn 装配，禁止半截截断 |
+| Provider Validation | 发送前协议安全 | 已有 sanitizer / tool pair 测试 | Phase 5 最终输出必须过 validator |
+
+建议补齐任务：
+
+1. 新增 `core/context_assembler.py`，定义 `ContextAssemblyInput` / `ContextAssemblyResult`；
+2. 明确默认预算，例如：
+   - plan：不可丢弃，约 500-1200 tokens；
+   - memory：默认 800-1500 tokens；
+   - compressed state：默认 1200-2500 tokens；
+   - recent turns：保留总预算的 40%-60%，且最后一条用户请求必须存在；
+3. ContextAssembler 只在安全区域插入 memory/summary：
+   - system prompt 附加段；或
+   - 新一轮 user 前的独立 user context；
+   - 禁止插入 assistant.tool_calls 与 tool response 中间；
+4. 对旧消息先走 TurnBuilder，按完整 turn 裁剪；
+5. 补 `tests/test_context_assembly_budget.py`，覆盖预算、顺序、最近 turn、当前请求和 provider validator。
 
 验收：
 
 - 当前用户请求永远存在；
+- 当前 Plan 永远存在或明确标记为空；
 - 最近完整 turns 不被半截截断；
-- memory 注入有长度上限；
-- provider validator 通过。
+- memory 注入有长度上限，不会挤掉 recent turns；
+- `CompressedSessionState` 能以稳定结构注入；
+- 注入内容只能进入 system/user 安全区域，不能插入 tool pair；
+- provider validator 通过；
+- 相关测试至少包括 `tests/test_memory_phase5.py` 与新增 `tests/test_context_assembly_budget.py`。
+
+推荐执行顺序：
+
+```text
+Phase 5A：保持现有 MemoryContextBuilder，补文档和回归测试
+Phase 5B：新增 ContextAssembler 数据结构，只做 deterministic assembly，不接 LLM
+Phase 5C：AgentEngine / ContextManager 改用 ContextAssembler 组装发送前上下文
+Phase 5D：接入 ProviderMessageValidator，形成发送前最终安全门
+```
 
 ### Phase 6：可观测性与压缩质量评估
 
