@@ -10,6 +10,7 @@ from typing import List, Dict, Any, Optional, Tuple
 from .memory_models import SessionSummary
 from .memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory
 from .memory_items import MemoryItem, MemoryKind, MemoryRecallResult
+from .memory_index import BM25MemoryDocument, BM25MemoryIndex
 
 
 @dataclass
@@ -361,29 +362,8 @@ class MemoryRetriever:
         return score
 
     def _tokenize(self, text: str) -> List[str]:
-        """
-        简单分词（支持中英文）
-
-        Args:
-            text: 输入文本
-
-        Returns:
-            词项列表
-        """
-        import re
-
-        # 英文单词
-        words = re.findall(r'\b[a-zA-Z]{2,}\b', text.lower())
-
-        # 中文分词（简单实现：提取 2-3 字的片段）
-        # 注意：这是简化版本，实际应用中应使用 jieba 等分词工具
-        chinese_2char = re.findall(r'[\u4e00-\u9fa5]{2}', text)
-        chinese_3char = re.findall(r'[\u4e00-\u9fa5]{3}', text)
-
-        # 合并并去重
-        chinese = list(set(chinese_2char + chinese_3char))
-
-        return words + chinese
+        """统一使用 BM25MemoryIndex 的 Phase 1 分词器。"""
+        return BM25MemoryIndex.tokenize(text)
 
     def hybrid_recall(
         self,
@@ -397,7 +377,10 @@ class MemoryRetriever:
     ) -> List[MemoryRecallResult]:
         """统一 Hybrid Recall：整合 MemoryItem、Episodic SessionSummary 与长期 SessionSummary。"""
         documents = self._build_documents(include_summaries=include_summaries, include_items=include_items)
-        query_terms = self._tokenize(" ".join(part for part in [query, file_path or "", error_type or ""] if part))
+        bm25_query = " ".join(part for part in [query, file_path or "", error_type or ""] if part)
+        query_terms = self._tokenize(bm25_query)
+        bm25_index = self._build_bm25_index(documents)
+        bm25_hits = {hit.doc_id: hit for hit in bm25_index.search(bm25_query, top_k=max(len(documents), top_k))}
         ranked: List[Tuple[MemoryDocument, float, List[str]]] = []
 
         normalized_file = self._normalize_path(file_path) if file_path else ""
@@ -415,7 +398,8 @@ class MemoryRetriever:
             if normalized_error and error_match <= 0 and doc.kind != MemoryKind.BUG.value:
                 continue
 
-            bm25_score = self._calculate_text_bm25_score(query_terms, doc.content) if query_terms else 0.0
+            bm25_hit = bm25_hits.get(doc.id)
+            bm25_score = bm25_hit.score if bm25_hit else 0.0
             importance_weight = max(0.0, min(doc.importance, 1.0)) * 0.35
             recency_weight = self._recency_weight(doc.timestamp)
             type_weight = self._type_weight(doc.kind, query)
@@ -423,7 +407,9 @@ class MemoryRetriever:
 
             reasons = []
             if bm25_score:
-                reasons.append(f"匹配关键词/文本相关 {bm25_score:.2f}")
+                matched = ", ".join((bm25_hit.matched_terms if bm25_hit else [])[:6])
+                suffix = f" ({matched})" if matched else ""
+                reasons.append(f"BM25相关 {bm25_score:.2f}{suffix}")
             if importance_weight:
                 reasons.append(f"重要性 {importance_weight:.2f}")
             if recency_weight:
@@ -466,6 +452,29 @@ class MemoryRetriever:
                 if summary:
                     documents.append(MemoryDocument.from_session_summary(summary, source_type="summary_compat"))
         return documents
+
+    def _build_bm25_index(self, documents: List[MemoryDocument]) -> BM25MemoryIndex:
+        index = BM25MemoryIndex()
+        for doc in documents:
+            index.add_or_update(BM25MemoryDocument(
+                doc_id=doc.id,
+                title=self._document_title(doc),
+                content=doc.content,
+                concepts=doc.concepts,
+                files=doc.files,
+                kind=doc.kind,
+                error=" ".join(doc.error_types),
+                project=doc.project,
+                metadata={"source_type": doc.source_type, "session_id": doc.session_id},
+            ))
+        return index
+
+    def _document_title(self, doc: MemoryDocument) -> str:
+        if doc.item:
+            return doc.item.title
+        if doc.summary:
+            return doc.summary.task_goal
+        return doc.id
 
     def _calculate_text_bm25_score(self, query_terms: List[str], text: str) -> float:
         doc_terms = self._tokenize(text)
