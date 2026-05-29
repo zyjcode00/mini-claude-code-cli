@@ -18,6 +18,7 @@ import re
 from datetime import datetime
 
 from core.memory_models import SessionSummary, FileChange, ErrorRecord, ToolUsage
+from core.memory_items import MemoryItem, MemoryKind
 from core.prompts import SUMMARY_PROMPT_TEMPLATE_V2
 from core.turn_builder import ConversationTurn, TurnBuilder
 
@@ -146,16 +147,26 @@ class CompressionEngine:
     3. SLIDING_WINDOW: 滑动窗口保留最近消息（默认、最可靠）
     """
 
-    def __init__(self, default_strategy: CompressionStrategy = None, plan_manager=None):
+    def __init__(
+        self,
+        default_strategy: CompressionStrategy = None,
+        plan_manager=None,
+        memory_manager=None,
+        promotion_enabled: bool = True,
+    ):
         """
         初始化压缩引擎
 
         Args:
             default_strategy: 默认压缩策略（None 表示自动选择）
             plan_manager: Plan 状态管理器（用于查询真实任务状态）
+            memory_manager: 可选 MemoryManager，用于把压缩状态晋升为长期记忆
+            promotion_enabled: 是否在压缩成功后自动晋升可复用经验
         """
         self.default_strategy = default_strategy
         self.plan_manager = plan_manager  # Plan 状态管理器
+        self.memory_manager = memory_manager
+        self.promotion_enabled = promotion_enabled
 
         # 策略选择阈值
         self.error_dense_threshold = 0.3      # 错误消息占比 > 30% → LLM_SUMMARY
@@ -213,15 +224,18 @@ class CompressionEngine:
 
         # 执行对应策略
         if strategy == CompressionStrategy.LLM_SUMMARY:
-            return await self._compress_with_llm(
+            result = await self._compress_with_llm(
                 messages, llm_summarizer_func, existing_summary, min_keep
             )
         elif strategy == CompressionStrategy.KEYFRAME:
-            return self._compress_with_keyframe(messages, target_ratio, min_keep)
+            result = self._compress_with_keyframe(messages, target_ratio, min_keep)
         elif strategy == CompressionStrategy.SLIDING_WINDOW:
-            return self._compress_with_sliding_window(messages, target_ratio, min_keep)
+            result = self._compress_with_sliding_window(messages, target_ratio, min_keep)
         else:
             raise ValueError(f"未知的压缩策略: {strategy}")
+
+        self._promote_compression_result(result)
+        return result
 
     def _select_strategy(self, messages: List[Dict[str, Any]]) -> CompressionStrategy:
         """
@@ -807,6 +821,183 @@ class CompressionEngine:
             message_count=len(messages),
             token_count=sum(len(str(msg)) for msg in messages)
         )
+
+    def _promote_compression_result(self, result: CompressionResult) -> List[MemoryItem]:
+        """Promote reusable knowledge from CompressedSessionState into long-term MemoryItems."""
+        if not self.promotion_enabled or not self.memory_manager or not result or not result.success:
+            return []
+        if not result.compressed_state:
+            return []
+
+        candidates = self._build_memory_promotion_candidates(result.compressed_state, result)
+        promoted: List[MemoryItem] = []
+        seen = self._existing_memory_signatures()
+        for item in candidates:
+            signature = self._memory_item_signature(item)
+            if signature in seen:
+                continue
+            saved_path = self.memory_manager.save_memory_item(item)
+            if saved_path:
+                promoted.append(item)
+                seen.add(signature)
+
+        result.metadata["promoted_memory_items"] = [item.to_dict() for item in promoted]
+        result.metadata["promoted_memory_item_ids"] = [item.id for item in promoted]
+        return promoted
+
+    def _build_memory_promotion_candidates(
+        self,
+        state: CompressedSessionState,
+        result: CompressionResult,
+    ) -> List[MemoryItem]:
+        """Convert compressed state facts into MemoryItem candidates aligned with memory module APIs."""
+        candidates: List[MemoryItem] = []
+        source_turn_ids = list(state.source_turn_ids)
+        session_id = result.summary.session_id if result.summary else ""
+        project = self._infer_project_from_memory_manager()
+        changed_files = [item.get("path", "") for item in state.files_changed if item.get("path")]
+        tests_text = "; ".join(
+            item.get("command") or item.get("summary", "")
+            for item in state.tests_run
+            if item.get("command") or item.get("summary")
+        )
+
+        for error in state.errors_encountered:
+            message = str(error.get("message", "")).strip()
+            if not message:
+                continue
+            files = list(dict.fromkeys((error.get("files") or []) + changed_files))[:10]
+            status = error.get("status") or ("resolved" if error.get("resolved") else "failed")
+            content_parts = [f"错误: {message}", f"状态: {status}"]
+            if tests_text:
+                content_parts.append(f"相关测试/命令: {tests_text}")
+            if state.key_decisions:
+                content_parts.append("处理决策: " + "; ".join(state.key_decisions[:3]))
+            candidates.append(MemoryItem(
+                kind=MemoryKind.BUG.value,
+                title=f"压缩晋升 Bug: {self._shorten_text(message, 80)}",
+                content="\n".join(content_parts),
+                project=project,
+                concepts=self._extract_memory_concepts(message, extra=["compression_promotion", "bug", status]),
+                files=files,
+                source_session_ids=[session_id] if session_id else [],
+                importance=0.85 if status == "resolved" else 0.75,
+                confidence=0.78,
+                metadata={
+                    "source": "compression_promotion",
+                    "promotion_kind": "bug",
+                    "source_turn_ids": [error.get("source_turn_id")] if error.get("source_turn_id") else source_turn_ids,
+                    "compressed_state_created_at": state.created_at,
+                    "error": dict(error),
+                },
+            ))
+
+        for decision in state.key_decisions:
+            clean = decision.strip()
+            if not clean:
+                continue
+            candidates.append(MemoryItem(
+                kind=MemoryKind.DECISION.value,
+                title=f"压缩晋升决策: {self._shorten_text(clean, 80)}",
+                content=clean,
+                project=project,
+                concepts=self._extract_memory_concepts(clean, extra=["compression_promotion", "decision"]),
+                files=changed_files[:10],
+                source_session_ids=[session_id] if session_id else [],
+                importance=0.72,
+                confidence=0.74,
+                metadata={
+                    "source": "compression_promotion",
+                    "promotion_kind": "decision",
+                    "source_turn_ids": source_turn_ids,
+                    "compressed_state_created_at": state.created_at,
+                },
+            ))
+
+        for preference in state.user_preferences:
+            clean = preference.strip()
+            if not clean:
+                continue
+            candidates.append(MemoryItem(
+                kind=MemoryKind.PREFERENCE.value,
+                title=f"压缩晋升偏好: {self._shorten_text(clean, 80)}",
+                content=clean,
+                project=project,
+                concepts=self._extract_memory_concepts(clean, extra=["compression_promotion", "preference"]),
+                files=changed_files[:10],
+                source_session_ids=[session_id] if session_id else [],
+                importance=0.8,
+                confidence=0.82,
+                metadata={
+                    "source": "compression_promotion",
+                    "promotion_kind": "preference",
+                    "source_turn_ids": source_turn_ids,
+                    "compressed_state_created_at": state.created_at,
+                },
+            ))
+
+        workflow_lines = []
+        for step in state.completed_steps[:6]:
+            workflow_lines.append(f"完成: {step}")
+        for command in state.commands_run[:6]:
+            command_text = command.get("command")
+            if command_text:
+                workflow_lines.append(f"命令: {command_text} ({command.get('status', 'unknown')})")
+        if workflow_lines and (state.tests_run or state.files_changed):
+            content = "\n".join(workflow_lines)
+            candidates.append(MemoryItem(
+                kind=MemoryKind.WORKFLOW.value,
+                title=f"压缩晋升工作流: {self._shorten_text(state.task_goal or content, 80)}",
+                content=content,
+                project=project,
+                concepts=self._extract_memory_concepts(content, extra=["compression_promotion", "workflow"]),
+                files=changed_files[:10],
+                source_session_ids=[session_id] if session_id else [],
+                importance=0.68,
+                confidence=0.72,
+                metadata={
+                    "source": "compression_promotion",
+                    "promotion_kind": "workflow",
+                    "source_turn_ids": source_turn_ids,
+                    "compressed_state_created_at": state.created_at,
+                },
+            ))
+
+        return candidates
+
+    def _existing_memory_signatures(self) -> set:
+        if not self.memory_manager or not hasattr(self.memory_manager, "long_term_memory"):
+            return set()
+        try:
+            return {self._memory_item_signature(item) for item in self.memory_manager.long_term_memory.get_all_items()}
+        except Exception:
+            return set()
+
+    def _memory_item_signature(self, item: MemoryItem) -> str:
+        raw = "\n".join([item.kind, item.title.strip().lower(), item.content.strip().lower(), "|".join(sorted(item.files))])
+        return hashlib.sha256(raw.encode("utf-8")).hexdigest()
+
+    def _infer_project_from_memory_manager(self) -> str:
+        storage_dir = getattr(getattr(self.memory_manager, "long_term_memory", None), "storage_dir", None)
+        if storage_dir:
+            try:
+                return str(storage_dir.parent)
+            except Exception:
+                return ""
+        return ""
+
+    def _shorten_text(self, text: str, limit: int = 80) -> str:
+        text = " ".join(str(text).split())
+        return text if len(text) <= limit else text[: limit - 1] + "…"
+
+    def _extract_memory_concepts(self, text: str, extra: Optional[List[str]] = None) -> List[str]:
+        concepts = list(extra or [])
+        for token in re.findall(r"[A-Za-z_][A-Za-z0-9_\.:-]{2,}|[\u4e00-\u9fff]{2,}", text):
+            if token not in concepts:
+                concepts.append(token)
+            if len(concepts) >= 12:
+                break
+        return concepts
 
     def _extract_compressed_state(
         self,

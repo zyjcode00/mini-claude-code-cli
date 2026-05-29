@@ -54,7 +54,12 @@ class MemoryManager:
         self.working_memory = working_memory or WorkingMemory(max_size=working_max_size)
         self.episodic_memory = episodic_memory or EpisodicMemory(max_size=episodic_max_size)
         self.long_term_memory = long_term_memory or LongTermMemory(storage_dir=long_term_storage_dir)
-        self.compression_engine = compression_engine or CompressionEngine(plan_manager=plan_manager)
+        self.compression_engine = compression_engine or CompressionEngine(
+            plan_manager=plan_manager,
+            memory_manager=self,
+        )
+        if compression_engine is not None and getattr(compression_engine, "memory_manager", None) is None:
+            compression_engine.memory_manager = self
         self.retriever = MemoryRetriever(
             self.working_memory,
             self.episodic_memory,
