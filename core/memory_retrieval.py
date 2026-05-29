@@ -9,7 +9,7 @@ from datetime import datetime
 from typing import List, Dict, Any, Optional, Tuple
 from .memory_models import SessionSummary
 from .memory_layers import WorkingMemory, EpisodicMemory, LongTermMemory
-from .memory_items import MemoryItem, MemoryKind, MemoryRecallResult
+from .memory_items import MemoryItem, MemoryKind, MemoryRecallResult, MemoryStatus
 from .memory_index import BM25MemoryDocument, BM25MemoryIndex
 
 
@@ -443,7 +443,11 @@ class MemoryRetriever:
     def _build_documents(self, include_summaries: bool = True, include_items: bool = True) -> List[MemoryDocument]:
         documents: List[MemoryDocument] = []
         if include_items:
-            documents.extend(MemoryDocument.from_memory_item(item) for item in self.long_term_memory.get_all_items())
+            documents.extend(
+                MemoryDocument.from_memory_item(item)
+                for item in self.long_term_memory.get_all_items()
+                if item.status == MemoryStatus.ACTIVE.value
+            )
         if include_summaries:
             documents.extend(MemoryDocument.from_session_summary(summary, source_type="summary_compat") for summary in self.episodic_memory.get_all())
             for session_id in self.long_term_memory.get_all_session_ids():
