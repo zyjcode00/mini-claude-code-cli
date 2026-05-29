@@ -379,8 +379,7 @@ class MemoryRetriever:
         documents = self._build_documents(include_summaries=include_summaries, include_items=include_items)
         bm25_query = " ".join(part for part in [query, file_path or "", error_type or ""] if part)
         query_terms = self._tokenize(bm25_query)
-        bm25_index = self._build_bm25_index(documents)
-        bm25_hits = {hit.doc_id: hit for hit in bm25_index.search(bm25_query, top_k=max(len(documents), top_k))}
+        bm25_hits = self._search_bm25(documents, bm25_query, top_k=max(len(documents), top_k))
         ranked: List[Tuple[MemoryDocument, float, List[str]]] = []
 
         normalized_file = self._normalize_path(file_path) if file_path else ""
@@ -452,6 +451,42 @@ class MemoryRetriever:
                 if summary:
                     documents.append(MemoryDocument.from_session_summary(summary, source_type="summary_compat"))
         return documents
+
+    def _search_bm25(self, documents: List[MemoryDocument], query: str, top_k: int) -> Dict[str, Any]:
+        """Search BM25, preferring Phase 2 persisted index for long-term docs."""
+        if not query:
+            return {}
+
+        persisted_hits: Dict[str, Any] = {}
+        if hasattr(self.long_term_memory, "index_manager"):
+            try:
+                valid_long_term_ids = {
+                    doc.id
+                    for doc in documents
+                    if doc.source_type in {"long_term_items", "summary_compat"}
+                }
+                raw_hits = self.long_term_memory.index_manager.search(query, top_k=max(top_k, len(valid_long_term_ids)))
+                persisted_hits = {hit.doc_id: hit for hit in raw_hits if hit.doc_id in valid_long_term_ids}
+            except Exception:
+                try:
+                    self.long_term_memory.rebuild_search_index()
+                    raw_hits = self.long_term_memory.index_manager.search(query, top_k=top_k)
+                    valid_ids = {doc.id for doc in documents}
+                    persisted_hits = {hit.doc_id: hit for hit in raw_hits if hit.doc_id in valid_ids}
+                except Exception:
+                    persisted_hits = {}
+
+        transient_docs = [
+            doc for doc in documents
+            if doc.source_type not in {"long_term_items", "summary_compat"}
+        ]
+        if not transient_docs:
+            return persisted_hits
+
+        transient_index = self._build_bm25_index(transient_docs)
+        for hit in transient_index.search(query, top_k=max(top_k, len(transient_docs))):
+            persisted_hits[hit.doc_id] = hit
+        return persisted_hits
 
     def _build_bm25_index(self, documents: List[MemoryDocument]) -> BM25MemoryIndex:
         index = BM25MemoryIndex()

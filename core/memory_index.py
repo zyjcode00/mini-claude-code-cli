@@ -1,19 +1,23 @@
 """Memory-specific search indexes.
 
-Phase 1 introduces BM25MemoryIndex as the retrieval backbone for long-term
-MemoryItem / SessionSummary documents.  It keeps the implementation local and
-small, but uses the standard BM25 formula with document frequency, document
-length normalization, weighted fields, and JSON persistence hooks.
+Phase 1 introduced BM25MemoryIndex as the retrieval backbone for long-term
+MemoryItem / SessionSummary documents.  Phase 2 adds IndexPersistence so the
+BM25 index can be incrementally maintained and atomically persisted instead of
+being rebuilt from every memory JSON file on each recall.
 """
 
 from __future__ import annotations
 
 import json
 import math
+import os
 import re
+import tempfile
+import time
 from dataclasses import dataclass, field
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Dict, Iterable, List, Optional, Set
+from typing import Any, Callable, Dict, Iterable, List, Optional, Set
 
 
 @dataclass
@@ -283,3 +287,158 @@ class BM25MemoryIndex:
                         tokens.append(chunk)
 
         return tokens
+
+
+class IndexPersistence:
+    """Atomic JSON persistence wrapper for BM25MemoryIndex.
+
+    The persisted file uses the Phase 2 envelope:
+    `{schema_version, embedding_provider, created_at, updated_at, indexes}`.
+    Writes are debounced by default and use a single temp file that is cleaned
+    after successful/failed replace to avoid `index.*.tmp` accumulation on
+    Windows.
+    """
+
+    SCHEMA_VERSION = 1
+
+    def __init__(
+        self,
+        path: str | Path,
+        debounce_seconds: float = 0.0,
+        embedding_provider: Optional[str] = None,
+        clock: Optional[Callable[[], datetime]] = None,
+    ):
+        self.path = Path(path)
+        self.debounce_seconds = debounce_seconds
+        self.embedding_provider = embedding_provider
+        self.clock = clock or datetime.now
+        self.created_at = self._now_iso()
+        self.updated_at = self.created_at
+        self.dirty = False
+        self._last_save_at = 0.0
+
+    def load(self) -> Optional[BM25MemoryIndex]:
+        """Load persisted BM25 index. Return None when missing/corrupt/incompatible."""
+        if not self.path.exists():
+            return None
+        try:
+            data = json.loads(self.path.read_text(encoding="utf-8"))
+            if data.get("schema_version") != self.SCHEMA_VERSION:
+                return None
+            if data.get("embedding_provider") != self.embedding_provider:
+                return None
+            self.created_at = data.get("created_at") or self.created_at
+            self.updated_at = data.get("updated_at") or self.updated_at
+            index_data = data.get("indexes", {}).get("bm25")
+            if not isinstance(index_data, dict):
+                return None
+            if index_data.get("version") != BM25MemoryIndex.VERSION:
+                return None
+            return BM25MemoryIndex.from_dict(index_data)
+        except Exception:
+            return None
+
+    def save(self, index: BM25MemoryIndex, force: bool = False) -> None:
+        """Persist index using debounce + atomic write."""
+        self.dirty = True
+        now = time.monotonic()
+        if not force and self.debounce_seconds > 0 and now - self._last_save_at < self.debounce_seconds:
+            return
+        self.flush(index)
+
+    def flush(self, index: BM25MemoryIndex) -> None:
+        self.path.parent.mkdir(parents=True, exist_ok=True)
+        self.updated_at = self._now_iso()
+        payload = {
+            "schema_version": self.SCHEMA_VERSION,
+            "embedding_provider": self.embedding_provider,
+            "created_at": self.created_at,
+            "updated_at": self.updated_at,
+            "indexes": {"bm25": index.to_dict()},
+        }
+        serialized = json.dumps(payload, ensure_ascii=False, indent=2)
+        if self.path.exists():
+            try:
+                if self.path.read_text(encoding="utf-8") == serialized:
+                    self.dirty = False
+                    self._last_save_at = time.monotonic()
+                    return
+            except OSError:
+                pass
+
+        fd, tmp_name = tempfile.mkstemp(
+            prefix=f"{self.path.name}.",
+            suffix=".tmp",
+            dir=str(self.path.parent),
+            text=True,
+        )
+        tmp_path = Path(tmp_name)
+        try:
+            with os.fdopen(fd, "w", encoding="utf-8") as f:
+                f.write(serialized)
+                f.flush()
+                os.fsync(f.fileno())
+
+            last_error: Optional[Exception] = None
+            for attempt in range(5):
+                try:
+                    os.replace(tmp_path, self.path)
+                    self.dirty = False
+                    self._last_save_at = time.monotonic()
+                    return
+                except PermissionError as error:
+                    last_error = error
+                    time.sleep(0.05 * (attempt + 1))
+            raise last_error or PermissionError(f"Unable to replace {self.path}")
+        finally:
+            if tmp_path.exists():
+                try:
+                    tmp_path.unlink()
+                except OSError:
+                    pass
+
+    def _now_iso(self) -> str:
+        return self.clock().isoformat(timespec="seconds")
+
+
+class MemoryIndexManager:
+    """Incrementally maintained index manager for long-term memory."""
+
+    def __init__(
+        self,
+        storage_dir: str | Path,
+        debounce_seconds: float = 0.0,
+        embedding_provider: Optional[str] = None,
+    ):
+        self.storage_dir = Path(storage_dir)
+        self.persistence = IndexPersistence(
+            self.storage_dir / "indexes" / "bm25.json",
+            debounce_seconds=debounce_seconds,
+            embedding_provider=embedding_provider,
+        )
+        self.bm25 = self.persistence.load() or BM25MemoryIndex()
+        self.needs_rebuild = self.persistence.path.exists() and len(self.bm25) == 0
+
+    def add_or_update(self, document: BM25MemoryDocument, force: bool = False) -> None:
+        self.bm25.add_or_update(document)
+        self.persistence.save(self.bm25, force=force)
+
+    def remove(self, doc_id: str, force: bool = False) -> None:
+        self.bm25.remove(doc_id)
+        self.persistence.save(self.bm25, force=force)
+
+    def search(self, query: str, top_k: int = 10) -> List[BM25SearchHit]:
+        return self.bm25.search(query, top_k=top_k)
+
+    def rebuild(self, documents: Iterable[BM25MemoryDocument], force: bool = True) -> None:
+        self.bm25 = BM25MemoryIndex()
+        self.bm25.add_documents(documents)
+        self.needs_rebuild = False
+        self.persistence.save(self.bm25, force=force)
+
+    def flush(self) -> None:
+        if self.persistence.dirty:
+            self.persistence.flush(self.bm25)
+
+    def __len__(self) -> int:
+        return len(self.bm25)

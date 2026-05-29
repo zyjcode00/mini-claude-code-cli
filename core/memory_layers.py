@@ -14,6 +14,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from .memory_models import SessionSummary
 from .memory_items import MemoryItem, MemoryKind, MemoryRecallResult, MemoryStatus
+from .memory_index import BM25MemoryDocument, MemoryIndexManager
 
 
 class WorkingMemory:
@@ -194,8 +195,15 @@ class LongTermMemory:
         # MemoryItem 倒排索引：{keyword: [memory_item_ids]}
         self.item_inverted_index: Dict[str, List[str]] = {}
 
+        # Phase 2: 持久化 BM25 索引，随 store/store_item 增量更新。
+        self.index_manager = MemoryIndexManager(self.storage_dir)
+
         # 初始化时加载索引
         self._load_index()
+
+        # 如果 bm25.json 缺失/损坏/版本不一致，则从现有轻量 index.json 重建一次。
+        if self.index_manager.needs_rebuild or len(self.index_manager) == 0:
+            self.rebuild_search_index()
 
     def _load_index(self):
         """从磁盘加载索引"""
@@ -391,6 +399,65 @@ class LongTermMemory:
 
         return list(set(keywords))
 
+    def _summary_to_bm25_document(self, summary: SessionSummary) -> BM25MemoryDocument:
+        """把 SessionSummary 映射为可持久化 BM25 文档。"""
+        error_text = " ".join(
+            f"{error.error_type} {error.error_message} {error.solution or ''}"
+            for error in summary.errors_encountered
+        )
+        content_parts = [
+            summary.summary_text,
+            " ".join(summary.key_decisions),
+            " ".join(fc.summary for fc in summary.files_changed),
+            error_text,
+            " ".join(tool.tool_name for tool in summary.tools_used),
+        ]
+        return BM25MemoryDocument(
+            doc_id=f"summary_{summary.session_id}",
+            title=summary.task_goal,
+            content="\n".join(part for part in content_parts if part),
+            concepts=summary.get_keywords(),
+            files=summary.get_file_paths(),
+            kind=MemoryKind.SUMMARY.value,
+            error=error_text,
+            metadata={"source_type": "summary_compat", "session_id": summary.session_id},
+        )
+
+    def _item_to_bm25_document(self, item: MemoryItem) -> BM25MemoryDocument:
+        """把 MemoryItem 映射为可持久化 BM25 文档。"""
+        raw_observation = item.metadata.get("raw_observation", {}) if item.metadata else {}
+        error_parts = []
+        if item.kind == MemoryKind.BUG.value:
+            error_parts.extend(item.concepts)
+        if isinstance(raw_observation, dict):
+            error_parts.append(str(raw_observation.get("error") or raw_observation.get("tool_output") or ""))
+        if item.metadata:
+            error_parts.append(str(item.metadata.get("error_type", "")))
+        return BM25MemoryDocument(
+            doc_id=item.id,
+            title=item.title,
+            content=item.searchable_text(),
+            concepts=list(item.concepts),
+            files=list(item.files),
+            kind=item.kind,
+            error=" ".join(part for part in error_parts if part),
+            project=item.project,
+            metadata={"source_type": "long_term_items"},
+        )
+
+    def rebuild_search_index(self) -> None:
+        """从轻量文件索引重建持久化 BM25 索引。"""
+        documents: List[BM25MemoryDocument] = []
+        for item_id in list(self.item_index.keys()):
+            item = self.retrieve_item(item_id)
+            if item and item.status == MemoryStatus.ACTIVE.value:
+                documents.append(self._item_to_bm25_document(item))
+        for session_id in list(self.index.keys()):
+            summary = self.retrieve(session_id)
+            if summary:
+                documents.append(self._summary_to_bm25_document(summary))
+        self.index_manager.rebuild(documents, force=True)
+
     def _tokenize(self, text: str) -> List[str]:
         """简单分词（支持中英文）"""
         import re
@@ -445,6 +512,7 @@ class LongTermMemory:
 
             # 保存索引
             self._save_index()
+            self.index_manager.add_or_update(self._summary_to_bm25_document(summary), force=True)
 
             return str(file_path)
         except Exception as e:
@@ -484,6 +552,10 @@ class LongTermMemory:
                     self.item_inverted_index[keyword].append(item.id)
 
             self._save_index()
+            if item.status == MemoryStatus.ACTIVE.value:
+                self.index_manager.add_or_update(self._item_to_bm25_document(item), force=True)
+            else:
+                self.index_manager.remove(item.id, force=True)
             return str(file_path)
         except Exception as e:
             print(f"⚠️ 存储 MemoryItem 失败: {e}")
@@ -640,6 +712,7 @@ class LongTermMemory:
 
         # 保存空索引
         self._save_index()
+        self.index_manager.rebuild([], force=True)
 
     def __len__(self) -> int:
         return len(self.index) + len(self.item_index)
